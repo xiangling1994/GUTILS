@@ -1,5 +1,6 @@
 
 import numpy as np
+from scipy.interpolate import interp1d
 import math
 
 from glider_utils import (
@@ -7,9 +8,20 @@ from glider_utils import (
     DATA_DIM,
     validate_glider_dataset,
     clean_dataset,
-    interpolate_dataset,
     boxcar_smooth_dataset
 )
+
+
+def interpolate_yos(dataset, interval):
+    ts = np.arange(
+        np.min(dataset[:, TIME_DIM]),
+        np.max(dataset[:, TIME_DIM]),
+        interval
+    )
+    # Use cubic to approximate yo
+    f = interp1d(dataset[:, TIME_DIM], dataset[:, DATA_DIM], kind='cubic')
+    interp_data = f(ts)
+    return np.column_stack((ts, interp_data))
 
 
 def binarize_diff(data):
@@ -74,7 +86,7 @@ def find_yo_extrema(dataset, interval=10):
 
     est_data = clean_dataset(est_data)
 
-    interp_data = interpolate_dataset(est_data, interval)
+    interp_data = interpolate_yos(est_data, interval)
 
     interp_data[:, DATA_DIM] = (
         boxcar_smooth_dataset(interp_data[:, DATA_DIM], math.ceil(interval/2))

@@ -1,5 +1,4 @@
 import numpy as np
-from scipy.interpolate import interp1d
 from scipy.signal import boxcar, convolve
 
 # Readability
@@ -22,17 +21,6 @@ def clean_dataset(dataset):
 def boxcar_smooth_dataset(dataset, window_size):
     window = boxcar(window_size)
     return convolve(dataset, window, 'same') / window_size
-
-
-def interpolate_dataset(dataset, interval):
-    ts = np.arange(
-        np.min(dataset[:, TIME_DIM]),
-        np.max(dataset[:, TIME_DIM]),
-        interval
-    )
-    f = interp1d(dataset[:, TIME_DIM], dataset[:, DATA_DIM], kind='cubic')
-    interp_data = f(ts)
-    return np.column_stack((ts, interp_data))
 
 
 def validate_glider_dataset(dataset):
