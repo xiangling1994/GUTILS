@@ -58,9 +58,9 @@ def calculate_delta_depth(interp_data, interval):
 
 def create_profile_entry(dataset, start, end):
     time_start = dataset[start, TIME_DIM]
-    time_end = dataset[end, TIME_DIM]
+    time_end = dataset[end-1, TIME_DIM]
     depth_start = dataset[start, DEPTH_DIM]
-    depth_end = dataset[end, DEPTH_DIM]
+    depth_end = dataset[end-1, DEPTH_DIM]
     return {
         'index_bounds': (start, end),
         'time_bounds': (time_start, time_end),
@@ -140,7 +140,7 @@ def find_yo_extrema(dataset, interval=10):
 
     if start_index < len(dataset):
         profiles.append(
-            create_profile_entry(dataset, start_index, len(dataset)-1)
+            create_profile_entry(dataset, start_index, len(dataset))
         )
 
     return profiles

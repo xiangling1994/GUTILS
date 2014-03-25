@@ -48,7 +48,7 @@ def is_continuous(profiles):
 def is_complete(profiles, dataset):
     start_index = profiles[0]['index_bounds'][0]
     end_index = profiles[-1]['index_bounds'][1]
-    return start_index == 0 and end_index == len(dataset) - 1
+    return start_index == 0 and end_index == len(dataset)
 
 
 class TestFindProfile(unittest.TestCase):
@@ -69,6 +69,12 @@ class TestFindProfile(unittest.TestCase):
         self.assertNotEqual(len(self.profiles), len(filtered_profiles))
         self.assertTrue(is_continuous(filtered_profiles))
         self.assertTrue(is_complete(filtered_profiles, self.dataset))
+
+    def test_filter_to_one(self):
+        filtered_profiles = (
+            filter_profile_depth(self.profiles, self.dataset, 10000)
+        )
+        self.assertEqual(len(filtered_profiles), 1)
 
     def test_filter_profile_time(self):
         filtered_profiles = filter_profile_time(self.profiles, self.dataset)

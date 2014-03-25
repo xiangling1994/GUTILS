@@ -20,7 +20,7 @@ def filter_profiles(profiles, dataset, conditional):
                 )
             )
             start_index = end_index
-        elif len(dataset)-1 == end_index:
+        elif len(dataset) == end_index:
             filtered_profiles.append(
                 create_profile_entry(
                     dataset,
