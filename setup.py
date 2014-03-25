@@ -5,5 +5,7 @@ setup(
     version='1.0',
     author='Michael Lindemuth',
     author_email='mlindemu@usf.edu',
-    packages=['glider_utils'],
+    packages=[
+        'glider_utils.yo'
+    ]
 )
