@@ -11,6 +11,10 @@ from glider_utils.yo.filters import (
     filter_profile_number_of_points
 )
 
+from glider_utils.gps import (
+    interpolate_gps
+)
+
 import numpy as np
 import pprint
 import csv
@@ -26,6 +30,20 @@ def read_depth_dataset():
             depth.append(float(row[1]))
 
     return np.column_stack((times, depth))
+
+
+def read_gps_dataset():
+    times = []
+    lat = []
+    lon = []
+    with open('gps_data.csv', 'rb') as csvfile:
+        reader = csv.reader(csvfile, delimiter=',')
+        for row in reader:
+            times.append(float(row[0]))
+            lat.append(float(row[1]))
+            lon.append(float(row[2]))
+
+    return np.column_stack((times, lat, lon))
 
 
 def is_continuous(profiles):
@@ -114,6 +132,14 @@ class TestFindProfile(unittest.TestCase):
 
         pp = pprint.PrettyPrinter(indent=4)
         pp.pprint(filtered_profiles)
+
+
+class TestInterpolateGPS(unittest.TestCase):
+    def setUp(self):
+        self.dataset = read_gps_dataset()
+
+    def test_interpolate_gps(self):
+        print interpolate_gps(self.dataset)
 
 
 if __name__ == '__main__':
