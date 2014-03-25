@@ -21,13 +21,33 @@ def filter_profiles(profiles, dataset, conditional):
             )
             start_index = end_index
         elif len(dataset) == end_index:
-            filtered_profiles.append(
-                create_profile_entry(
-                    dataset,
-                    start_index,
-                    end_index
+            # Should this one be merged with the last
+            # or made into its own?
+            if conditional(profile):
+                filtered_profiles.append(
+                    create_profile_entry(
+                        dataset,
+                        start_index,
+                        end_index
+                    )
                 )
-            )
+            elif len(filtered_profiles) > 0:
+                last_bounds = filtered_profiles[-1]['index_bounds']
+                filtered_profiles[-1] = (
+                    create_profile_entry(
+                        dataset,
+                        last_bounds[0],
+                        end_index
+                    )
+                )
+            else:
+                filtered_profiles.append(
+                    create_profile_entry(
+                        dataset,
+                        start_index,
+                        end_index
+                    )
+                )
 
     return filtered_profiles
 
