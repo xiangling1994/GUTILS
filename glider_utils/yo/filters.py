@@ -19,7 +19,7 @@ def filter_profiles(profiles, dataset, conditional):
                     end_index
                 )
             )
-            start_index = end_index + 1
+            start_index = end_index
         elif len(dataset)-1 == end_index:
             filtered_profiles.append(
                 create_profile_entry(
@@ -47,8 +47,9 @@ def filter_profile_depth(profiles, dataset, below=1):
     return filter_profiles(profiles, dataset, conditional)
 
 
-def filter_profile_time(profiles, dataset, timespan_condition):
+def filter_profile_time(profiles, dataset, timespan_condition=10):
     """Filters out profiles that do not span a specified number of seconds
+    (Default: 10 seconds)
 
     Returns the filtered set of profiles
     """
@@ -60,8 +61,9 @@ def filter_profile_time(profiles, dataset, timespan_condition):
     return filter_profiles(profiles, dataset, conditional)
 
 
-def filter_profile_distance(profiles, dataset, distance_condition):
+def filter_profile_distance(profiles, dataset, distance_condition=1):
     """Filters out profiles that do not span a specified vertical distance
+    (Default: 1m)
 
     Returns the filtered set of profiles
     """
@@ -73,8 +75,9 @@ def filter_profile_distance(profiles, dataset, distance_condition):
     return filter_profiles(profiles, dataset, conditional)
 
 
-def filter_profile_number_of_points(profiles, dataset, points_condition):
+def filter_profile_number_of_points(profiles, dataset, points_condition=3):
     """Filters out profiles that do not have a specified number of points
+    (Default: 3 points)
 
     Returns the filtered set of profiles
     """

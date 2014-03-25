@@ -37,7 +37,4 @@ nosetests.xml
 # VIM Swap Files
 *.swp
 
-test_data
-test_data/*
-
 dbd2asc
