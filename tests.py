@@ -19,7 +19,7 @@ import csv
 def read_depth_dataset():
     times = []
     depth = []
-    with open('test_data.csv', 'rb') as csvfile:
+    with open('depth_data.csv', 'rb') as csvfile:
         reader = csv.reader(csvfile, delimiter=',')
         for row in reader:
             times.append(float(row[0]))

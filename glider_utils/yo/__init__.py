@@ -51,7 +51,7 @@ def calculate_delta_depth(interp_data, interval):
     delta_depth = np.diff(interp_data[:, DEPTH_DIM])
     delta_depth = binarize_diff(delta_depth)
 
-    delta_depth = boxcar_smooth_data(delta_depth, math.ceil(interval/5))
+    delta_depth = boxcar_smooth_data(delta_depth, 2)
 
     return delta_depth
 
