@@ -21,8 +21,10 @@ def filter_profiles(profiles, dataset, conditional):
             )
             start_index = end_index
         elif len(dataset) == end_index:
-            # Should this one be merged with the last
-            # or made into its own?
+            # Merge the last profile that does not meet the
+            # conditional with the latest good profile.  If
+            # no other profiles are qualified, make the entire
+            # dataset a profile.
             if len(filtered_profiles) > 0:
                 last_bounds = filtered_profiles[-1]['index_bounds']
                 filtered_profiles[-1] = (
