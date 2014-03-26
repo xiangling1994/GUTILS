@@ -1,7 +1,8 @@
 import unittest
 
 from glider_utils.yo import (
-    find_yo_extrema
+    find_yo_extrema,
+    profiles_to_dataset
 )
 
 from glider_utils.yo.filters import (
@@ -132,6 +133,10 @@ class TestFindProfile(unittest.TestCase):
 
         pp = pprint.PrettyPrinter(indent=4)
         pp.pprint(filtered_profiles)
+
+    def test_profiles_to_dataset(self):
+        profile_dataset = profiles_to_dataset(self.profiles, self.dataset)
+        self.assertEqual(len(profile_dataset), len(self.dataset))
 
 
 class TestInterpolateGPS(unittest.TestCase):

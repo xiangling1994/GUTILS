@@ -115,3 +115,24 @@ def find_yo_extrema(dataset, interval=10):
         )
 
     return profiles
+
+
+def profiles_to_dataset(profiles, dataset):
+    """Converts a profile description array to a profile dataset
+
+    Parameters:
+        'profiles': Description of profiles as output by find_yo_extrema
+        'dataset': An N by 1 or 2 array of timestamps
+
+    Returns:
+        'dataset': An N by 2 array of timestamps and profile ids
+    """
+
+    profile_dataset = np.zeros((len(dataset), 2))
+    profile_dataset[:, TIME_DIM] = dataset[:, TIME_DIM]
+
+    for i, profile in enumerate(profiles, start=1):
+        bounds = profile['index_bounds']
+        profile_dataset[bounds[0]:bounds[1], DATA_DIM] = i
+
+    return profile_dataset
