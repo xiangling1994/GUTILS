@@ -1,8 +1,7 @@
 import unittest
 
 from glider_utils.yo import (
-    find_yo_extrema,
-    profiles_to_dataset
+    find_yo_extrema
 )
 
 from glider_utils.yo.filters import (
@@ -47,96 +46,85 @@ def read_gps_dataset():
     return np.column_stack((times, lat, lon))
 
 
-def is_continuous(profiles):
-    start_index = 0
-    for profile in profiles:
-        if profile['index_bounds'][0] == start_index:
-            start_index = profile['index_bounds'][1]
-        else:
-            print(
-                "Start: %d, Profile: (%d, %d)"
-                % (start_index,
-                   profile['index_bounds'][0],
-                   profile['index_bounds'][1])
-            )
+def is_continuous(profiled_dataset):
+    last_profile_id = 0
+    for row in profiled_dataset:
+        profile_diff = abs(last_profile_id - row[2])
+
+        if profile_diff == 1:
+            last_profile_id = row[2]
+        elif profile_diff > 1:
+            print "Last Profile: %d, Current: %d" % (last_profile_id, row[2])
             return False
 
     return True
 
 
-def is_complete(profiles, dataset):
-    start_index = profiles[0]['index_bounds'][0]
-    end_index = profiles[-1]['index_bounds'][1]
-    return start_index == 0 and end_index == len(dataset)
+def is_complete(profiled_dataset, dataset):
+    return len(profiled_dataset) == len(dataset)
 
 
 class TestFindProfile(unittest.TestCase):
     def setUp(self):
         self.dataset = read_depth_dataset()
-        self.profiles = find_yo_extrema(self.dataset)
+        self.profiled_dataset = find_yo_extrema(self.dataset)
 
     def test_find_profile(self):
         self.assertNotEqual(
-            len(self.profiles),
+            len(self.profiled_dataset),
             0
         )
-        self.assertTrue(is_continuous(self.profiles))
-        self.assertTrue(is_complete(self.profiles, self.dataset))
+        self.assertTrue(is_complete(self.profiled_dataset, self.dataset))
+
+    def test_extreme_depth_filter(self):
+        filtered_profiled_dataset = filter_profile_depth(
+            self.profiled_dataset, 10000
+        )
+        uniques = np.unique(filtered_profiled_dataset[:, 2])
+        self.assertEqual(len(uniques), 1)
 
     def test_filter_profile_depth(self):
-        filtered_profiles = filter_profile_depth(self.profiles, self.dataset)
-        self.assertNotEqual(len(self.profiles), len(filtered_profiles))
-        self.assertTrue(is_continuous(filtered_profiles))
-        self.assertTrue(is_complete(filtered_profiles, self.dataset))
-
-    def test_filter_to_one(self):
-        filtered_profiles = (
-            filter_profile_depth(self.profiles, self.dataset, 10000)
-        )
-        self.assertEqual(len(filtered_profiles), 1)
+        filtered_profiled_dataset = filter_profile_depth(self.profiled_dataset)
+        self.assertTrue(is_continuous(filtered_profiled_dataset))
+        self.assertTrue(is_complete(filtered_profiled_dataset, self.dataset))
 
     def test_filter_profile_time(self):
-        filtered_profiles = filter_profile_time(self.profiles, self.dataset)
-        self.assertNotEqual(len(self.profiles), len(filtered_profiles))
-        self.assertTrue(is_continuous(filtered_profiles))
-        self.assertTrue(is_complete(filtered_profiles, self.dataset))
+        filtered_profiled_dataset = filter_profile_time(self.profiled_dataset)
+        self.assertTrue(is_continuous(filtered_profiled_dataset))
+        self.assertTrue(is_complete(filtered_profiled_dataset, self.dataset))
 
     def test_filter_profile_distance(self):
-        filtered_profiles = filter_profile_distance(
-            self.profiles, self.dataset
+        filtered_profiled_dataset = filter_profile_distance(
+            self.profiled_dataset
         )
-        self.assertNotEqual(len(self.profiles), len(filtered_profiles))
-        self.assertTrue(is_continuous(filtered_profiles))
-        self.assertTrue(is_complete(filtered_profiles, self.dataset))
+        self.assertTrue(is_continuous(filtered_profiled_dataset))
+        self.assertTrue(is_complete(filtered_profiled_dataset, self.dataset))
 
     def test_filter_profile_number_of_points(self):
-        filtered_profiles = filter_profile_number_of_points(
-            self.profiles, self.dataset
+        filtered_profiled_dataset = filter_profile_number_of_points(
+            self.profiled_dataset
         )
-        self.assertNotEqual(len(self.profiles), len(filtered_profiles))
-        self.assertTrue(is_continuous(filtered_profiles))
-        self.assertTrue(is_complete(filtered_profiles, self.dataset))
+        self.assertTrue(is_continuous(filtered_profiled_dataset))
+        self.assertTrue(is_complete(filtered_profiled_dataset, self.dataset))
 
     def test_default_filter_composite(self):
-        filtered_profiles = filter_profile_depth(self.profiles, self.dataset)
-        filtered_profiles = filter_profile_number_of_points(
-            filtered_profiles, self.dataset
+        filtered_profiled_dataset = filter_profile_depth(self.profiled_dataset)
+        filtered_profiled_dataset = filter_profile_number_of_points(
+            filtered_profiled_dataset
         )
-        filtered_profiles = filter_profile_time(
-            filtered_profiles, self.dataset
+        filtered_profiled_dataset = filter_profile_time(
+            filtered_profiled_dataset
         )
-        filtered_profiles = filter_profile_distance(
-            filtered_profiles, self.dataset
+        filtered_profiled_dataset = filter_profile_distance(
+            filtered_profiled_dataset
         )
-        self.assertTrue(is_continuous(filtered_profiles))
-        self.assertTrue(is_complete(filtered_profiles, self.dataset))
+        self.assertTrue(is_continuous(filtered_profiled_dataset))
+        self.assertTrue(is_complete(filtered_profiled_dataset, self.dataset))
 
         pp = pprint.PrettyPrinter(indent=4)
-        pp.pprint(filtered_profiles)
-
-    def test_profiles_to_dataset(self):
-        profile_dataset = profiles_to_dataset(self.profiles, self.dataset)
-        self.assertEqual(len(profile_dataset), len(self.dataset))
+        pp.pprint(filtered_profiled_dataset)
+        print np.unique(self.profiled_dataset[:, 2])
+        print np.unique(filtered_profiled_dataset[:, 2])
 
 
 class TestInterpolateGPS(unittest.TestCase):
@@ -144,7 +132,7 @@ class TestInterpolateGPS(unittest.TestCase):
         self.dataset = read_gps_dataset()
 
     def test_interpolate_gps(self):
-        print interpolate_gps(self.dataset)
+        interpolate_gps(self.dataset)
 
 
 if __name__ == '__main__':

@@ -1,7 +1,6 @@
 
 import numpy as np
 from scipy.interpolate import interp1d
-import math
 
 from glider_utils import (
     TIME_DIM,
@@ -12,16 +11,14 @@ from glider_utils import (
 )
 
 
-def interpolate_yos(dataset, interval):
-    ts = np.arange(
-        np.min(dataset[:, TIME_DIM]),
-        np.max(dataset[:, TIME_DIM]),
-        interval
-    )
+def interpolate_yos(estimated_dataset, dataset):
     # Use cubic to approximate yo
-    f = interp1d(dataset[:, TIME_DIM], dataset[:, DATA_DIM], kind='cubic')
-    interp_data = f(ts)
-    return np.column_stack((ts, interp_data))
+    f = interp1d(
+        estimated_dataset[:, TIME_DIM],
+        estimated_dataset[:, DATA_DIM],
+        kind='cubic'
+    )
+    return f(dataset[:, TIME_DIM])
 
 
 def binarize_diff(data):
@@ -30,8 +27,8 @@ def binarize_diff(data):
     return data
 
 
-def calculate_delta_depth(interp_data, interval):
-    delta_depth = np.diff(interp_data[:, DATA_DIM])
+def calculate_delta_depth(interp_data):
+    delta_depth = np.diff(interp_data)
     delta_depth = binarize_diff(delta_depth)
 
     delta_depth = boxcar_smooth_dataset(delta_depth, 2)
@@ -51,7 +48,7 @@ def create_profile_entry(dataset, start, end):
     }
 
 
-def find_yo_extrema(dataset, interval=10):
+def find_yo_extrema(dataset):
     """Returns timestamps, row indices, and depth and time bounds
     corresponding to glider yo profiles
 
@@ -62,17 +59,9 @@ def find_yo_extrema(dataset, interval=10):
     Parameters:
         'dataset': An N by 2 numpy array of time, depth pairs
 
-    Optional Parameters:
-        'interval': NUMBER
-            Specify an alternate interval for resampling the time-series prior
-            to indexing.  Default: 10
-
     Returns:
-        {
-            'index_bounds': (<starting index>, <ending index of profile>)
-            'time_bounds': (<start time of profile>, <end time of profile>)
-            'depth_bounds': (<start depth>, <end depth>)
-        }
+        'profiled_dataset': An N by 3 numpy array of time, depth,
+            and profile pairs
 
     Use filter_yo_extrema to remove invalid/incomplete profiles
     """
@@ -86,53 +75,29 @@ def find_yo_extrema(dataset, interval=10):
 
     est_data = clean_dataset(est_data)
 
-    interp_data = interpolate_yos(est_data, interval)
+    # Stretch estimated values for interpolation to span entire dataset
+    est_data[0, TIME_DIM] = dataset[0, TIME_DIM]
+    est_data[-1, TIME_DIM] = dataset[-1, TIME_DIM]
 
-    interp_data[:, DATA_DIM] = (
-        boxcar_smooth_dataset(interp_data[:, DATA_DIM], math.ceil(interval/2))
-    )
+    interp_data = interpolate_yos(est_data, dataset)
 
-    delta_depth = calculate_delta_depth(interp_data, interval)
+    interp_data = boxcar_smooth_dataset(interp_data, 5)
+
+    delta_depth = calculate_delta_depth(interp_data)
 
     interp_indices = np.argwhere(delta_depth == 0).flatten()
 
-    profiles = []
+    profiled_dataset = np.zeros((len(dataset), 3))
+    profiled_dataset[:, TIME_DIM] = dataset[:, TIME_DIM]
+    profiled_dataset[:, DATA_DIM] = interp_data
 
     start_index = 0
-    for index in interp_indices:
-        # Find original index
-        end_index = np.abs(dataset[:, 0] - interp_data[index, 0]).argmin()
-
-        profiles.append(
-            create_profile_entry(dataset, start_index, end_index)
-        )
+    for profile_id, end_index in enumerate(interp_indices):
+        profiled_dataset[start_index:end_index, 2] = profile_id
 
         start_index = end_index
 
-    if start_index < len(dataset):
-        profiles.append(
-            create_profile_entry(dataset, start_index, len(dataset))
-        )
+    if start_index < len(profiled_dataset):
+        profiled_dataset[start_index:, 2] = len(interp_indices)-1
 
-    return profiles
-
-
-def profiles_to_dataset(profiles, dataset):
-    """Converts a profile description array to a profile dataset
-
-    Parameters:
-        'profiles': Description of profiles as output by find_yo_extrema
-        'dataset': An N by 1 or 2 array of timestamps
-
-    Returns:
-        'dataset': An N by 2 array of timestamps and profile ids
-    """
-
-    profile_dataset = np.zeros((len(dataset), 2))
-    profile_dataset[:, TIME_DIM] = dataset[:, TIME_DIM]
-
-    for i, profile in enumerate(profiles, start=1):
-        bounds = profile['index_bounds']
-        profile_dataset[bounds[0]:bounds[1], DATA_DIM] = i
-
-    return profile_dataset
+    return profiled_dataset
