@@ -14,17 +14,19 @@ def filter_profiles(dataset, conditional):
 
     filtered_dataset = dataset.copy()
 
+    filtered_dataset[:, 2] = 0
+
     start_index = 0
     last_good_profile = 0
     num_profiles = int(max(dataset[:, 2]) + 1)
     for profile_id in range(0, num_profiles):
         profile = dataset[dataset[:, 2] == profile_id]
-        end_index = np.where(dataset[:, 2] == profile_id)[0][-1]
+        end_index = np.where(dataset[:, 2] == profile_id)[0][-1]+1
         if conditional(profile):
             filtered_dataset[start_index:end_index, 2] = last_good_profile
             start_index = end_index
             last_good_profile += 1
-        elif len(dataset)-1 == end_index:
+        elif len(dataset) == end_index:
             filtered_dataset[start_index:, 2] = last_good_profile
 
     return filtered_dataset

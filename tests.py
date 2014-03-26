@@ -48,13 +48,16 @@ def read_gps_dataset():
 
 def is_continuous(profiled_dataset):
     last_profile_id = 0
-    for row in profiled_dataset:
+    for i, row in enumerate(profiled_dataset):
         profile_diff = abs(last_profile_id - row[2])
 
         if profile_diff == 1:
             last_profile_id = row[2]
         elif profile_diff > 1:
-            print "Last Profile: %d, Current: %d" % (last_profile_id, row[2])
+            print(
+                "Inconsistency @: %d, Last Profile: %d, Current: %d"
+                % (i, last_profile_id, row[2])
+            )
             return False
 
     return True
@@ -84,25 +87,45 @@ class TestFindProfile(unittest.TestCase):
         self.assertEqual(len(uniques), 1)
 
     def test_filter_profile_depth(self):
-        filtered_profiled_dataset = filter_profile_depth(self.profiled_dataset)
+        filtered_profiled_dataset = filter_profile_depth(
+            self.profiled_dataset, 36
+        )
+        self.assertNotEqual(
+            len(np.unique(self.profiled_dataset[:, 2])),
+            len(np.unique(filtered_profiled_dataset[:, 2]))
+        )
         self.assertTrue(is_continuous(filtered_profiled_dataset))
         self.assertTrue(is_complete(filtered_profiled_dataset, self.dataset))
 
     def test_filter_profile_time(self):
-        filtered_profiled_dataset = filter_profile_time(self.profiled_dataset)
+        filtered_profiled_dataset = filter_profile_time(
+            self.profiled_dataset, 300
+        )
+        self.assertNotEqual(
+            len(np.unique(self.profiled_dataset[:, 2])),
+            len(np.unique(filtered_profiled_dataset[:, 2]))
+        )
         self.assertTrue(is_continuous(filtered_profiled_dataset))
         self.assertTrue(is_complete(filtered_profiled_dataset, self.dataset))
 
     def test_filter_profile_distance(self):
         filtered_profiled_dataset = filter_profile_distance(
-            self.profiled_dataset
+            self.profiled_dataset, 150
+        )
+        self.assertNotEqual(
+            len(np.unique(self.profiled_dataset[:, 2])),
+            len(np.unique(filtered_profiled_dataset[:, 2]))
         )
         self.assertTrue(is_continuous(filtered_profiled_dataset))
         self.assertTrue(is_complete(filtered_profiled_dataset, self.dataset))
 
     def test_filter_profile_number_of_points(self):
         filtered_profiled_dataset = filter_profile_number_of_points(
-            self.profiled_dataset
+            self.profiled_dataset, 20
+        )
+        self.assertNotEqual(
+            len(np.unique(self.profiled_dataset[:, 2])),
+            len(np.unique(filtered_profiled_dataset[:, 2]))
         )
         self.assertTrue(is_continuous(filtered_profiled_dataset))
         self.assertTrue(is_complete(filtered_profiled_dataset, self.dataset))
@@ -110,7 +133,7 @@ class TestFindProfile(unittest.TestCase):
     def test_default_filter_composite(self):
         filtered_profiled_dataset = filter_profile_depth(self.profiled_dataset)
         filtered_profiled_dataset = filter_profile_number_of_points(
-            filtered_profiled_dataset
+            filtered_profiled_dataset, 20
         )
         filtered_profiled_dataset = filter_profile_time(
             filtered_profiled_dataset
@@ -118,13 +141,15 @@ class TestFindProfile(unittest.TestCase):
         filtered_profiled_dataset = filter_profile_distance(
             filtered_profiled_dataset
         )
+        self.assertNotEqual(
+            len(np.unique(self.profiled_dataset[:, 2])),
+            len(np.unique(filtered_profiled_dataset[:, 2]))
+        )
         self.assertTrue(is_continuous(filtered_profiled_dataset))
         self.assertTrue(is_complete(filtered_profiled_dataset, self.dataset))
 
         pp = pprint.PrettyPrinter(indent=4)
         pp.pprint(filtered_profiled_dataset)
-        print np.unique(self.profiled_dataset[:, 2])
-        print np.unique(filtered_profiled_dataset[:, 2])
 
 
 class TestInterpolateGPS(unittest.TestCase):
