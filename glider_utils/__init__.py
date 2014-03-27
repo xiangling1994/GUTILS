@@ -41,7 +41,9 @@ def validate_glider_dataset(dataset):
     try:
         from netCDF4 import default_fillvals as NC_FILL_VALUES
         dataset[dataset[:, TIME_DIM] == NC_FILL_VALUES['f8'], TIME_DIM] = float('nan')  # NOQA
-        dataset[dataset[:, DATA_DIM] == NC_FILL_VALUES['f8'], DATA_DIM] = float('nan')  # NOQA
+        (rows, cols) = dataset.shape
+        for i in range(1, cols):
+            dataset[dataset[:, i] == NC_FILL_VALUES['f8'], i] = float('nan')  # NOQA
     except ImportError:
         pass
 
@@ -49,6 +51,6 @@ def validate_glider_dataset(dataset):
     if len(dataset[np.isfinite(dataset[:, TIME_DIM])]) == 0:
         raise ValueError('Time array has no finite values')
     if len(dataset[np.isfinite(dataset[:, DATA_DIM])]) == 0:
-        raise ValueError('Depth array has no finite values')
+        raise ValueError('Data array has no finite values')
 
     return dataset

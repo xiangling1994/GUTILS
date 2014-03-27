@@ -16,7 +16,7 @@ def interpolate_gps(dataset):
     in a single glider binary data file.
 
     Parameters:
-        'dataset': An N by 3 numpy array of time, depth pairs
+        'dataset': An N by 3 numpy array of time, lat, lon pairs
 
     Returns interpolated gps dataset over entire time domain of dataset
     """

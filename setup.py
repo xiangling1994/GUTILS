@@ -6,6 +6,9 @@ setup(
     author='Michael Lindemuth',
     author_email='mlindemu@usf.edu',
     packages=[
-        'glider_utils.yo'
+        'glider_utils',
+        'glider_utils.yo',
+        'glider_utils.gps',
+        'glider_utils.ctd'
     ]
 )

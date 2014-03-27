@@ -15,6 +15,10 @@ from glider_utils.gps import (
     interpolate_gps
 )
 
+from glider_utils.ctd.salinity import (
+    calculate_practical_salinity
+)
+
 import numpy as np
 import pprint
 import csv
@@ -44,6 +48,22 @@ def read_gps_dataset():
             lon.append(float(row[2]))
 
     return np.column_stack((times, lat, lon))
+
+
+def read_ctd_dataset():
+    times = []
+    cond = []
+    temp = []
+    pres = []
+    with open('ctd_data.csv', 'rb') as csvfile:
+        reader = csv.reader(csvfile, delimiter=',')
+        for row in reader:
+            times.append(float(row[0]))
+            cond.append(float(row[1]))
+            temp.append(float(row[2]))
+            pres.append(float(row[3]))
+
+    return np.column_stack((times, cond, temp, pres))
 
 
 def is_continuous(profiled_dataset):
@@ -157,8 +177,23 @@ class TestInterpolateGPS(unittest.TestCase):
         self.dataset = read_gps_dataset()
 
     def test_interpolate_gps(self):
-        interpolate_gps(self.dataset)
+        self.assertNotEqual(
+            len(interpolate_gps(self.dataset)),
+            0
+        )
 
+
+class TestSalinity(unittest.TestCase):
+    def setUp(self):
+        self.dataset = read_ctd_dataset()
+
+    def test_practical_salinity(self):
+        salinity_dataset = calculate_practical_salinity(self.dataset)
+        print salinity_dataset
+        self.assertNotEqual(
+            len(salinity_dataset),
+            0,
+        )
 
 if __name__ == '__main__':
     unittest.main()
