@@ -19,6 +19,10 @@ from glider_utils.ctd.salinity import (
     calculate_practical_salinity
 )
 
+from glider_utils.ctd.density import (
+    calculate_density
+)
+
 import numpy as np
 import pprint
 import csv
@@ -189,10 +193,23 @@ class TestSalinity(unittest.TestCase):
 
     def test_practical_salinity(self):
         salinity_dataset = calculate_practical_salinity(self.dataset)
-        print salinity_dataset
         self.assertNotEqual(
             len(salinity_dataset),
             0,
+        )
+
+
+class TestDensity(unittest.TestCase):
+    def setUp(self):
+        self.dataset = read_ctd_dataset()
+
+    def test_density(self):
+        salinity_dataset = calculate_practical_salinity(self.dataset)
+        density_dataset = calculate_density(salinity_dataset)
+        print density_dataset
+        self.AssertNotEqual(
+            len(density_dataset),
+            0
         )
 
 if __name__ == '__main__':
