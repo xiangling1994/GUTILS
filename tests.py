@@ -15,11 +15,8 @@ from glider_utils.gps import (
     interpolate_gps
 )
 
-from glider_utils.ctd.salinity import (
-    calculate_practical_salinity
-)
-
-from glider_utils.ctd.density import (
+from glider_utils.ctd import (
+    calculate_practical_salinity,
     calculate_density
 )
 
@@ -201,11 +198,16 @@ class TestSalinity(unittest.TestCase):
 
 class TestDensity(unittest.TestCase):
     def setUp(self):
-        self.dataset = read_ctd_dataset()
+        self.ctd_dataset = read_ctd_dataset()
+        self.gps_dataset = read_gps_dataset()
+        self.gps_dataset = interpolate_gps(self.gps_dataset)
 
     def test_density(self):
-        salinity_dataset = calculate_practical_salinity(self.dataset)
-        density_dataset = calculate_density(salinity_dataset)
+        salinity_dataset = calculate_practical_salinity(self.ctd_dataset)
+        density_dataset = calculate_density(
+            salinity_dataset,
+            self.gps_dataset[:, 1], self.gps_dataset[:, 2]
+        )
         print density_dataset
         self.AssertNotEqual(
             len(density_dataset),
