@@ -43,8 +43,7 @@ def calculate_density(timestamps,
 
     Parameters:
         timestamps (UNIX epoch),
-        conductivity (S/cm), temperature (C), pressure (bar),
-        salinity (psu PSS-78),
+        temperature (C), pressure (bar), salinity (psu PSS-78),
         latitude (decimal degrees), longitude (decimal degrees)
 
     Returns:
@@ -53,12 +52,11 @@ def calculate_density(timestamps,
     """
 
     validate_glider_args(timestamps,
-                         temperature, pressure,
+                         temperature, pressure, salinity,
                          latitude, longitude)
 
     dBar_pressure = pressure * 10
 
-    print latitude
     absolute_salinity = SA_from_SP(
         salinity,
         dBar_pressure,
@@ -78,4 +76,4 @@ def calculate_density(timestamps,
         dBar_pressure
     )
 
-    return density, absolute_salinity, conservative_temperature
+    return density

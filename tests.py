@@ -136,7 +136,7 @@ class TestFindProfile(unittest.TestCase):
 
 class TestInterpolateGPS(unittest.TestCase):
     def setUp(self):
-        self.ctd_dataset = np.loadtxt('density_dataset.csv', delimiter=',')
+        self.ctd_dataset = np.loadtxt(ctd_filepath, delimiter=',')
 
     def test_interpolate_gps(self):
         est_lat, est_lon = interpolate_gps(
@@ -149,7 +149,7 @@ class TestInterpolateGPS(unittest.TestCase):
 
 class TestSalinity(unittest.TestCase):
     def setUp(self):
-        self.ctd_dataset = np.loadtxt('density_dataset.csv', delimiter=',')
+        self.ctd_dataset = np.loadtxt(ctd_filepath, delimiter=',')
 
     def test_practical_salinity(self):
         salinity = calculate_practical_salinity(
@@ -163,7 +163,7 @@ class TestSalinity(unittest.TestCase):
 
 class TestDensity(unittest.TestCase):
     def setUp(self):
-        self.ctd_dataset = np.loadtxt('density_dataset.csv', delimiter=',')
+        self.ctd_dataset = np.loadtxt(ctd_filepath, delimiter=',')
         self.lat, self.lon = interpolate_gps(
             self.ctd_dataset[:, 0],
             self.ctd_dataset[:, 4], self.ctd_dataset[:, 5]
@@ -183,11 +183,7 @@ class TestDensity(unittest.TestCase):
             salinity,
             self.lat, self.lon
         )
-        print density
-        self.AssertNotEqual(
-            len(density),
-            0
-        )
+        self.assertEqual(len(self.ctd_dataset[:, 0]), len(density))
 
 if __name__ == '__main__':
     unittest.main()
