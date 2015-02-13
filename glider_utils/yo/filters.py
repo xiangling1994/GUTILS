@@ -1,4 +1,4 @@
-from glider_utils import (
+from glider_utils.yo import (
     TIME_DIM,
     DATA_DIM
 )

@@ -1,19 +1,10 @@
 import numpy as np
 from scipy.signal import boxcar, convolve
 
-# Readability
-TIME_DIM = 0
-DATA_DIM = 1
-
 
 def clean_dataset(dataset):
     # Get rid of NaNs
-    dataset = dataset[~np.isnan(dataset[:, DATA_DIM])]
-
-    # Get rid of successive duplicate timestamps
-    # NOTE: Should not be a problem with merged datasets
-    keep_indexes = np.append([True], np.diff(dataset[:, TIME_DIM]) != 0)
-    dataset = dataset[keep_indexes]
+    dataset = dataset[~np.isnan(dataset[:, 1:]).any(axis=1), :]
 
     return dataset
 
@@ -23,34 +14,33 @@ def boxcar_smooth_dataset(dataset, window_size):
     return convolve(dataset, window, 'same') / window_size
 
 
-def validate_glider_dataset(dataset):
+def validate_glider_args(*args):
     """Validates a glider dataset
 
     Performs the following changes and checks:
     * Makes sure that there are at least 2 points in the dataset
     * Checks for netCDF4 fill types and changes them to NaNs
     * Tests for finite values in time and depth arrays
-
-    Returns validated dataset
     """
 
-    if len(dataset[:, TIME_DIM]) < 2:
+    arg_length = len(args[0])
+
+    # Time is assumed to be the first dataset
+    if arg_length < 2:
         raise IndexError('The time series must have at least two values')
 
-    # Set NC_FILL_VALUES to NaN for consistency if NetCDF lib available
-    try:
-        from netCDF4 import default_fillvals as NC_FILL_VALUES
-        dataset[dataset[:, TIME_DIM] == NC_FILL_VALUES['f8'], TIME_DIM] = float('nan')  # NOQA
-        (rows, cols) = dataset.shape
-        for i in range(1, cols):
-            dataset[dataset[:, i] == NC_FILL_VALUES['f8'], i] = float('nan')  # NOQA
-    except ImportError:
-        pass
+    for arg in args:
+        # Make sure all arguments have the same length
+        if len(arg) != arg_length:
+            raise ValueError('Arguments must all be the same length')
 
-    # Test for finite values
-    if len(dataset[np.isfinite(dataset[:, TIME_DIM])]) == 0:
-        raise ValueError('Time array has no finite values')
-    if len(dataset[np.isfinite(dataset[:, DATA_DIM])]) == 0:
-        raise ValueError('Data array has no finite values')
+        # Set NC_FILL_VALUES to NaN for consistency if NetCDF lib available
+        try:
+            from netCDF4 import default_fillvals as NC_FILL_VALUES
+            arg[arg == NC_FILL_VALUES['f8']] = float('nan')  # NOQA
+        except ImportError:
+            pass
 
-    return dataset
+        # Test for finite values
+        if len(arg[np.isfinite(arg)]) == 0:
+            raise ValueError('Data array has no finite values')

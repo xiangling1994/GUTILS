@@ -22,49 +22,6 @@ from glider_utils.ctd import (
 
 import numpy as np
 import pprint
-import csv
-
-
-def read_depth_dataset():
-    times = []
-    depth = []
-    with open('depth_data.csv', 'rb') as csvfile:
-        reader = csv.reader(csvfile, delimiter=',')
-        for row in reader:
-            times.append(float(row[0]))
-            depth.append(float(row[1]))
-
-    return np.column_stack((times, depth))
-
-
-def read_gps_dataset():
-    times = []
-    lat = []
-    lon = []
-    with open('gps_data.csv', 'rb') as csvfile:
-        reader = csv.reader(csvfile, delimiter=',')
-        for row in reader:
-            times.append(float(row[0]))
-            lat.append(float(row[1]))
-            lon.append(float(row[2]))
-
-    return np.column_stack((times, lat, lon))
-
-
-def read_ctd_dataset():
-    times = []
-    cond = []
-    temp = []
-    pres = []
-    with open('ctd_data.csv', 'rb') as csvfile:
-        reader = csv.reader(csvfile, delimiter=',')
-        for row in reader:
-            times.append(float(row[0]))
-            cond.append(float(row[1]))
-            temp.append(float(row[2]))
-            pres.append(float(row[3]))
-
-    return np.column_stack((times, cond, temp, pres))
 
 
 def is_continuous(profiled_dataset):
@@ -87,11 +44,15 @@ def is_continuous(profiled_dataset):
 def is_complete(profiled_dataset, dataset):
     return len(profiled_dataset) == len(dataset)
 
+ctd_filepath = 'ctd_dataset.csv'
+
 
 class TestFindProfile(unittest.TestCase):
     def setUp(self):
-        self.dataset = read_depth_dataset()
-        self.profiled_dataset = find_yo_extrema(self.dataset)
+        self.dataset = np.loadtxt(ctd_filepath, delimiter=',')
+        self.profiled_dataset = find_yo_extrema(
+            self.dataset[:, 0], self.dataset[:, 3]
+        )
 
     def test_find_profile(self):
         self.assertNotEqual(
@@ -175,42 +136,56 @@ class TestFindProfile(unittest.TestCase):
 
 class TestInterpolateGPS(unittest.TestCase):
     def setUp(self):
-        self.dataset = read_gps_dataset()
+        self.ctd_dataset = np.loadtxt('density_dataset.csv', delimiter=',')
 
     def test_interpolate_gps(self):
-        self.assertNotEqual(
-            len(interpolate_gps(self.dataset)),
-            0
+        est_lat, est_lon = interpolate_gps(
+            self.ctd_dataset[:, 0],
+            self.ctd_dataset[:, 4], self.ctd_dataset[:, 5]
         )
+        self.assertEqual(len(est_lat), len(est_lon))
+        self.assertEqual(len(self.ctd_dataset[:, 0]), len(est_lat))
 
 
 class TestSalinity(unittest.TestCase):
     def setUp(self):
-        self.dataset = read_ctd_dataset()
+        self.ctd_dataset = np.loadtxt('density_dataset.csv', delimiter=',')
 
     def test_practical_salinity(self):
-        salinity_dataset = calculate_practical_salinity(self.dataset)
-        self.assertNotEqual(
-            len(salinity_dataset),
-            0,
+        salinity = calculate_practical_salinity(
+            self.ctd_dataset[:, 0],
+            self.ctd_dataset[:, 1],
+            self.ctd_dataset[:, 2],
+            self.ctd_dataset[:, 3]
         )
+        self.assertEqual(len(self.ctd_dataset[:, 0]), len(salinity))
 
 
 class TestDensity(unittest.TestCase):
     def setUp(self):
-        self.ctd_dataset = read_ctd_dataset()
-        self.gps_dataset = read_gps_dataset()
-        self.gps_dataset = interpolate_gps(self.gps_dataset)
+        self.ctd_dataset = np.loadtxt('density_dataset.csv', delimiter=',')
+        self.lat, self.lon = interpolate_gps(
+            self.ctd_dataset[:, 0],
+            self.ctd_dataset[:, 4], self.ctd_dataset[:, 5]
+        )
 
     def test_density(self):
-        salinity_dataset = calculate_practical_salinity(self.ctd_dataset)
-        density_dataset = calculate_density(
-            salinity_dataset,
-            self.gps_dataset[:, 1], self.gps_dataset[:, 2]
+        salinity = calculate_practical_salinity(
+            self.ctd_dataset[:, 0],
+            self.ctd_dataset[:, 1],
+            self.ctd_dataset[:, 2],
+            self.ctd_dataset[:, 3]
         )
-        print density_dataset
+        density = calculate_density(
+            self.ctd_dataset[:, 0],
+            self.ctd_dataset[:, 2],
+            self.ctd_dataset[:, 3],
+            salinity,
+            self.lat, self.lon
+        )
+        print density
         self.AssertNotEqual(
-            len(density_dataset),
+            len(density),
             0
         )
 

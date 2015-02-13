@@ -1,105 +1,81 @@
 
 from glider_utils import (
-    validate_glider_dataset,
+    validate_glider_args,
 )
 
 from gsw.gibbs.practical_salinity import SP_from_C
 from gsw.gibbs.conversions import SA_from_SP, CT_from_t
 from gsw.gibbs.density_enthalpy_48 import rho
 
-COND_DIM = 1
-TEMP_DIM = 2
-PRES_DIM = 3
-SALI_DIM = 4
-LAT_DIM = 5
-LON_DIM = 6
-SA_DIM = 7
-CT_DIM = 8
-DEN_DIM = 9
 
-
-import numpy as np
-
-
-def calculate_practical_salinity(dataset):
+def calculate_practical_salinity(timestamps,
+                                 conductivity, temperature, pressure):
     """Calculates practical salinity given glider conductivity, temperature,
     and pressure using Gibbs gsw SP_from_C function.
 
     Parameters:
-        'dataset': An N x 4 array of timestamps(UNIX epoch),
-            conductivity (S/m), temperature (C), and pressure (bar).
+        timestamp, conductivity (S/m), temperature (C), and pressure (bar).
 
     Returns:
-        'salinity_dataset': An N x 5 array of timestamps (UNIX epoch),
-            conductivity (mS/cm), temperature (C), pressure (dbar) and
-            salinity (psu PSS-78).
+        salinity (psu PSS-78).
     """
 
-    salinity_dataset = np.zeros((len(dataset), 5))
-    for i in range(0, 4):
-        salinity_dataset[:, i] = dataset[:, i]
-
-    salinity_dataset = validate_glider_dataset(salinity_dataset)
+    validate_glider_args(timestamps, conductivity, temperature, pressure)
 
     # Convert S/m to mS/cm
-    salinity_dataset[:, COND_DIM] *= 10
+    mS_conductivity = conductivity * 10
 
     # Convert bar to dbar
-    salinity_dataset[:, PRES_DIM] *= 10
+    dBar_pressure = pressure * 10
 
-    salinity_dataset[:, SALI_DIM] = SP_from_C(
-        salinity_dataset[:, COND_DIM],
-        salinity_dataset[:, TEMP_DIM],
-        salinity_dataset[:, PRES_DIM]
+    return SP_from_C(
+        mS_conductivity,
+        temperature,
+        dBar_pressure
     )
 
-    return salinity_dataset
 
-
-def calculate_density(salinity_dataset, latitude, longitude):
+def calculate_density(timestamps,
+                      temperature, pressure, salinity,
+                      latitude, longitude):
     """Calculates density given glider practical salinity, pressure, latitude,
     and longitude using Gibbs gsw SA_from_SP and rho functions.
 
     Parameters:
-        'salinity_dataset': An N x 5 array of timestamps (UNIX epoch),
-              conductivity (mS/cm), temperature (C), pressure (dbar) and
-              salinity (psu PSS-78).
-        'latitude': An N dimensional array of latitude values
-        'longitude': An N dimensional array of longitude values
+        timestamps (UNIX epoch),
+        conductivity (S/cm), temperature (C), pressure (bar),
+        salinity (psu PSS-78),
+        latitude (decimal degrees), longitude (decimal degrees)
 
     Returns:
-        'density_dataset': An N x 10 array of timestamps, conductivity(mS/cm),
-            temperature (C), pressure (dbar), salinity (psu PSS-78), latitude,
-            longitude, absolute salinity(g/kg), conservative temperature (C)
-            and density (kg/m**3)
+        density (kg/m**3),
+        absolute salinity(g/kg), conservative temperature (C)
     """
 
-    density_dataset = np.zeros((len(salinity_dataset), 10))
-    for i in range(0, 5):
-        density_dataset[:, i] = salinity_dataset[:, i]
+    validate_glider_args(timestamps,
+                         temperature, pressure,
+                         latitude, longitude)
 
-    density_dataset[:, LAT_DIM] = latitude
-    density_dataset[:, LON_DIM] = longitude
+    dBar_pressure = pressure * 10
 
-    density_dataset = validate_glider_dataset(density_dataset)
-
-    density_dataset[:, SA_DIM] = SA_from_SP(
-        density_dataset[:, SALI_DIM],
-        density_dataset[:, PRES_DIM],
-        density_dataset[:, LON_DIM],
-        density_dataset[:, LAT_DIM]
+    print latitude
+    absolute_salinity = SA_from_SP(
+        salinity,
+        dBar_pressure,
+        longitude,
+        latitude
     )
 
-    density_dataset[:, CT_DIM] = CT_from_t(
-        density_dataset[:, SA_DIM],
-        density_dataset[:, TEMP_DIM],
-        density_dataset[:, PRES_DIM]
+    conservative_temperature = CT_from_t(
+        absolute_salinity,
+        temperature,
+        dBar_pressure
     )
 
-    density_dataset[:, DEN_DIM] = rho(
-        density_dataset[:, SA_DIM],
-        density_dataset[:, CT_DIM],
-        density_dataset[:, PRES_DIM]
+    density = rho(
+        absolute_salinity,
+        conservative_temperature,
+        dBar_pressure
     )
 
-    return density_dataset
+    return density, absolute_salinity, conservative_temperature

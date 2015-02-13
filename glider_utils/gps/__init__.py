@@ -1,17 +1,12 @@
 from glider_utils import (
-    TIME_DIM,
-    validate_glider_dataset,
+    validate_glider_args,
     clean_dataset
 )
 
-from scipy.interpolate import interp1d
-
-# Readability
-LAT_DIM = 1
-LON_DIM = 2
+import numpy as np
 
 
-def interpolate_gps(dataset):
+def interpolate_gps(timestamps, latitude, longitude):
     """Calculates interpolated GPS coordinates between the two surfacings
     in a single glider binary data file.
 
@@ -21,33 +16,38 @@ def interpolate_gps(dataset):
     Returns interpolated gps dataset over entire time domain of dataset
     """
 
-    dataset = validate_glider_dataset(dataset)
-    est_data = dataset.copy()
+    validate_glider_args(timestamps, latitude, longitude)
 
-    est_data = clean_dataset(est_data)
+    dataset = np.column_stack((
+        timestamps,
+        latitude,
+        longitude
+    ))
+
+    dataset = clean_dataset(dataset)
+
+    est_lat = np.zeros(len(latitude))
+    est_lon = np.zeros(len(longitude))
 
     # If only one GPS point, make it the same for the entire dataset
-    if len(est_data) == 1:
-        dataset[:, LAT_DIM:LON_DIM+1] = est_data[0, LAT_DIM:LON_DIM+1]
+    if len(dataset) == 1:
+        est_lat[:] = dataset[0, 1]
+        est_lon[:] = dataset[0, 2]
     else:
-        # Bump the first GPS timestamp to the first dataset timestamp
-        est_data[0, TIME_DIM] = dataset[0, TIME_DIM]
-
-        # Drop the last GPS timestamp to the last dataset timestamp
-        est_data[-1, TIME_DIM] = dataset[-1, TIME_DIM]
-
         # Interpolate data
-        f_lat = interp1d(
-            est_data[:, TIME_DIM],
-            est_data[:, LAT_DIM],
-            kind='linear'
+        est_lat = np.interp(
+            timestamps,
+            dataset[:, 0],
+            dataset[:, 1],
+            left=dataset[0, 1],
+            right=dataset[-1, 1]
         )
-        f_lon = interp1d(
-            est_data[:, TIME_DIM],
-            est_data[:, LON_DIM],
-            kind='linear'
+        est_lon = np.interp(
+            timestamps,
+            dataset[:, 0],
+            dataset[:, 2],
+            left=dataset[0, 2],
+            right=dataset[-1, 2]
         )
-        dataset[:, LAT_DIM] = f_lat(dataset[:, TIME_DIM])
-        dataset[:, LON_DIM] = f_lon(dataset[:, TIME_DIM])
 
-    return dataset
+    return est_lat, est_lon

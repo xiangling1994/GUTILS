@@ -1,24 +1,15 @@
 
 import numpy as np
-from scipy.interpolate import interp1d
 
 from glider_utils import (
-    TIME_DIM,
-    DATA_DIM,
-    validate_glider_dataset,
+    validate_glider_args,
     clean_dataset,
     boxcar_smooth_dataset
 )
 
-
-def interpolate_yos(estimated_dataset, dataset):
-    # Use cubic to approximate yo
-    f = interp1d(
-        estimated_dataset[:, TIME_DIM],
-        estimated_dataset[:, DATA_DIM],
-        kind='cubic'
-    )
-    return f(dataset[:, TIME_DIM])
+# For Readability
+TIME_DIM = 0
+DATA_DIM = 1
 
 
 def binarize_diff(data):
@@ -48,7 +39,7 @@ def create_profile_entry(dataset, start, end):
     }
 
 
-def find_yo_extrema(dataset):
+def find_yo_extrema(timestamps, depth):
     """Returns timestamps, row indices, and depth and time bounds
     corresponding to glider yo profiles
 
@@ -57,18 +48,20 @@ def find_yo_extrema(dataset):
     returned.
 
     Parameters:
-        'dataset': An N by 2 numpy array of time, depth pairs
+        time, depth
 
     Returns:
-        'profiled_dataset': An N by 3 numpy array of time, depth,
-            and profile pairs
+        A Nx3 array of timestamps, depth, and profile ids
 
     Use filter_yo_extrema to remove invalid/incomplete profiles
     """
 
-    dataset = validate_glider_dataset(dataset)
+    validate_glider_args(timestamps, depth)
 
-    est_data = dataset.copy()
+    est_data = np.column_stack((
+        timestamps,
+        depth
+    ))
 
     # Set negative depth values to NaN
     est_data[est_data[:, DATA_DIM] <= 0] = float('nan')
@@ -76,10 +69,13 @@ def find_yo_extrema(dataset):
     est_data = clean_dataset(est_data)
 
     # Stretch estimated values for interpolation to span entire dataset
-    est_data[0, TIME_DIM] = dataset[0, TIME_DIM]
-    est_data[-1, TIME_DIM] = dataset[-1, TIME_DIM]
-
-    interp_data = interpolate_yos(est_data, dataset)
+    interp_data = np.interp(
+        timestamps,
+        est_data[:, 0],
+        est_data[:, 1],
+        left=est_data[0, 1],
+        right=est_data[-1, 1]
+    )
 
     interp_data = boxcar_smooth_dataset(interp_data, 5)
 
@@ -87,8 +83,8 @@ def find_yo_extrema(dataset):
 
     interp_indices = np.argwhere(delta_depth == 0).flatten()
 
-    profiled_dataset = np.zeros((len(dataset), 3))
-    profiled_dataset[:, TIME_DIM] = dataset[:, TIME_DIM]
+    profiled_dataset = np.zeros((len(timestamps), 3))
+    profiled_dataset[:, TIME_DIM] = timestamps
     profiled_dataset[:, DATA_DIM] = interp_data
 
     start_index = 0
