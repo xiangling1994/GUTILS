@@ -1,21 +1,23 @@
+#!/usr/bin/env python
+
 import unittest
 
-from glider_utils.yo import (
+from gutils.yo import (
     find_yo_extrema
 )
 
-from glider_utils.yo.filters import (
+from gutils.yo.filters import (
     filter_profile_depth,
     filter_profile_time,
     filter_profile_distance,
     filter_profile_number_of_points
 )
 
-from glider_utils.gps import (
+from gutils.gps import (
     interpolate_gps
 )
 
-from glider_utils.ctd import (
+from gutils.ctd import (
     calculate_practical_salinity,
     calculate_density
 )
@@ -48,6 +50,7 @@ ctd_filepath = 'ctd_dataset.csv'
 
 
 class TestFindProfile(unittest.TestCase):
+
     def setUp(self):
         self.dataset = np.loadtxt(ctd_filepath, delimiter=',')
         self.profiled_dataset = find_yo_extrema(
@@ -135,6 +138,7 @@ class TestFindProfile(unittest.TestCase):
 
 
 class TestInterpolateGPS(unittest.TestCase):
+
     def setUp(self):
         self.ctd_dataset = np.loadtxt(ctd_filepath, delimiter=',')
 
@@ -148,6 +152,7 @@ class TestInterpolateGPS(unittest.TestCase):
 
 
 class TestSalinity(unittest.TestCase):
+
     def setUp(self):
         self.ctd_dataset = np.loadtxt(ctd_filepath, delimiter=',')
 
@@ -162,6 +167,7 @@ class TestSalinity(unittest.TestCase):
 
 
 class TestDensity(unittest.TestCase):
+
     def setUp(self):
         self.ctd_dataset = np.loadtxt(ctd_filepath, delimiter=',')
         self.lat, self.lon = interpolate_gps(

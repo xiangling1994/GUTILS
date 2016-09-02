@@ -1,4 +1,6 @@
-from glider_utils import (
+#!/usr/bin/env python
+
+from gutils import (
     validate_glider_args,
     clean_dataset
 )

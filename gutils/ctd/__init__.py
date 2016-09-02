@@ -1,5 +1,6 @@
+#!/usr/bin/env python
 
-from glider_utils import (
+from gutils import (
     validate_glider_args,
 )
 

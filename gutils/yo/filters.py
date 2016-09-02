@@ -1,9 +1,11 @@
-from glider_utils.yo import (
+#!/usr/bin/env python
+
+import numpy as np
+
+from gutils.yo import (
     TIME_DIM,
     DATA_DIM
 )
-
-import numpy as np
 
 
 def filter_profiles(dataset, conditional):
@@ -21,7 +23,7 @@ def filter_profiles(dataset, conditional):
     num_profiles = int(max(dataset[:, 2]) + 1)
     for profile_id in range(0, num_profiles):
         profile = dataset[dataset[:, 2] == profile_id]
-        end_index = np.where(dataset[:, 2] == profile_id)[0][-1]+1
+        end_index = np.where(dataset[:, 2] == profile_id)[0][-1] + 1
         if conditional(profile):
             filtered_dataset[start_index:end_index, 2] = last_good_profile
             start_index = end_index

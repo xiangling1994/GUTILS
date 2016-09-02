@@ -1,14 +1,22 @@
+#!/usr/bin/env python
+
 from distutils.core import setup
 
 setup(
-    name='glider_utils',
+    name='gutils',
     version='1.0',
     author='Michael Lindemuth',
     author_email='mlindemu@usf.edu',
+    install_requires=[
+        'gbdr',
+        'gsw',
+        'numpy',
+        'scipy'
+    ],
     packages=[
-        'glider_utils',
-        'glider_utils.yo',
-        'glider_utils.gps',
-        'glider_utils.ctd'
+        'gutils',
+        'gutils.yo',
+        'gutils.gps',
+        'gutils.ctd'
     ]
 )

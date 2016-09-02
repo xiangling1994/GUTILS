@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-from glider_binary_data_reader import (
+from gbdr import (
     GliderBDReader,
     MergedGliderBDReader
 )

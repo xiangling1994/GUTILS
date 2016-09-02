@@ -1,5 +1,11 @@
+#!/usr/bin/env python
+
 import numpy as np
 from scipy.signal import boxcar, convolve
+
+import logging
+logger = logging.getLogger('g.gutils')
+logger.addHandler(logging.NullHandler())
 
 
 def clean_dataset(dataset):

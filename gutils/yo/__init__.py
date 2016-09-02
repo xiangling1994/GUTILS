@@ -1,7 +1,8 @@
+#!/usr/bin/env python
 
 import numpy as np
 
-from glider_utils import (
+from gutils import (
     validate_glider_args,
     clean_dataset,
     boxcar_smooth_dataset
@@ -29,9 +30,9 @@ def calculate_delta_depth(interp_data):
 
 def create_profile_entry(dataset, start, end):
     time_start = dataset[start, TIME_DIM]
-    time_end = dataset[end-1, TIME_DIM]
+    time_end = dataset[end - 1, TIME_DIM]
     depth_start = dataset[start, DATA_DIM]
-    depth_end = dataset[end-1, DATA_DIM]
+    depth_end = dataset[end - 1, DATA_DIM]
     return {
         'index_bounds': (start, end),
         'time_bounds': (time_start, time_end),
@@ -94,6 +95,6 @@ def find_yo_extrema(timestamps, depth):
         start_index = end_index
 
     if start_index < len(profiled_dataset):
-        profiled_dataset[start_index:, 2] = len(interp_indices)-1
+        profiled_dataset[start_index:, 2] = len(interp_indices) - 1
 
     return profiled_dataset
