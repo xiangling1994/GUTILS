@@ -1,0 +1,33 @@
+package:
+    name: gutils
+    version: "0.0.1"
+
+source:
+    path: ../
+
+build:
+    number: 0
+    script: python setup.py install --single-version-externally-managed --record=record.txt
+
+requirements:
+    build:
+        - python
+        - setuptools
+    run:
+        - python
+        - gbdr
+        - gsw
+        - numpy
+        - scipy
+
+test:
+    imports:
+        - gutils
+        - gutils.ctd
+        - gutils.gps
+        - gutils.yo
+
+about:
+    home: https://github.com/axiom-data-science/GUTILS
+    license: MIT License
+    summary: 'A set of Python utilities for post processing glider data'
