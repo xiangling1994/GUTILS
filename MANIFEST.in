@@ -1,0 +1,5 @@
+include *.txt
+recursive-include tests *.tbd *.sbd
+include README.md
+include LICENSE
+include VERSION

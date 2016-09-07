@@ -6,14 +6,14 @@ from gbdr import (
 )
 
 flightReader = GliderBDReader(
-    ['./test_data/usf-bass/usf-bass-2014-061-1-0.sbd']
+    ['./tests/resources/usf-bass/usf-bass-2014-061-1-0.sbd']
 )
 scienceReader = GliderBDReader(
-    ['./test_data/usf-bass/usf-bass-2014-061-1-0.tbd']
+    ['./tests/resources/usf-bass/usf-bass-2014-061-1-0.tbd']
 )
 reader = MergedGliderBDReader(flightReader, scienceReader)
 
-with open('ctd_dataset.csv', 'w') as f:
+with open('./tests/resources/usf-bass/ctd_dataset.csv', 'w') as f:
     for line in reader:
         f.write('%f,%f,%f,%f,%f,%f\r\n' % (
             line.get('timestamp'),

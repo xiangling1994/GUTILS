@@ -2,3 +2,4 @@ gbdr
 gsw
 numpy
 scipy
+pytest
