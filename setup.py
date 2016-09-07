@@ -19,7 +19,7 @@ reqs = [line.strip() for line in open('requirements.txt') if not line.startswith
 setup(
     name='gutils',
     version=version(),
-    descriptoin='A set of Python utilities for post processing Teledyne Webb '
+    description='A set of Python utilities for post processing Teledyne Webb '
                 'Slocum Glider data',
     long_description=readme(),
     author='Michael Lindemuth',
