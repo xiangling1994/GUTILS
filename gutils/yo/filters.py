@@ -36,11 +36,12 @@ def filter_profiles(dataset, conditional):
 # Convenience methods follow
 
 
-def filter_profile_depth(dataset, below=1):
+def filter_profile_depth(dataset, below=None):
     """Filters out profiles that are not below a certain depth (Default: 1m)
 
     Returns the filtered set of profiles
     """
+    below = below or 1
 
     def conditional(profile):
         depth_max = max(profile[:, DATA_DIM])
@@ -49,12 +50,13 @@ def filter_profile_depth(dataset, below=1):
     return filter_profiles(dataset, conditional)
 
 
-def filter_profile_time(dataset, timespan_condition=10):
+def filter_profile_time(dataset, timespan_condition=None):
     """Filters out profiles that do not span a specified number of seconds
     (Default: 10 seconds)
 
     Returns the filtered set of profiles
     """
+    timespan_condition = timespan_condition or 10
 
     def conditional(profile):
         timespan = profile[-1, TIME_DIM] - profile[0, TIME_DIM]
@@ -63,12 +65,13 @@ def filter_profile_time(dataset, timespan_condition=10):
     return filter_profiles(dataset, conditional)
 
 
-def filter_profile_distance(dataset, distance_condition=1):
+def filter_profile_distance(dataset, distance_condition=None):
     """Filters out profiles that do not span a specified vertical distance
     (Default: 1m)
 
     Returns the filtered set of profiles
     """
+    distance_condition = distance_condition or 1
 
     def conditional(profile):
         distance = abs(profile[-1, DATA_DIM] - profile[0, DATA_DIM])
@@ -77,12 +80,13 @@ def filter_profile_distance(dataset, distance_condition=1):
     return filter_profiles(dataset, conditional)
 
 
-def filter_profile_number_of_points(dataset, points_condition=5):
+def filter_profile_number_of_points(dataset, points_condition=None):
     """Filters out profiles that do not have a specified number of points
-    (Default: 3 points)
+    (Default: 5 points)
 
     Returns the filtered set of profiles
     """
+    points_condition = points_condition or 5
 
     def conditional(profile):
         return len(profile) >= points_condition
