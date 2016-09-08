@@ -8,6 +8,15 @@ from gutils.yo import (
 )
 
 
+def default_filter(dataset):
+    dataset = filter_profile_depth(dataset)
+    dataset = filter_profile_number_of_points(dataset)
+    dataset = filter_profile_time(dataset)
+    dataset = filter_profile_distance(dataset)
+
+    return dataset
+
+
 def filter_profiles(dataset, conditional):
     """Filters out profiles that do not meet some criteria
 
