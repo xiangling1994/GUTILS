@@ -27,11 +27,12 @@ install:
 
   # Install testing requirements
   # ------------------------------------
-  - conda install --file requirements.txt pytest conda-build anaconda-client
+  - conda install --file requirements.txt pytest
   - conda list --export
 
 script:
   - py.test -s -rxs -v
+  - conda install -n root conda-build anaconda-client
   - conda build conda-recipe
   - conda install gutils --use-local
 
