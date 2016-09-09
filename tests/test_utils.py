@@ -25,6 +25,11 @@ from gutils.ctd import (
 
 import numpy as np
 
+import logging
+logger = logging.getLogger()
+logger.addHandler(logging.StreamHandler())
+logger.setLevel(logging.DEBUG)
+
 
 def is_continuous(profiled_dataset):
     last_profile_id = 0

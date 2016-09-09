@@ -1,5 +1,7 @@
 include *.txt
-recursive-include tests *.tbd *.sbd
+recursive-include tests *.tbd *.sbd *.json *.csv
+recursive-include gutils/gbdr/bin *
+recursive-include gutils *.json
 include README.md
 include LICENSE
 include VERSION

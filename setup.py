@@ -19,8 +19,8 @@ reqs = [line.strip() for line in open('requirements.txt') if not line.startswith
 setup(
     name='gutils',
     version=version(),
-    description='A set of Python utilities for post processing Teledyne Webb '
-                'Slocum Glider data',
+    description='A set of Python utilities for reading, merging, and post '
+                'processing Teledyne Webb Slocum Glider data.',
     long_description=readme(),
     author='Michael Lindemuth',
     author_email='mlindemu@usf.edu',
@@ -28,10 +28,14 @@ setup(
     url='https://github.com/axiom-data-science/GUTILS',
     packages=[
         'gutils',
-        'gutils.ctd',
-        'gutils.gps',
         'gutils.yo',
+        'gutils.gbdr'
     ],
+    scripts=[
+        'gutils/scripts/check_glider_netcdf.py',
+        'gutils/scripts/create_glider_netcdf.py',
+    ],
+    include_package_data=True,
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',

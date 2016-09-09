@@ -1,6 +1,6 @@
 package:
     name: gutils
-    version: "1.0.1"
+    version: "1.1.0"
 
 source:
     path: ../
@@ -15,10 +15,10 @@ requirements:
         - setuptools
     run:
         - python
-        - gbdr
         - gsw
         - numpy
         - scipy
+        - netcdf4
 
 test:
     imports:
@@ -26,8 +26,13 @@ test:
         - gutils.ctd
         - gutils.gps
         - gutils.yo
+        - gutils.yo.filters
+        - gutils.nc
+        - gutils.gbdr
+        - gutils.gbdr.methods
 
 about:
     home: https://github.com/axiom-data-science/GUTILS
     license: MIT License
-    summary: 'A set of Python utilities for post processing glider data'
+    license_file: LICENSE
+    summary: A set of Python utilities for reading, merging, and post processing Teledyne Webb Slocum Glider data

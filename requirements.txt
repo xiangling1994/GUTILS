@@ -1,5 +1,4 @@
-gbdr>=1.0.1
 gsw
 numpy
 scipy
-pytest
+netCDF4
