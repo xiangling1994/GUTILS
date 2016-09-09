@@ -1,5 +1,7 @@
 # Glider Utilities (GUTILS)
 
+[![Build Status](https://travis-ci.org/SECOORA/GUTILS.svg?branch=master)](https://travis-ci.org/SECOORA/GUTILS)
+
 A set of Python utilities for reading, merging, and post processing Teledyne Webb Slocum Glider data.
 
 
