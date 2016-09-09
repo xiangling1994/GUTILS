@@ -10,7 +10,6 @@
         "sea_name" : "Gulf of Mexico",
         "title" : "Slocum Glider Dataset",
         "platform_type": "Slocum Glider",
-        "id": "usf-bass-20140303T1600",
         "wmo_id": 4801516
     },
     "platform": {

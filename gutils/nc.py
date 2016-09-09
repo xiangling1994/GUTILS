@@ -242,6 +242,7 @@ class GliderNetCDFWriter(object):
             trajectory_var = self.nc.variables['trajectory']
 
         trajectory_var[:] = stringtoarr(traj_str, len(traj_str))
+        self.nc.id = traj_str  # Global id variable
 
     def check_datatype_exists(self, key):
         if key not in self.datatypes:
