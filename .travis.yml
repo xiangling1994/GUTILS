@@ -36,6 +36,11 @@ script:
   - conda build conda-recipe
   - conda install gutils --use-local
 
+after_success:
+  - if [ "$TRAVIS_PULL_REQUEST" == "false" ] && [ "$TRAVIS_TAG" != "" ]; then
+    anaconda upload --force -t $ANACONDA_TOKEN -u axiom-data-science $HOME/miniconda/**/*.tar.bz2
+    fi
+
 deploy:
   provider: releases
   api_key:
