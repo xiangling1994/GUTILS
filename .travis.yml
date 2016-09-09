@@ -32,6 +32,8 @@ install:
 
 script:
   - py.test -s -rxs -v
+  - conda build conda-recipe
+  - conda install gutils --use-local
 
 deploy:
   provider: releases
