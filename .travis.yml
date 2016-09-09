@@ -27,7 +27,7 @@ install:
 
   # Install testing requirements
   # ------------------------------------
-  - conda install --file requirements.txt pytest
+  - conda install --file requirements.txt pytest conda-build anaconda-client
   - conda list --export
 
 script:
