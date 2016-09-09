@@ -182,23 +182,19 @@ def create_arg_parser():
     )
 
     parser.add_argument(
-        'glider_name',
-        help='Name of glider that generated given binary files.'
-    )
-
-    parser.add_argument(
         'glider_config_path',
-        help='Path to configuration files for institution.'
+        help='Path to configuration files for this specific glider deployment.'
     )
 
     parser.add_argument(
         'output_path',
-        help='Path to file for NetCDF output.'
+        help='Path to folder to save NetCDF output. A directory named after '
+             'the deployment will be created here'
     )
 
     parser.add_argument(
         '-m', '--mode',
-        help="Set the mode for the file nameing convention (rt or delayed?)",
+        help="Set the mode for the file naming convention (rt or delayed?)",
         default="delayed"
     )
 
@@ -241,14 +237,13 @@ def create_arg_parser():
     return parser
 
 
-def read_attrs(glider_config_path, glider_name):
+def read_attrs(glider_config_path):
     # Load in configurations
     attrs = {}
 
     def cfg_file(name):
         return os.path.join(
             glider_config_path,
-            glider_name,
             name
         )
 
@@ -277,6 +272,12 @@ def process_dataset(args, attrs):
     flight_path = args.flight
     science_path = args.science
 
+    glider_name = attrs['deployment']['glider']
+    deployment_name = '{}-{}'.format(
+        glider_name,
+        attrs['deployment']['trajectory_date']
+    )
+
     try:
         # Find profile breaks
         profiles = find_profiles(flight_path, science_path, args.time, args.depth)
@@ -301,12 +302,13 @@ def process_dataset(args, attrs):
             # Open new NetCDF
             begin_time = datetime.fromtimestamp(line['timestamp'])
             filename = "%s_%s_%s.nc" % (
-                args.glider_name,
+                glider_name,
                 begin_time.isoformat(),
                 args.mode
             )
             file_path = os.path.join(
                 args.output_path,
+                deployment_name,
                 filename
             )
 
@@ -369,7 +371,7 @@ def main():
     if args.segment_id is None:
         args.segment_id = find_segment_id(args.flight, args.science)
 
-    attrs = read_attrs(args.glider_config_path, args.glider_name)
+    attrs = read_attrs(args.glider_config_path)
 
     return process_dataset(args, attrs)
 

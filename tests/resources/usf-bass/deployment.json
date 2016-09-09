@@ -1,6 +1,6 @@
 {
     "glider": "usf-bass",
-    "trajectory_date": "usf-bass-20150407T1300Z",
+    "trajectory_date": "20150407T1300Z",
     "global_attributes": {
         "acknowledgement" : "Florida Fish and Wildlife Conservation Commission",
         "featureType" : "trajectory",
@@ -19,6 +19,5 @@
         "long_name": "Slocum Glider USF Bass",
         "comment": "",
         "instrument": ""
-    },
-    "directory": "usfbass-20150407T1300Z"
+    }
 }

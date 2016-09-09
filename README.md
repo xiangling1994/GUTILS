@@ -41,14 +41,13 @@ $ create_glider_netcdf.py -h
 $ create_glider_netcdf.py \
     -f <path to flight file> \
     -s <path to science file> \
-    <glider name> \
-    <base config directory> \
+    <glider config directory> \
     <NetCDF output directory>
 ```
 
 Outputs a set of profiles from a merged flight and science dataset NetCDF files to the output directory.  *Can also specify only a flight (-f) or science (-s) file without the corresponding file.*
 
-For the example above, the base config directory would be something like [this](https://github.com/axiom-data-science/GUTILS/tree/master/tests/resources/).  Do not point directly at a glider configuration directory.  That is why you must specify a glider name.
+For the example above, the glider config directory would be something like [this](https://github.com/axiom-data-science/GUTILS/tree/master/tests/resources/usf-bass).  Point directly at a glider configuration directory.
 
 ###### Check NetCDF File
 
