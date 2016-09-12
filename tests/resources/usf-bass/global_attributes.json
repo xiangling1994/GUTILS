@@ -1,6 +1,6 @@
 {
     "Conventions" : "CF-1.6",
-    "Metadata_Conventions" : "Unidata Dataset Discovery v1.0",
+    "Metadata_Conventions" : "CF-1.6, Unidata Dataset Discovery v1.0",
     "cdm_data_type" : "Trajectory",
     "creator_email" : "mlindemu@usf.edu",
     "creator_name" : "Michael Lindemuth",
@@ -18,7 +18,7 @@
     "publisher_name" : "Michael Lindemuth",
     "publisher_url" : "http://www.marine.usf.edu/COT/",
     "references" : " ",
-    "standard_name_vocabulary" : "CF-v25",
+    "standard_name_vocabulary" : "CF Standard Name Table v27",
     "source" : "Observational data from a profiling glider",
     "summary" : "The University of South Florida operates gliders mainly in the Gulf of Mexico and Southern Atlantic.  Gliders are small, free-swimming, unmanned vehicles that use changes in buoyancy to move vertically and horizontally through the water column in a saw-tooth pattern. They are deployed for days to several months and gather detailed information about the physical, chemical and biological processes of the world\"s The Slocum glider was designed and oceans. built by Teledyne Webb Research Corporation, Falmouth, MA, USA.",
     "title" : "Slocum Glider Dataset",
