@@ -305,7 +305,7 @@ def process_dataset(args):
     for line in reader:
         if profile_end < line[timestr]:
             # Open new NetCDF
-            begin_time = datetime.fromtimestamp(line[timestr])
+            begin_time = datetime.utcfromtimestamp(line[timestr])
             filename = "%s_%s_%s.nc" % (
                 glider_name,
                 begin_time.strftime("%Y%m%dT%H%M%SZ"),

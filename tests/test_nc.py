@@ -78,11 +78,11 @@ class TestCreateGliderScript(unittest.TestCase):
 
         output_files = os.listdir(output('bass-20150407T1300Z'))
         assert len(output_files) == 5
-        assert 'bass_20140303T095556Z_rt.nc' in output_files
-        assert 'bass_20140303T100510Z_rt.nc' in output_files
-        assert 'bass_20140303T101015Z_rt.nc' in output_files
-        assert 'bass_20140303T101624Z_rt.nc' in output_files
-        assert 'bass_20140303T102040Z_rt.nc' in output_files
+        assert 'bass_20140303T145556Z_rt.nc' in output_files
+        assert 'bass_20140303T150510Z_rt.nc' in output_files
+        assert 'bass_20140303T151015Z_rt.nc' in output_files
+        assert 'bass_20140303T151624Z_rt.nc' in output_files
+        assert 'bass_20140303T152040Z_rt.nc' in output_files
 
 
 class TestMergedGliderDataReader(unittest.TestCase):
