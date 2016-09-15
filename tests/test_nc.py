@@ -47,7 +47,7 @@ def output(*args):
 class TestCreateGliderScript(unittest.TestCase):
 
     def tearDown(self):
-        shutil.rmtree(output())
+        shutil.rmtree(output('bass-20150407T1300Z'))
 
     def test_script(self):
         nt = namedtuple('Arguments', [
@@ -76,18 +76,19 @@ class TestCreateGliderScript(unittest.TestCase):
 
         process_dataset(args)
 
-        assert len(os.listdir(output('bass-20150407T1300Z'))) == 5
-        assert os.path.isfile(output('bass-20150407T1300Z', 'bass_20140303T095556Z_rt.nc'))
-        assert os.path.isfile(output('bass-20150407T1300Z', 'bass_20140303T100510Z_rt.nc'))
-        assert os.path.isfile(output('bass-20150407T1300Z', 'bass_20140303T101015Z_rt.nc'))
-        assert os.path.isfile(output('bass-20150407T1300Z', 'bass_20140303T101624Z_rt.nc'))
-        assert os.path.isfile(output('bass-20150407T1300Z', 'bass_20140303T102040Z_rt.nc'))
+        output_files = os.listdir(output('bass-20150407T1300Z'))
+        assert len(output_files) == 5
+        assert 'bass_20140303T095556Z_rt.nc' in output_files
+        assert 'bass_20140303T100510Z_rt.nc' in output_files
+        assert 'bass_20140303T101015Z_rt.nc' in output_files
+        assert 'bass_20140303T101624Z_rt.nc' in output_files
+        assert 'bass_20140303T102040Z_rt.nc' in output_files
 
 
 class TestMergedGliderDataReader(unittest.TestCase):
 
     def tearDown(self):
-        shutil.rmtree(output())
+        os.remove(output('test.nc'))
 
     def setUp(self):
         # Load NetCDF Configs
