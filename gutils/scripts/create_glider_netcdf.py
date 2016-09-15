@@ -347,6 +347,7 @@ def process_dataset(args, attrs):
                 logger.error('{}: '.format(
                     'Could not compute salinity or density')
                 )
+            glider_nc.update_bounds()
 
         profile_id += 1
 
