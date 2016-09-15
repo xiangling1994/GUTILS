@@ -11,7 +11,9 @@
 import os
 import sys
 import json
+import shutil
 import argparse
+import tempfile
 from datetime import datetime
 
 import numpy as np
@@ -114,17 +116,7 @@ def fill_gps(line, interp_gps, time_name, gps_prefix):
 
 
 def init_netcdf(file_path, attrs, segment_id, profile_id):
-    # Check if the output path already exists, remove old file
-    mode = 'w'
-    if os.path.isfile(file_path):
-        os.remove(file_path)
-
-    try:
-        os.makedirs(os.path.dirname(file_path))
-    except OSError:
-        pass  # destination folder exists
-
-    with open_glider_netcdf(file_path, mode) as glider_nc:
+    with open_glider_netcdf(file_path, 'w') as glider_nc:
         # Set global attributes
         glider_nc.set_global_attributes(attrs['global'])
 
@@ -302,8 +294,17 @@ def process_dataset(args):
     uv_values = None
     empty_uv_processed_paths = []
     reader = create_reader(flight_path, science_path)
+
+    # Tempdirectory
+    tmpdir = tempfile.mkdtemp()
+
     for line in reader:
         if profile_end < line[timestr]:
+            # New profile! init the NetCDF output file
+
+            # Path to hold file while we create it
+            _, tmp_path = tempfile.mkstemp(dir=tmpdir, suffix='.nc', prefix='gutils')
+
             # Open new NetCDF
             begin_time = datetime.utcfromtimestamp(line[timestr])
             filename = "%s_%s_%s.nc" % (
@@ -311,20 +312,19 @@ def process_dataset(args):
                 begin_time.strftime("%Y%m%dT%H%M%SZ"),
                 args.mode
             )
+
             file_path = os.path.join(
                 args.output_path,
                 deployment_name,
                 filename
             )
 
-            profile = profiles[profiles[:, 2] == profile_id]
-
             # NOTE: Store 1 based profile id
-            init_netcdf(file_path, attrs, args.segment_id, profile_id + 1)
+            init_netcdf(tmp_path, attrs, args.segment_id, profile_id + 1)
             profile = profiles[profiles[:, 2] == profile_id]
             profile_end = max(profile[:, 0])
 
-        with open_glider_netcdf(file_path, 'a') as glider_nc:
+        with open_glider_netcdf(tmp_path, 'a') as glider_nc:
             while line[timestr] <= profile_end:
                 line = fill_gps(line, interp_gps, args.time, args.gps_prefix)
                 glider_nc.stream_dict_insert(line)
@@ -342,7 +342,7 @@ def process_dataset(args):
                 fill_uv_variables(glider_nc, uv_values)
                 del empty_uv_processed_paths[:]
             else:
-                empty_uv_processed_paths.append(file_path)
+                empty_uv_processed_paths.append(tmp_path)
 
             glider_nc.update_profile_vars()
             try:
@@ -350,10 +350,16 @@ def process_dataset(args):
                 glider_nc.calculate_density()
             except BaseException as e:
                 logger.error(e)
-
             glider_nc.update_bounds()
 
+        try:
+            os.makedirs(os.path.dirname(file_path))
+        except OSError:
+            pass  # destination folder exists
+        shutil.move(tmp_path, file_path)
         profile_id += 1
+
+    shutil.rmtree(tmpdir)
 
     return 0
 
