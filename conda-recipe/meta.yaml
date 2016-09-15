@@ -31,6 +31,9 @@ test:
         - gutils.gbdr
         - gutils.gbdr.methods
 
+    commands:
+        - create_glider_netcdf.py --help
+
 about:
     home: https://github.com/axiom-data-science/GUTILS
     license: MIT License
