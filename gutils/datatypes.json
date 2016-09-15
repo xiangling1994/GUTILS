@@ -391,7 +391,7 @@
         "type": "f8",
         "dimension": "time",
         "attrs": {
-            "units": "Celsius",
+            "units": "degree_Celsius",
             "standard_name": "sea_water_temperature",
             "valid_min": -5,
             "valid_max": 40,
@@ -418,7 +418,7 @@
         "dimension": "time",
         "attrs": {
             "units": "psu",
-            "standard_name": "sea_water_salinity",
+            "standard_name": "sea_water_practical_salinity",
             "valid_min": 0,
             "valid_max": 10,
             "long_name": "Salinity",
