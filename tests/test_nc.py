@@ -31,7 +31,6 @@ def resource(*args):
     return os.path.join(
         os.path.dirname(__file__),
         'resources',
-        'usf-bass',
         *args
     )
 
@@ -46,11 +45,8 @@ def output(*args):
 
 class TestCreateGliderScript(unittest.TestCase):
 
-    def tearDown(self):
-        shutil.rmtree(output('bass-20150407T1300Z'))
-
-    def test_script(self):
-        nt = namedtuple('Arguments', [
+    def setUp(self):
+        self.nt = namedtuple('Arguments', [
             'flight',
             'science',
             'time',
@@ -62,15 +58,28 @@ class TestCreateGliderScript(unittest.TestCase):
             'output_path'
         ])
 
-        args = nt(
-            flight=resource('usf-bass-2014-061-1-0.sbd'),
-            science=resource('usf-bass-2014-061-1-0.tbd'),
+    def tearDown(self):
+        outputs = [
+            output('bass-20150407T1300Z'),
+            output('bass-20160909T1733Z')
+        ]
+
+        for d in outputs:
+            try:
+                shutil.rmtree(d)
+            except FileNotFoundError:
+                pass
+
+    def test_script(self):
+        args = self.nt(
+            flight=resource('usf-bass', 'usf-bass-2014-061-1-0.sbd'),
+            science=resource('usf-bass', 'usf-bass-2014-061-1-0.tbd'),
             time='timestamp',
             depth='m_depth-m',
             gps_prefix='m_gps_',
             segment_id=None,
             mode='rt',
-            glider_config_path=resource(),
+            glider_config_path=resource('usf-bass'),
             output_path=output(),
         )
 
@@ -84,6 +93,24 @@ class TestCreateGliderScript(unittest.TestCase):
         assert 'bass_20140303T151624Z_rt.nc' in output_files
         assert 'bass_20140303T152040Z_rt.nc' in output_files
 
+    def test_uv_fill(self):
+        args = self.nt(
+            flight=resource('usf-2016', 'usf-bass-2016-253-0-6.sbd'),
+            science=resource('usf-2016', 'usf-bass-2016-253-0-6.tbd'),
+            time='timestamp',
+            depth='m_depth-m',
+            gps_prefix='m_gps_',
+            segment_id=None,
+            mode='rt',
+            glider_config_path=resource('usf-2016'),
+            output_path=output(),
+        )
+
+        process_dataset(args)
+
+        output_files = os.listdir(output('bass-20160909T1733Z'))
+        assert len(output_files) == 33
+
 
 class TestMergedGliderDataReader(unittest.TestCase):
 
@@ -92,14 +119,14 @@ class TestMergedGliderDataReader(unittest.TestCase):
 
     def setUp(self):
         # Load NetCDF Configs
-        with open(resource('deployment.json'), 'r') as f:
+        with open(resource('usf-bass', 'deployment.json'), 'r') as f:
             self.deployment = json.loads(f.read())
 
-        with open(resource('global_attributes.json'), 'r') as f:
+        with open(resource('usf-bass', 'global_attributes.json'), 'r') as f:
             self.global_attributes = json.loads(f.read())
         self.global_attributes.update(self.deployment['global_attributes'])
 
-        with open(resource('instruments.json'), 'r') as f:
+        with open(resource('usf-bass', 'instruments.json'), 'r') as f:
             self.instruments = json.loads(f.read())
 
         self.test_path = os.path.join(
@@ -163,10 +190,10 @@ class TestMergedGliderDataReader(unittest.TestCase):
             )
 
             flightReader = GliderBDReader(
-                [resource('usf-bass-2014-061-1-0.sbd')]
+                [resource('usf-bass', 'usf-bass-2014-061-1-0.sbd')]
             )
             scienceReader = GliderBDReader(
-                [resource('usf-bass-2014-061-1-0.tbd')]
+                [resource('usf-bass', 'usf-bass-2014-061-1-0.tbd')]
             )
             reader = MergedGliderBDReader(flightReader, scienceReader)
 

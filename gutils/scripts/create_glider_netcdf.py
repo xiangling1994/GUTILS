@@ -292,6 +292,7 @@ def process_dataset(args):
     profile_end = 0
     file_path = None
     uv_values = None
+    movepairs = []
     empty_uv_processed_paths = []
     reader = create_reader(flight_path, science_path)
 
@@ -352,13 +353,16 @@ def process_dataset(args):
                 logger.error(e)
             glider_nc.update_bounds()
 
-        try:
-            os.makedirs(os.path.dirname(file_path))
-        except OSError:
-            pass  # destination folder exists
-        shutil.move(tmp_path, file_path)
+        movepairs.append((tmp_path, file_path))
+
         profile_id += 1
 
+    for tp, fp in movepairs:
+        try:
+            os.makedirs(os.path.dirname(fp))
+        except OSError:
+            pass  # destination folder exists
+        shutil.move(tp, fp)
     shutil.rmtree(tmpdir)
 
     return 0
