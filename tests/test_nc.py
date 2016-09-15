@@ -3,6 +3,7 @@
 import os
 import json
 import unittest
+from collections import namedtuple
 
 import numpy as np
 import netCDF4 as nc4
@@ -13,6 +14,7 @@ from gutils.gbdr import (
 )
 
 from gutils.nc import open_glider_netcdf
+from gutils.scripts.create_glider_netcdf import process_dataset
 
 import logging
 logger = logging.getLogger()
@@ -24,40 +26,72 @@ def decoder(x):
     return str(x.decode('utf-8'))
 
 
+def resource(nm):
+    return os.path.join(
+        os.path.dirname(__file__),
+        'resources',
+        'usf-bass',
+        nm
+    )
+
+
+def output(*args):
+    return os.path.join(
+        os.path.dirname(__file__),
+        'output',
+        *args
+    )
+
+
+class TestCreateGliderScript(unittest.TestCase):
+
+    def test_script(self):
+        nt = namedtuple('Arguments', [
+            'flight',
+            'science',
+            'time',
+            'depth',
+            'gps_prefix',
+            'segment_id',
+            'mode',
+            'glider_config_path',
+            'output_path'
+        ])
+
+        args = nt(
+            flight=resource('usf-bass-2014-061-1-0.sbd'),
+            science=resource('usf-bass-2014-061-1-0.tbd'),
+            time='timestamp',
+            depth='m_depth-m',
+            gps_prefix='m_gps_',
+            segment_id=None,
+            mode='rt',
+            glider_config_path=resource('.'),
+            output_path=os.path.join(os.path.dirname(__file__), 'output')
+        )
+
+        process_dataset(args)
+
+        assert len(os.listdir(output('bass-20150407T1300Z'))) == 5
+        assert os.path.isfile(output('bass-20150407T1300Z', 'bass_20140303T095556Z_rt.nc'))
+        assert os.path.isfile(output('bass-20150407T1300Z', 'bass_20140303T100510Z_rt.nc'))
+        assert os.path.isfile(output('bass-20150407T1300Z', 'bass_20140303T101015Z_rt.nc'))
+        assert os.path.isfile(output('bass-20150407T1300Z', 'bass_20140303T101624Z_rt.nc'))
+        assert os.path.isfile(output('bass-20150407T1300Z', 'bass_20140303T102040Z_rt.nc'))
+
+
 class TestMergedGliderDataReader(unittest.TestCase):
 
     def setUp(self):
         # Load NetCDF Configs
-        contents = ''
-        global_attr_path = (
-            os.path.join(
-                os.path.dirname(__file__),
-                'resources',
-                'usf-bass',
-                'global_attributes.json'
-            )
-        )
-        with open(global_attr_path, 'r') as f:
-            self.global_attributes = json.loads(f.read())
+        with open(resource('deployment.json'), 'r') as f:
+            self.deployment = json.loads(f.read())
 
-        bass_global_attr_path = os.path.join(
-            os.path.dirname(__file__),
-            'resources',
-            'usf-bass',
-            'deployment.json'
-        )
-        with open(bass_global_attr_path, 'r') as f:
-            contents = f.read()
-        self.deployment = json.loads(contents)
+        with open(resource('global_attributes.json'), 'r') as f:
+            self.global_attributes = json.loads(f.read())
         self.global_attributes.update(self.deployment['global_attributes'])
 
-        instruments_config_path = os.path.join(
-            os.path.dirname(__file__),
-            'resources',
-            'usf-bass',
-            'instruments.json'
-        )
-        with open(instruments_config_path, 'r') as f:
+        with open(resource('instruments.json'), 'r') as f:
             self.instruments = json.loads(f.read())
 
         self.test_path = os.path.join(
@@ -121,20 +155,10 @@ class TestMergedGliderDataReader(unittest.TestCase):
             )
 
             flightReader = GliderBDReader(
-                [os.path.join(
-                    os.path.dirname(__file__),
-                    'resources',
-                    'usf-bass',
-                    'usf-bass-2014-061-1-0.sbd'
-                )]
+                [resource('usf-bass-2014-061-1-0.sbd')]
             )
             scienceReader = GliderBDReader(
-                [os.path.join(
-                    os.path.dirname(__file__),
-                    'resources',
-                    'usf-bass',
-                    'usf-bass-2014-061-1-0.tbd'
-                )]
+                [resource('usf-bass-2014-061-1-0.tbd')]
             )
             reader = MergedGliderBDReader(flightReader, scienceReader)
 
