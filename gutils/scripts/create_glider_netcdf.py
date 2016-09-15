@@ -303,7 +303,7 @@ def process_dataset(args, attrs):
             begin_time = datetime.fromtimestamp(line['timestamp'])
             filename = "%s_%s_%s.nc" % (
                 glider_name,
-                begin_time.isoformat(),
+                begin_time.strftile("%Y%m%dT%H%M%SZ"),
                 args.mode
             )
             file_path = os.path.join(
