@@ -2,6 +2,7 @@
 
 import os
 import json
+import shutil
 import unittest
 from collections import namedtuple
 
@@ -26,12 +27,12 @@ def decoder(x):
     return str(x.decode('utf-8'))
 
 
-def resource(nm):
+def resource(*args):
     return os.path.join(
         os.path.dirname(__file__),
         'resources',
         'usf-bass',
-        nm
+        *args
     )
 
 
@@ -44,6 +45,9 @@ def output(*args):
 
 
 class TestCreateGliderScript(unittest.TestCase):
+
+    def tearDown(self):
+        shutil.rmtree(output())
 
     def test_script(self):
         nt = namedtuple('Arguments', [
@@ -66,8 +70,8 @@ class TestCreateGliderScript(unittest.TestCase):
             gps_prefix='m_gps_',
             segment_id=None,
             mode='rt',
-            glider_config_path=resource('.'),
-            output_path=os.path.join(os.path.dirname(__file__), 'output')
+            glider_config_path=resource(),
+            output_path=output(),
         )
 
         process_dataset(args)
@@ -81,6 +85,9 @@ class TestCreateGliderScript(unittest.TestCase):
 
 
 class TestMergedGliderDataReader(unittest.TestCase):
+
+    def tearDown(self):
+        shutil.rmtree(output())
 
     def setUp(self):
         # Load NetCDF Configs
