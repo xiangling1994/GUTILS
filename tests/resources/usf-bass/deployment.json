@@ -1,16 +1,27 @@
 {
-    "glider": "usf-bass",
+    "glider": "bass",
     "trajectory_date": "20150407T1300Z",
     "global_attributes": {
-        "acknowledgement" : "Florida Fish and Wildlife Conservation Commission",
-        "featureType" : "trajectory",
-        "project" : "Collaborative Operations with Mote Marine Laboratory",
+        "wmo_id": 4801918,
+        "naming_authority" : "edu.usf.marine",
+        "institution" : "University of South Florida College of Marine Science Ocean Technology Group",
+        "creator_email" : "vembu@secoora.org",
+        "creator_name" : "Vembu Subramanian",
+        "creator_url" : "http://secoora.org",
+        "publisher_email" : "vembu@secoora.org",
+        "publisher_name" : "Vembu Subramanian",
+        "publisher_url" : "http://secoora.org",
         "contributor_name" : "Chad Lembke, Kellie Dixon, and Michael Lindemuth",
         "contributor_role" : "Principal Investigator, Principal Investigator, Principal Investigator, and Data Manager",
+        "support_name": "secoora,ioos,noaa",
+        "support_type": "ra,federal,federal",
+        "support_email": "vembu@secoora.org,ioos.glider.data@noaa.gov,ioos.glider.data@noaa.gov",
+        "support_role": "fiscal,fiscal,fiscal",
+        "ioos_regional_association": "secoora",
+        "acknowledgement" : "Florida Fish and Wildlife Conservation Commission.",
+        "project" : "Collaborative Operations with Mote Marine Laboratory",
         "sea_name" : "Gulf of Mexico",
-        "title" : "Slocum Glider Dataset",
-        "platform_type": "Slocum Glider",
-        "wmo_id": 4801516
+        "title" : "USF Bass Slocum Glider Dataset",
     },
     "platform": {
         "type": "platform",
@@ -18,6 +29,7 @@
         "wmo_id": 4801516,
         "long_name": "Slocum Glider USF Bass",
         "comment": "",
-        "instrument": ""
+        "instrument": "",
+        "type": "platform"
     }
 }

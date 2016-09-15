@@ -4,6 +4,9 @@ import os
 import json
 import unittest
 
+import numpy as np
+import netCDF4 as nc4
+
 from gutils.gbdr import (
     GliderBDReader,
     MergedGliderBDReader
@@ -15,6 +18,10 @@ import logging
 logger = logging.getLogger()
 logger.addHandler(logging.StreamHandler())
 logger.setLevel(logging.DEBUG)
+
+
+def decoder(x):
+    return str(x.decode('utf-8'))
 
 
 class TestMergedGliderDataReader(unittest.TestCase):
@@ -63,81 +70,81 @@ class TestMergedGliderDataReader(unittest.TestCase):
         except OSError:
             pass  # Already exists
 
-        if os.path.isfile(self.test_path):
-            self.mode = 'a'
-        else:
-            self.mode = 'w'
+    def test_creation(self):
 
-    def test_with(self):
-        with open_glider_netcdf(self.test_path, self.mode) as glider_nc:
+        with open_glider_netcdf(self.test_path, 'w') as glider_nc:
+
+            # Set global attributes
             glider_nc.set_global_attributes(self.global_attributes)
-        self.assertTrue(os.path.isfile(self.test_path))
 
-    def test_set_trajectory_id(self):
-        with open_glider_netcdf(self.test_path, self.mode) as glider_nc:
+            # Set Trajectory
             glider_nc.set_trajectory_id(
                 self.deployment['glider'],
                 self.deployment['trajectory_date']
             )
-            nc = glider_nc.nc
-            traj_str = "%s-%s" % (
+
+            traj_str = "{}-{}".format(
                 self.deployment['glider'],
                 self.deployment['trajectory_date']
             )
 
+            assert 'trajectory' in glider_nc.nc.variables
+            vfunc = np.vectorize(decoder)
             self.assertEqual(
-                nc.variables['trajectory'][:].tostring().decode('utf-8'), traj_str
+                vfunc(nc4.chartostring(glider_nc.nc.variables['trajectory'][:])),
+                traj_str
             )
 
-    def test_segment_id(self):
-        with open_glider_netcdf(self.test_path, self.mode) as glider_nc:
-            glider_nc.set_segment_id(3)
-            nc = glider_nc.nc
-            self.assertEqual(nc.variables['segment_id'].getValue(), 3)
-
-    def test_profile_ids(self):
-        with open_glider_netcdf(self.test_path, self.mode) as glider_nc:
-            glider_nc.set_profile_id(4)
-            nc = glider_nc.nc
-            self.assertEqual(nc.variables['profile_id'].getValue(), 4)
-
-    def test_set_platform(self):
-        with open_glider_netcdf(self.test_path, self.mode) as glider_nc:
+            # Set Platform
             glider_nc.set_platform(self.deployment['platform'])
-            nc = glider_nc.nc
             self.assertEqual(
-                nc.variables['platform'].getncattr('wmo_id'),
+                glider_nc.nc.variables['platform'].getncattr('wmo_id'),
                 4801516
             )
 
-    def test_set_instruments(self):
-        with open_glider_netcdf(self.test_path, self.mode) as glider_nc:
+            # Set Instruments
             glider_nc.set_instruments(self.instruments)
-            nc = glider_nc.nc
-            self.assertIn('instrument_ctd', nc.variables)
+            self.assertIn('instrument_ctd', glider_nc.nc.variables)
 
-    def test_data_insert(self):
-        flightReader = GliderBDReader(
-            [os.path.join(
-                os.path.dirname(__file__),
-                'resources',
-                'usf-bass',
-                'usf-bass-2014-061-1-0.sbd'
-            )]
-        )
-        scienceReader = GliderBDReader(
-            [os.path.join(
-                os.path.dirname(__file__),
-                'resources',
-                'usf-bass',
-                'usf-bass-2014-061-1-0.tbd'
-            )]
-        )
-        reader = MergedGliderBDReader(flightReader, scienceReader)
+            # Set Segment ID
+            glider_nc.set_segment_id(3)
+            self.assertEqual(
+                glider_nc.nc.variables['segment_id'].getValue(),
+                3
+            )
 
-        with open_glider_netcdf(self.test_path, self.mode) as glider_nc:
+            # Set Profile ID
+            glider_nc.set_profile_id(4)
+            self.assertEqual(
+                glider_nc.nc.variables['profile_id'].getValue(),
+                4
+            )
+
+            flightReader = GliderBDReader(
+                [os.path.join(
+                    os.path.dirname(__file__),
+                    'resources',
+                    'usf-bass',
+                    'usf-bass-2014-061-1-0.sbd'
+                )]
+            )
+            scienceReader = GliderBDReader(
+                [os.path.join(
+                    os.path.dirname(__file__),
+                    'resources',
+                    'usf-bass',
+                    'usf-bass-2014-061-1-0.tbd'
+                )]
+            )
+            reader = MergedGliderBDReader(flightReader, scienceReader)
+
             for line in reader:
                 glider_nc.stream_dict_insert(line)
+
+            glider_nc.update_profile_vars()
+            glider_nc.calculate_salinity()
+            glider_nc.calculate_density()
+            glider_nc.update_bounds()
 
 
 if __name__ == '__main__':
