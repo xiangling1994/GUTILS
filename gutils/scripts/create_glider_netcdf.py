@@ -268,7 +268,12 @@ def read_attrs(glider_config_path):
     return attrs
 
 
-def process_dataset(args, attrs):
+def process_dataset(args):
+
+    attrs = read_attrs(args.glider_config_path)
+
+    timestr = 'timestamp'
+
     flight_path = args.flight
     science_path = args.science
 
@@ -298,12 +303,12 @@ def process_dataset(args, attrs):
     empty_uv_processed_paths = []
     reader = create_reader(flight_path, science_path)
     for line in reader:
-        if profile_end < line['timestamp']:
+        if profile_end < line[timestr]:
             # Open new NetCDF
-            begin_time = datetime.fromtimestamp(line['timestamp'])
+            begin_time = datetime.fromtimestamp(line[timestr])
             filename = "%s_%s_%s.nc" % (
                 glider_name,
-                begin_time.strftile("%Y%m%dT%H%M%SZ"),
+                begin_time.strftime("%Y%m%dT%H%M%SZ"),
                 args.mode
             )
             file_path = os.path.join(
@@ -320,7 +325,7 @@ def process_dataset(args, attrs):
             profile_end = max(profile[:, 0])
 
         with open_glider_netcdf(file_path, 'a') as glider_nc:
-            while line['timestamp'] <= profile_end:
+            while line[timestr] <= profile_end:
                 line = fill_gps(line, interp_gps, args.time, args.gps_prefix)
                 glider_nc.stream_dict_insert(line)
                 try:
@@ -343,10 +348,9 @@ def process_dataset(args, attrs):
             try:
                 glider_nc.calculate_salinity()
                 glider_nc.calculate_density()
-            except BaseException:
-                logger.error('{}: '.format(
-                    'Could not compute salinity or density')
-                )
+            except BaseException as e:
+                logger.error(e)
+
             glider_nc.update_bounds()
 
         profile_id += 1
@@ -372,9 +376,7 @@ def main():
     if args.segment_id is None:
         args.segment_id = find_segment_id(args.flight, args.science)
 
-    attrs = read_attrs(args.glider_config_path)
-
-    return process_dataset(args, attrs)
+    return process_dataset(args)
 
 
 if __name__ == '__main__':
