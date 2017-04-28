@@ -3,12 +3,12 @@
 import re
 import io
 import os
-import shutil
 import subprocess
 from glob import glob
+from whichcraft import which
 
 
-dbd2asc_path = shutil.which('dbd2asc')  # conda
+dbd2asc_path = which('dbd2asc')  # conda
 if dbd2asc_path is None:
     dbd2asc_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'bin', 'dbd2asc')  # pip
 
