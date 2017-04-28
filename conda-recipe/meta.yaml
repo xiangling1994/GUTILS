@@ -14,13 +14,13 @@ requirements:
         - python
         - setuptools
     run:
-        - python
         - gsw <3.1.0
-        - numpy
-        - scipy
         - netcdf4
+        - numpy
+        - python
+        - scipy
+        - six
         - whichcraft
-
 test:
     imports:
         - gutils

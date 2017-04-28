@@ -1,5 +1,6 @@
 gsw<3.1.0
+netCDF4
 numpy
 scipy
-netCDF4
+six
 whichcraft

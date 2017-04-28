@@ -1,12 +1,11 @@
 #!/usr/bin/env python
 
 import re
-import io
 import os
 import subprocess
 from glob import glob
 from whichcraft import which
-
+from six import StringIO
 
 dbd2asc_path = which('dbd2asc')  # conda
 if dbd2asc_path is None:
@@ -90,7 +89,7 @@ def generate_stream(processArgs):
     """
     process = subprocess.Popen(processArgs, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     stdout, _ = process.communicate()
-    return io.StringIO(stdout), process.returncode
+    return StringIO(stdout), process.returncode
 
 
 def can_find_bd_index(path):
@@ -232,7 +231,7 @@ def find_glider_BD_headers(reader):
 
     Parameters
     ----------
-    reader : io.StringIO
+    reader : StringIO
         Glider binary data reader output
 
     Returns
@@ -323,18 +322,15 @@ def map_line(reader, headers):
 
     Parameters
     ----------
-    reader : io.StringIO
+    reader : StringIO
         Glider binary data reader output
     headers : list
         Headers discovered in data file
 
     Returns
     -------
-    float
-        Decimal degree coordinate (dd.ddd)
-    Arguments:
-    reader - A subprocess.Popen with headers discovered
-    headers - Headers discovered in data file already
+    dict
+        Mapping of glider data to a known header
     """
 
     readings = {}

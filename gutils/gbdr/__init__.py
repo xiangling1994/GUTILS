@@ -41,6 +41,7 @@ class GliderBDReader(object):
         except EOFError:
             self.finished = True
             raise StopIteration
+    next = __next__
 
 
 class MergedGliderBDReader(object):
@@ -130,3 +131,4 @@ class MergedGliderBDReader(object):
             return ret_val
         else:
             raise StopIteration
+    next = __next__
