@@ -244,10 +244,21 @@ class GliderNetCDFWriter(object):
         trajectory_var[:] = stringtoarr(traj_str, len(traj_str))
         self.nc.id = traj_str  # Global id variable
 
-    def check_datatype_exists(self, key):
+    def check_datatype_exists(self, key, subset_datatypes=True):
         if key not in self.datatypes:
-            raise KeyError('Unknown datatype %s cannot '
-                           'be inserted to NetCDF' % key)
+            if subset_datatypes is True:
+                raise KeyError('Unknown datatype {}, cannot be inserted to NetCDF'.format(key))
+            else:
+                # Add the unknown datatype with sane defaults
+                name, units = key.split('-')
+                self.datatypes[key] = {
+                    'name': name,
+                    'type': 'f8',
+                    'dimension': 'time',
+                    'attrs': {
+                        'units': units
+                    }
+                }
 
         datatype = self.datatypes[key]
         if datatype['name'] not in self.nc.variables:
@@ -415,7 +426,7 @@ class GliderNetCDFWriter(object):
         self.set_scalar('lat_uv', line['m_gps_lat-lat'])
         self.set_scalar('lon_uv', line['m_gps_lon-lon'])
 
-    def stream_dict_insert(self, line, qaqc_methods={}):
+    def stream_dict_insert(self, line, subset_datatypes=True, qaqc_methods=None):
         """ Adds a data point glider_binary_data_reader library to NetCDF
 
         Input:
@@ -423,6 +434,8 @@ class GliderNetCDFWriter(object):
                 <value name>-<units> pair that matches a description
                 in the datatypes.json file.
         """
+
+        qaqc_methods = qaqc_methods or {}
 
         if 'timestamp' not in line:
             raise ValueError('No timestamp found for line')
@@ -434,19 +447,19 @@ class GliderNetCDFWriter(object):
                 continue  # Skip timestamp, inserted above
 
             try:
-                datatype = self.check_datatype_exists(name)
+                datatype = self.check_datatype_exists(name, subset_datatypes)
             except KeyError:
                 if self.DEBUG:
                     logger.exception("Datatype {} does not exist".format(name))
                 continue
-
-            datatype = self.datatypes[name]
-            if datatype['dimension'] == 'time':
-                self.set_array_value(name, self.stream_index, value)
             else:
-                self.set_scalar(name, value)
-                if name == "m_water_vx-m/s":
-                    self.fill_uv_vars(line)
+                datatype = self.datatypes[name]
+                if datatype['dimension'] == 'time':
+                    self.set_array_value(name, self.stream_index, value)
+                else:
+                    self.set_scalar(name, value)
+                    if name == "m_water_vx-m/s":
+                        self.fill_uv_vars(line)
 
         self.stream_index += 1
 

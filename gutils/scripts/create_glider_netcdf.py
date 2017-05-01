@@ -191,7 +191,8 @@ def create_arg_parser():
     )
 
     parser.add_argument(
-        '--segment_id', nargs=1,
+        '--segment_id',
+        nargs=1,
         help='Set the segment ID',
         default=None
     )
@@ -225,6 +226,14 @@ def create_arg_parser():
         help="Science data file to process",
         default=None
     )
+
+    parser.add_argument(
+        '--no-subset',
+        dest='subset',
+        action='store_false',
+        help='Process all variables - not just those available in a datatype mapping JSON file'
+    )
+    parser.set_defaults(subset=True)
 
     return parser
 
@@ -268,6 +277,7 @@ def process_dataset(args):
 
     flight_path = args.flight
     science_path = args.science
+    subset_datatypes = args.subset
 
     glider_name = attrs['deployment']['glider']
     deployment_name = '{}-{}'.format(
@@ -328,7 +338,7 @@ def process_dataset(args):
         with open_glider_netcdf(tmp_path, 'a') as glider_nc:
             while line[timestr] <= profile_end:
                 line = fill_gps(line, interp_gps, args.time, args.gps_prefix)
-                glider_nc.stream_dict_insert(line)
+                glider_nc.stream_dict_insert(line, subset_datatypes)
                 try:
                     line = reader.__next__()
                 except StopIteration:

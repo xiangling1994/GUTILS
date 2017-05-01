@@ -55,7 +55,8 @@ class TestCreateGliderScript(unittest.TestCase):
             'segment_id',
             'mode',
             'glider_config_path',
-            'output_path'
+            'output_path',
+            'subset'
         ])
 
     def tearDown(self):
@@ -81,6 +82,31 @@ class TestCreateGliderScript(unittest.TestCase):
             mode='rt',
             glider_config_path=resource('usf-bass'),
             output_path=output(),
+            subset=True
+        )
+
+        process_dataset(args)
+
+        output_files = os.listdir(output('bass-20150407T1300Z'))
+        assert len(output_files) == 5
+        assert 'bass_20140303T145556Z_rt.nc' in output_files
+        assert 'bass_20140303T150510Z_rt.nc' in output_files
+        assert 'bass_20140303T151015Z_rt.nc' in output_files
+        assert 'bass_20140303T151624Z_rt.nc' in output_files
+        assert 'bass_20140303T152040Z_rt.nc' in output_files
+
+    def test_no_subset_script(self):
+        args = self.nt(
+            flight=resource('usf-bass', 'usf-bass-2014-061-1-0.sbd'),
+            science=resource('usf-bass', 'usf-bass-2014-061-1-0.tbd'),
+            time='timestamp',
+            depth='m_depth-m',
+            gps_prefix='m_gps_',
+            segment_id=None,
+            mode='rt',
+            glider_config_path=resource('usf-bass'),
+            output_path=output(),
+            subset=False
         )
 
         process_dataset(args)
@@ -104,6 +130,7 @@ class TestCreateGliderScript(unittest.TestCase):
             mode='rt',
             glider_config_path=resource('usf-2016'),
             output_path=output(),
+            subset=True
         )
 
         process_dataset(args)
