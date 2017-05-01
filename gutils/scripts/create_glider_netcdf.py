@@ -314,7 +314,7 @@ def process_dataset(args):
             # New profile! init the NetCDF output file
 
             # Path to hold file while we create it
-            _, tmp_path = tempfile.mkstemp(dir=tmpdir, suffix='.nc', prefix='gutils')
+            tmp_handle, tmp_path = tempfile.mkstemp(dir=tmpdir, suffix='.nc', prefix='gutils')
 
             # Open new NetCDF
             begin_time = datetime.utcfromtimestamp(line[timestr])
@@ -364,6 +364,7 @@ def process_dataset(args):
             glider_nc.update_bounds()
 
         movepairs.append((tmp_path, file_path))
+        os.close(tmp_handle)
 
         profile_id += 1
 
