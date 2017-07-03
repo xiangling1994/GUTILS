@@ -50,6 +50,18 @@ class TestUtility(unittest.TestCase):
             -83.50945
         )
 
+        decimal_degrees = get_decimal_degrees(3731.9404)
+        self.assertEqual(
+            decimal_degrees,
+            37.53234
+        )
+
+        decimal_degrees = get_decimal_degrees(10601.6986)
+        self.assertEqual(
+            decimal_degrees,
+            106.02831
+        )
+
 
 class TestBDReader(unittest.TestCase):
 

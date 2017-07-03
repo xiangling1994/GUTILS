@@ -1,11 +1,16 @@
 #!/usr/bin/env python
+from __future__ import division  # always return floats when dividing
 
 import re
 import os
+import math
 import subprocess
 from glob import glob
 from whichcraft import which
 from six import StringIO
+
+import logging
+L = logging.getLogger(__name__)
 
 dbd2asc_path = which('dbd2asc')  # conda
 if dbd2asc_path is None:
@@ -279,42 +284,42 @@ def find_glider_BD_headers(reader):
 
 
 def get_decimal_degrees(lat_lon):
-    """Converts glider gps coordinate ddmm.mmm to decimal degrees dd.ddd
+    """Converts NMEA GPS format (DDDmm.mmmm) to decimal degrees (DDD.dddddd)
 
     Parameters
     ----------
     lat_lon : str
-        Glider GPS coordinate (ddmm.mmm)
+        NMEA GPS coordinate (DDDmm.mmmm)
 
     Returns
     -------
     float
-        Decimal degree coordinate (dd.ddd)
+        Decimal degree coordinate (DDD.dddddd) or math.nan
     """
 
-    if lat_lon == 0:
-        return -1
+    # Absolute value of the coordinate
+    try:
+        pos_lat_lon = abs(lat_lon)
+    except (TypeError, ValueError):
+        return math.nan
 
-    lat_lon_string = str(lat_lon)
-    decimal_place = lat_lon_string.find('.')
-    if decimal_place != -1:
-        str_dec = lat_lon_string[0:decimal_place - 2]
-        str_dec_fractional = lat_lon_string[decimal_place - 2:]
-    elif abs(lat_lon) < 181:
-        if(abs(lat_lon / 100) > 100):
-            str_dec = lat_lon_string[0:3]
-            str_dec_fractional = lat_lon_string[3:]
-        else:
-            str_dec = lat_lon_string[0:2]
-            str_dec_fractional = lat_lon_string[2:]
-    else:
-        return -1
+    # Calculate NMEA degrees as an integer
+    nmea_degrees = int(pos_lat_lon // 100) * 100
 
-    dec = float(str_dec)
-    dec_fractional = float(str_dec_fractional)
-    if dec < 0:
-        dec_fractional *= -1
-    return dec + dec_fractional / 60
+    # Subtract the NMEA degrees from the absolute value of lat_lon and divide by 60
+    # to get the minutes in decimal format
+    gps_decimal_minutes = (pos_lat_lon - nmea_degrees) / 60
+
+    # Divide NMEA degrees by 100 and add the decimal minutes
+    decimal_degrees = (nmea_degrees // 100) + gps_decimal_minutes
+
+    # Round to 6 decimal places
+    decimal_degrees = round(decimal_degrees, 6)
+
+    if lat_lon < 0:
+        return -decimal_degrees
+
+    return decimal_degrees
 
 
 def map_line(reader, headers):
