@@ -61,8 +61,9 @@ class TestCreateGliderScript(unittest.TestCase):
 
     def tearDown(self):
         outputs = [
-            output('bass-20150407T1300Z'),
-            output('bass-20160909T1733Z')
+            #output('bass-20150407T1300Z'),
+            #output('bass-20160909T1733Z'),
+            output('modena-20160909T1758Z')
         ]
 
         for d in outputs:
@@ -136,6 +137,25 @@ class TestCreateGliderScript(unittest.TestCase):
         process_dataset(args)
 
         output_files = os.listdir(output('bass-20160909T1733Z'))
+        assert len(output_files) == 33
+
+    def test_delayed_no_subset(self):
+        args = self.nt(
+            flight=resource('export-all', 'modena-2015-175-0-29.dbd'),
+            science=resource('export-all', 'modena-2015-175-0-29.ebd'),
+            time='timestamp',
+            depth='m_depth-m',
+            gps_prefix='m_gps_',
+            segment_id=None,
+            mode='delayed',
+            glider_config_path=resource('export-all'),
+            output_path=output(),
+            subset=True
+        )
+
+        process_dataset(args)
+
+        output_files = os.listdir(output('modena-20160909T1758Z'))
         assert len(output_files) == 33
 
 

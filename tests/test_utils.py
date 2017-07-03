@@ -3,6 +3,8 @@
 import os
 import unittest
 
+from gutils import get_decimal_degrees
+
 from gutils.yo import (
     find_yo_extrema
 )
@@ -200,3 +202,25 @@ class TestDensity(unittest.TestCase):
             self.lat, self.lon
         )
         self.assertEqual(len(self.ctd_dataset[:, 0]), len(density))
+
+
+class TestUtility(unittest.TestCase):
+
+    def test_decimal_degrees(self):
+        decimal_degrees = get_decimal_degrees(-8330.567)
+        self.assertEqual(
+            decimal_degrees,
+            -83.50945
+        )
+
+        decimal_degrees = get_decimal_degrees(3731.9404)
+        self.assertEqual(
+            decimal_degrees,
+            37.53234
+        )
+
+        decimal_degrees = get_decimal_degrees(10601.6986)
+        self.assertEqual(
+            decimal_degrees,
+            106.02831
+        )

@@ -1,134 +1,132 @@
 #!/usr/bin/env python
+import os
+import shutil
+from collections import OrderedDict
+from glob import glob
+from tempfile import mkdtemp
 
-from gutils.gbdr.methods import (
-    create_glider_BD_ASCII_reader,
-    find_glider_BD_headers,
-    map_line
-)
+import pandas as pd
 
+from gutils import generate_stream
 
-class GliderBDReader(object):
-    """Reads a specified type or set of glider data files.
-
-    Starts a process to read through the data from a set of glider
-    binary data files.  Provides an iterator to process a line of
-    data at a time.
-
-    Arguments:
-    path - Directory where binary data is stored.
-    fileType - Types of files to process
-    fileNames - An optional set specifying exactly which files to process.
-    """
-
-    def __init__(self, filePaths):
-        self.reader = (
-            create_glider_BD_ASCII_reader(filePaths)
-        )
-
-        self.headers = find_glider_BD_headers(self.reader)
-        self.finished = False
-
-    def __iter__(self):
-        return self
-
-    def __next__(self):
-        if self.finished:
-            raise StopIteration
-
-        try:
-            value = map_line(self.reader, self.headers)
-            return value
-        except EOFError:
-            self.finished = True
-            raise StopIteration
-    next = __next__
+import logging
+L = logging.getLogger(__name__)
 
 
-class MergedGliderBDReader(object):
-    """Merges flight and science data readers to return merged glider data.
+class MergedASCIIReader(object):
 
-    Takes two glider binary data readers: one for
-    flight and one for science data.  Provides an
-    iterator that returns merged data from these readers
-    as a dictionary.
+    def __init__(self, ascii_file):
+        self.ascii_file = ascii_file
+        self.metadata, self.headers, self.data = self.read()
 
-    Arguments:
-    flight_reader - A GliderBDReader object tied to flight data *bd files.
-    science_reader - A GliderBDReader object tied to science data *bd files.
-    merge_tolerance - An optional tolerance number of seconds to consider two
-        rows mergeable.  Default: 1
-    """
-
-    def __init__(self, flight_reader, science_reader, merge_tolerance=1):
-        self.flight_reader = flight_reader
-        self.science_reader = science_reader
-        self.merge_tolerance = merge_tolerance
-
-        self.flight_headers = flight_reader.headers
-        self.science_headers = science_reader.headers
-        self.headers = self.flight_headers + self.science_headers
-
-        self.__read_both_values()
-
-    def __read_both_values(self):
-        self.__read_flight_values()
-        self.__read_science_values()
-
-    def __read_flight_values(self):
-        try:
-            self.flight_values = self.flight_reader.__next__()
-        except:
-            self.flight_values = None
-
-    def __read_science_values(self):
-        try:
-            self.science_values = self.science_reader.__next__()
-        except StopIteration:
-            self.science_values = None
-
-    def __iter__(self):
-        return self
-
-    def __next__(self):
-        if self.flight_values is not None or self.science_values is not None:
-            ret_val = {}
-
-            # No more flight values. Spit out the rest of the science values.
-            if self.flight_values is None:
-                ret_val = self.science_values
-                self.__read_science_values()
-            # No more science values. Spit out the rest of the flight values.
-            elif self.science_values is None:
-                ret_val = self.flight_values
-                self.__read_flight_values()
-            # We have both.  Time to merge.
-            else:
-                # To merge or not to merge
-                flight_time = (
-                    self.flight_values['timestamp']
-                )
-                science_time = (
-                    self.science_values['timestamp']
-                )
-                time_diff = abs(flight_time - science_time)
-
-                # Can merge because within tolerance
-                if time_diff <= self.merge_tolerance:
-                    ret_val = self.flight_values
-                    ret_val.update(self.science_values)
-                    self.__read_both_values()
-
-                # Flight is ahead of science.  Return and get next science.
-                elif flight_time > science_time:
-                    ret_val = self.science_values
-                    self.__read_science_values()
-
-                # Science is ahead of flight.  Return and get next flight.
+    def read(self):
+        metadata = OrderedDict()
+        headers = None
+        units = None
+        with open(self.ascii_file, 'rt') as af:
+            for li, al in enumerate(af):
+                if 'm_present_time' in al:
+                    headers = al.strip().split(' ')
+                elif headers is not None:
+                    units = al.strip().split(' ')
+                    data_start = li + 1
+                    break
                 else:
-                    ret_val = self.flight_values
-                    self.__read_flight_values()
+                    title, value = al.split(':', maxsplit=1)
+                    metadata[title.strip()] = value.strip()
 
-            return ret_val
-        else:
-            raise StopIteration
-    next = __next__
+        column_descriptions = OrderedDict()
+        for head, unit in zip(headers, units):
+            column_descriptions[head] = { 'units': unit }
+
+        df = pd.read_csv(
+            self.ascii_file,
+            index_col=None,
+            skiprows=data_start,
+            header=None,
+            names=headers,
+            sep=' ',
+            skip_blank_lines=True
+        )
+        return metadata, column_descriptions, df
+
+
+class MergedASCIICreator(object):
+    """
+    Merges flight and science data files into an ASCII file.
+
+    Copies files matching the regex in source_directory to their own temporary directory
+    before processing since the Rutgers supported script only takes foldesr as input
+
+    Returns a list of flight/science files that were processed into ASCII files
+    """
+
+    def __init__(self, source_directory, destination_directory, cache_directory=None, globs=None):
+
+        globs = globs or []
+
+        self.tmpdir = mkdtemp(prefix='gutils_convert_')
+        self.matched_files = []
+        self.cache_directory = cache_directory or source_directory
+        self.destination_directory = destination_directory
+        self.source_directory = source_directory
+
+        for g in globs:
+            self.matched_files += list(glob(
+                os.path.join(
+                    source_directory,
+                    g
+                )
+            ))
+
+    def __del__(self):
+        # Remove tmpdir
+        shutil.rmtree(self.tmpdir)
+
+    def convert(self):
+        # Copy to tempdir
+        for f in self.matched_files:
+            fname = os.path.basename(f)
+            tmpf = os.path.join(self.tmpdir, fname)
+            shutil.copy2(f, tmpf)
+
+        if not os.path.isdir(self.destination_directory):
+            os.makedirs(self.destination_directory)
+
+        # Run conversion script
+        convert_binary_path = os.path.join(
+            os.path.dirname(__file__),
+            'convertDbds.sh'
+        )
+        pargs = [
+            convert_binary_path,
+            '-q',
+            '-p',
+        ]
+        if self.cache_directory:
+            pargs += ['-c', self.cache_directory]
+
+        pargs.append(self.tmpdir)
+        pargs.append(self.destination_directory)
+        command_output, return_code = generate_stream(pargs)
+
+        # Return
+        processed = []
+
+        output_files = command_output.read().split('\n')
+        # iterate and every time we hit a .dat file we return the cache
+
+        binary_files = []
+        for x in output_files:
+            fname = os.path.basename(x)
+            _, suff = os.path.splitext(fname)
+            if suff == '.dat':
+                processed.append({
+                    'ascii': os.path.join(self.destination_directory, fname),
+                    'binary': sorted(binary_files)
+                })
+                binary_files = []
+            else:
+                binary_files.append(os.path.join(self.source_directory, fname))
+
+        return processed

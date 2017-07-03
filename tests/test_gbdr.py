@@ -1,127 +1,93 @@
 #!/usr/bin/env python
 
 import os
+import shutil
+import tempfile
 import unittest
 from glob import glob
 
-from gutils.gbdr.methods import (
-    create_glider_BD_ASCII_reader,
-    find_glider_BD_headers,
-    get_decimal_degrees
-)
-from gutils.gbdr import GliderBDReader, MergedGliderBDReader
+from gutils.gbdr import MergedASCIICreator, MergedASCIIReader
 
 import logging
 logger = logging.getLogger()
 logger.addHandler(logging.StreamHandler())
 logger.setLevel(logging.DEBUG)
 
-testdata_path = os.path.join(os.path.dirname(__file__), 'resources', 'usf-bass')
 
-
-class TestASCIIReader(unittest.TestCase):
+class TestMergedASCIICreator(unittest.TestCase):
 
     def setUp(self):
-        self.reader = create_glider_BD_ASCII_reader(
-            glob(os.path.join(testdata_path, '*.sbd'))
+        self.binary_path = os.path.join(os.path.dirname(__file__), 'resources', 'usf-bass')
+        self.ascii_path = os.path.join(self.binary_path, 'ascii')
+
+    def tearDown(self):
+        shutil.rmtree(self.ascii_path)  # Remove generated ASCII
+
+        # Remove any cached .cac files
+        for cac in glob(os.path.join(self.binary_path, '*.cac')):
+            os.remove(cac)
+
+    def test_convert_default_cache_directory(self):
+        merger = MergedASCIICreator(
+            self.binary_path,
+            self.ascii_path,
+            globs=['*.tbd', '*.sbd']
         )
+        p = merger.convert()
+        assert len(p) > 0
+        assert len(glob(os.path.join(self.ascii_path, '*.dat'))) > 0
 
-    def test_single_read(self):
-        line = self.reader.readline()
-        self.assertEqual(
-            line,
-            'dbd_label: DBD_ASC(dinkum_binary_data_ascii)file\n'
+    def test_convert_empty_cache_directory(self):
+        merger = MergedASCIICreator(
+            self.binary_path,
+            self.ascii_path,
+            cache_directory=tempfile.mkdtemp(),
+            globs=['*.tbd', '*.sbd']
         )
+        p = merger.convert()
+        assert len(p) > 0
+        assert len(glob(os.path.join(self.ascii_path, '*.dat'))) > 0
 
-    def test_find_headers(self):
-        headers = find_glider_BD_headers(self.reader)
-        self.assertEqual(
-            'c_heading',
-            headers[0]['name']
+    def test_convert_single_pair(self):
+        merger = MergedASCIICreator(
+            self.binary_path,
+            self.ascii_path,
+            globs=['usf-bass-2014-048-0-0.tbd', 'usf-bass-2014-048-0-0.sbd']
         )
+        p = merger.convert()
+        assert p == [{
+            'ascii': os.path.join(self.ascii_path, 'usf_bass_2014_048_0_0_sbd.dat'),
+            'binary': sorted([
+                os.path.join(self.binary_path, 'usf-bass-2014-048-0-0.sbd'),
+                os.path.join(self.binary_path, 'usf-bass-2014-048-0-0.tbd')
+            ]),
+        }]
+        assert len(glob(os.path.join(self.ascii_path, '*.dat'))) == 1
 
 
-class TestUtility(unittest.TestCase):
-
-    def test_decimal_degrees(self):
-        decimal_degrees = get_decimal_degrees(-8330.567)
-        self.assertEqual(
-            decimal_degrees,
-            -83.50945
-        )
-
-        decimal_degrees = get_decimal_degrees(3731.9404)
-        self.assertEqual(
-            decimal_degrees,
-            37.53234
-        )
-
-        decimal_degrees = get_decimal_degrees(10601.6986)
-        self.assertEqual(
-            decimal_degrees,
-            106.02831
-        )
-
-
-class TestBDReader(unittest.TestCase):
+class TestMergedASCIIReader(unittest.TestCase):
 
     def setUp(self):
-        self.reader = GliderBDReader(
-            glob(os.path.join(testdata_path, '*.tbd'))
+        self.binary_path = os.path.join(os.path.dirname(__file__), 'resources', 'usf-bass')
+        self.ascii_path = os.path.join(self.binary_path, 'ascii')
+
+    def tearDown(self):
+        shutil.rmtree(self.ascii_path)  # Remove generated ASCII
+
+        # Remove any cached .cac files
+        for cac in glob(os.path.join(self.binary_path, '*.cac')):
+            os.remove(cac)
+
+    def test_convert_single_pair(self):
+        merger = MergedASCIICreator(
+            self.binary_path,
+            self.ascii_path,
+            globs=['usf-bass-2014-048-0-0.tbd', 'usf-bass-2014-048-0-0.sbd']
         )
+        p = merger.convert()
+        af = p[0]['ascii']
 
-    def test_iteration(self):
-        for value in self.reader:
-            self.assertIn(
-                'sci_m_present_secs_into_mission-sec',
-                value
-            )
+        ar = MergedASCIIReader(af)
+        headers, columns, df = ar.read()
 
-
-class TestMergedGliderDataReader(unittest.TestCase):
-
-    def setUp(self):
-        flightReader = GliderBDReader(
-            glob(os.path.join(testdata_path, '*.sbd'))
-        )
-        scienceReader = GliderBDReader(
-            glob(os.path.join(testdata_path, '*.tbd'))
-        )
-        self.reader = MergedGliderBDReader(flightReader, scienceReader)
-
-    def test_iteration(self):
-        for value in self.reader:
-            time_present = (
-                'sci_m_present_secs_into_mission-sec' in value or
-                'm_present_secs_into_mission-sec' in value
-            )
-            self.assertTrue(time_present)
-
-
-class TestNoCacheAvailable(unittest.TestCase):
-
-    def setUp(self):
-        # Remove all cache files
-        for fileName in glob("/tmp/*.cac"):
-            os.remove(fileName)
-
-        # Create readers
-        flightReader = GliderBDReader(
-            [os.path.join(testdata_path, 'usf-bass-2014-048-2-3.sbd')]
-        )
-        scienceReader = GliderBDReader(
-            [os.path.join(testdata_path, 'usf-bass-2014-048-2-3.tbd')]
-        )
-        self.reader = MergedGliderBDReader(flightReader, scienceReader)
-
-    def test_iteration(self):
-        for value in self.reader:
-            time_present = (
-                'sci_m_present_secs_into_mission-sec' in value or
-                'm_present_secs_into_mission-sec' in value
-            )
-            self.assertTrue(time_present)
-
-
-if __name__ == '__main__':
-    unittest.main()
+        logger.info(df.head())
