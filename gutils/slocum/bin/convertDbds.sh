@@ -70,7 +70,7 @@ DESCRIPTION
 
 # Default option values
 # Location of dbd2asc, etc TWRC executables used to convert and merge binary files
-local_twrc_exe_dir="${app_dir}/linux-bin";
+local_twrc_exe_dir="$app_dir";
 # Default ascii file extension
 dba_extension='dat';
 # Process options

@@ -6,7 +6,7 @@ import tempfile
 import unittest
 from glob import glob
 
-from gutils.gbdr import MergedASCIICreator, MergedASCIIReader
+from gutils.slocum import SlocumMerger, SlocumReader
 
 import logging
 logger = logging.getLogger()
@@ -17,7 +17,7 @@ logger.setLevel(logging.DEBUG)
 class TestMergedASCIICreator(unittest.TestCase):
 
     def setUp(self):
-        self.binary_path = os.path.join(os.path.dirname(__file__), 'resources', 'usf-bass')
+        self.binary_path = os.path.join(os.path.dirname(__file__), 'resources', 'slocum', 'usf-bass')
         self.ascii_path = os.path.join(self.binary_path, 'ascii')
 
     def tearDown(self):
@@ -28,7 +28,7 @@ class TestMergedASCIICreator(unittest.TestCase):
             os.remove(cac)
 
     def test_convert_default_cache_directory(self):
-        merger = MergedASCIICreator(
+        merger = SlocumMerger(
             self.binary_path,
             self.ascii_path,
             globs=['*.tbd', '*.sbd']
@@ -38,7 +38,7 @@ class TestMergedASCIICreator(unittest.TestCase):
         assert len(glob(os.path.join(self.ascii_path, '*.dat'))) > 0
 
     def test_convert_empty_cache_directory(self):
-        merger = MergedASCIICreator(
+        merger = SlocumMerger(
             self.binary_path,
             self.ascii_path,
             cache_directory=tempfile.mkdtemp(),
@@ -49,7 +49,7 @@ class TestMergedASCIICreator(unittest.TestCase):
         assert len(glob(os.path.join(self.ascii_path, '*.dat'))) > 0
 
     def test_convert_single_pair(self):
-        merger = MergedASCIICreator(
+        merger = SlocumMerger(
             self.binary_path,
             self.ascii_path,
             globs=['usf-bass-2014-048-0-0.tbd', 'usf-bass-2014-048-0-0.sbd']
@@ -68,7 +68,7 @@ class TestMergedASCIICreator(unittest.TestCase):
 class TestMergedASCIIReader(unittest.TestCase):
 
     def setUp(self):
-        self.binary_path = os.path.join(os.path.dirname(__file__), 'resources', 'usf-bass')
+        self.binary_path = os.path.join(os.path.dirname(__file__), 'resources', 'slocum', 'usf-bass')
         self.ascii_path = os.path.join(self.binary_path, 'ascii')
 
     def tearDown(self):
@@ -79,7 +79,7 @@ class TestMergedASCIIReader(unittest.TestCase):
             os.remove(cac)
 
     def test_convert_single_pair(self):
-        merger = MergedASCIICreator(
+        merger = SlocumMerger(
             self.binary_path,
             self.ascii_path,
             globs=['usf-bass-2014-048-0-0.tbd', 'usf-bass-2014-048-0-0.sbd']
@@ -87,7 +87,7 @@ class TestMergedASCIIReader(unittest.TestCase):
         p = merger.convert()
         af = p[0]['ascii']
 
-        ar = MergedASCIIReader(af)
+        ar = SlocumReader(af)
         headers, columns, df = ar.read()
 
         logger.info(df.head())

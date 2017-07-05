@@ -53,10 +53,10 @@ def is_continuous(profiled_dataset):
 def is_complete(profiled_dataset, dataset):
     return len(profiled_dataset) == len(dataset)
 
+
 ctd_filepath = os.path.join(
     os.path.dirname(__file__),
     'resources',
-    'usf-bass',
     'ctd_dataset.csv'
 )
 

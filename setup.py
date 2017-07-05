@@ -25,7 +25,7 @@ setup(
     author='Kyle Wilcox',
     author_email='kyle@axiomdatascience.com',
     install_requires=reqs,
-    url='https://github.com/axiom-data-science/GUTILS',
+    url='https://github.com/SECOORA/GUTILS',
     packages=[
         'gutils',
         'gutils.yo',

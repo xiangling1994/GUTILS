@@ -13,7 +13,7 @@ import logging
 L = logging.getLogger(__name__)
 
 
-class MergedASCIIReader(object):
+class SlocumReader(object):
 
     def __init__(self, ascii_file):
         self.ascii_file = ascii_file
@@ -51,7 +51,7 @@ class MergedASCIIReader(object):
         return metadata, column_descriptions, df
 
 
-class MergedASCIICreator(object):
+class SlocumMerger(object):
     """
     Merges flight and science data files into an ASCII file.
 
@@ -96,6 +96,7 @@ class MergedASCIICreator(object):
         # Run conversion script
         convert_binary_path = os.path.join(
             os.path.dirname(__file__),
+            'bin',
             'convertDbds.sh'
         )
         pargs = [

@@ -29,14 +29,13 @@ test:
         - gutils.yo
         - gutils.yo.filters
         - gutils.nc
-        - gutils.gbdr
-        - gutils.gbdr.methods
+        - gutils.slocum
 
     commands:
         - create_glider_netcdf.py --help
 
 about:
-    home: https://github.com/axiom-data-science/GUTILS
+    home: https://github.com/SECOORA/GUTILS
     license: MIT License
     license_file: LICENSE
     summary: A set of Python utilities for reading, merging, and post processing Teledyne Webb Slocum Glider data
