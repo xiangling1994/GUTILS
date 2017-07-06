@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from setuptools import setup
+from setuptools import setup, find_packages
 
 
 def readme():
@@ -26,11 +26,11 @@ setup(
     author_email='kyle@axiomdatascience.com',
     install_requires=reqs,
     url='https://github.com/SECOORA/GUTILS',
-    packages=[
-        'gutils',
-        'gutils.yo',
-        'gutils.gbdr'
-    ],
+    packages=find_packages(
+        exclude=[
+            'tests'
+        ]
+    ),
     scripts=[
         'gutils/scripts/check_glider_netcdf.py',
         'gutils/scripts/create_glider_netcdf.py',
