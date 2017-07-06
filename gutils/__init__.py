@@ -5,11 +5,14 @@ import os
 import re
 import math
 import subprocess
-
 from six import StringIO
 
 import numpy as np
+import pandas as pd
 from scipy.signal import boxcar, convolve
+
+import logging
+L = logging.getLogger(__name__)
 
 
 def clean_dataset(dataset):
@@ -39,17 +42,11 @@ def validate_glider_args(*args):
     if arg_length < 2:
         raise IndexError('The time series must have at least two values')
 
-    for arg in args:
+    # Skipping first (time) argument
+    for arg in args[1:]:
         # Make sure all arguments have the same length
         if len(arg) != arg_length:
             raise ValueError('Arguments must all be the same length')
-
-        # Set NC_FILL_VALUES to NaN for consistency if NetCDF lib available
-        try:
-            from netCDF4 import default_fillvals as NC_FILL_VALUES
-            arg[arg == NC_FILL_VALUES['f8']] = float('nan')  # NOQA
-        except ImportError:
-            pass
 
         # Test for finite values
         if len(arg[np.isfinite(arg)]) == 0:
@@ -76,6 +73,9 @@ def get_decimal_degrees(lat_lon):
     except (TypeError, ValueError):
         return math.nan
 
+    if math.isnan(pos_lat_lon):
+        return lat_lon
+
     # Calculate NMEA degrees as an integer
     nmea_degrees = int(pos_lat_lon // 100) * 100
 
@@ -93,6 +93,62 @@ def get_decimal_degrees(lat_lon):
         return -decimal_degrees
 
     return decimal_degrees
+
+
+def masked_epoch(timeseries):
+    tmask = pd.isnull(timeseries)
+    epochs = np.ma.MaskedArray(timeseries.astype(np.int64) // 1e9)
+    epochs.mask = tmask
+    return epochs
+
+
+def interpolate_gps(timestamps, latitude, longitude):
+    """Calculates interpolated GPS coordinates between the two surfacings
+    in a single glider binary data file.
+    Parameters:
+        'dataset': An N by 3 numpy array of time, lat, lon pairs
+    Returns interpolated gps dataset over entire time domain of dataset
+    """
+
+    validate_glider_args(timestamps, latitude, longitude)
+
+    dataset = np.column_stack((
+        timestamps,
+        latitude,
+        longitude
+    ))
+
+    est_lat = np.empty((len(dataset))) * np.nan
+    est_lon = np.empty((len(dataset))) * np.nan
+
+    dataset = dataset[~np.isnan(dataset).any(axis=1), :]
+
+    if len(dataset) == 0:
+        L.warning('GPS time-seies contains no valid GPS fixes for interpolation')
+        return est_lat, est_lon
+
+    # If only one GPS point, make it the same for the entire dataset
+    if len(dataset) == 1:
+        est_lat[:] = dataset[0, 1]
+        est_lon[:] = dataset[0, 2]
+    else:
+        # Interpolate data
+        est_lat = np.interp(
+            timestamps,
+            dataset[:, 0],
+            dataset[:, 1],
+            left=dataset[0, 1],
+            right=dataset[-1, 1]
+        )
+        est_lon = np.interp(
+            timestamps,
+            dataset[:, 0],
+            dataset[:, 2],
+            left=dataset[0, 2],
+            right=dataset[-1, 2]
+        )
+
+    return est_lat, est_lon
 
 
 def parse_glider_filename(filename):

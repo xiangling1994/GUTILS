@@ -3,21 +3,18 @@
 import os
 import unittest
 
-from gutils import get_decimal_degrees
+from gutils import get_decimal_degrees, interpolate_gps, masked_epoch
 
 from gutils.yo import (
-    find_yo_extrema
+    assign_profiles
 )
 
 from gutils.yo.filters import (
+    default_filter,
     filter_profile_depth,
-    filter_profile_time,
+    filter_profile_timeperiod,
     filter_profile_distance,
     filter_profile_number_of_points
-)
-
-from gutils.gps import (
-    interpolate_gps
 )
 
 from gutils.ctd import (
@@ -25,183 +22,231 @@ from gutils.ctd import (
     calculate_density
 )
 
-import numpy as np
+from gutils.slocum import SlocumReader
 
 import logging
-logger = logging.getLogger()
-logger.addHandler(logging.StreamHandler())
-logger.setLevel(logging.DEBUG)
+L = logging.getLogger()
+L.handlers = [logging.StreamHandler()]
+L.setLevel(logging.DEBUG)
 
 
 def is_continuous(profiled_dataset):
     last_profile_id = 0
-    for i, row in enumerate(profiled_dataset):
-        profile_diff = abs(last_profile_id - row[2])
+    for i, row in enumerate(profiled_dataset.itertuples()):
+        profile_diff = abs(last_profile_id - row.profile)
 
         if profile_diff == 1:
-            last_profile_id = row[2]
+            last_profile_id = row.profile
         elif profile_diff > 1:
             print(
                 "Inconsistency @: %d, Last Profile: %d, Current: %d"
-                % (i, last_profile_id, row[2])
+                % (i, last_profile_id, row.profile)
             )
             return False
 
     return True
 
 
-def is_complete(profiled_dataset, dataset):
-    return len(profiled_dataset) == len(dataset)
-
-
 ctd_filepath = os.path.join(
     os.path.dirname(__file__),
     'resources',
-    'ctd_dataset.csv'
+    'slocum',
+    'usf-2016',
+    'usf_bass_2016_253_0_6_sbd.dat'
 )
 
 
 class TestFindProfile(unittest.TestCase):
 
     def setUp(self):
-        self.dataset = np.loadtxt(ctd_filepath, delimiter=',')
-        self.profiled_dataset = find_yo_extrema(
-            self.dataset[:, 0], self.dataset[:, 3]
+        sr = SlocumReader(ctd_filepath)
+        self.df = sr.standardize()
+
+        self.profiled_dataset = assign_profiles(
+            self.df
         )
 
     def test_find_profile(self):
-        self.assertNotEqual(
-            len(self.profiled_dataset),
-            0
-        )
-        self.assertTrue(is_complete(self.profiled_dataset, self.dataset))
+        assert len(self.profiled_dataset) != 0
+        assert len(self.profiled_dataset) == len(self.df)
 
     def test_extreme_depth_filter(self):
-        filtered_profiled_dataset = filter_profile_depth(
-            self.profiled_dataset, 10000
+        # All profiles have at least 1m of depth, so this should filter all profiles with at least
+        # one depth (44 of them)
+        fdf = filter_profile_depth(
+            self.profiled_dataset,
+            below=1
         )
-        uniques = np.unique(filtered_profiled_dataset[:, 2])
-        self.assertEqual(len(uniques), 1)
+        profiles = fdf.profile.unique()
+        # 63 total profiles but only 44 have any depths (the rest are all NaN) and are valid
+        assert len(profiles) == 44
+        assert is_continuous(fdf) is True
 
-    def test_filter_profile_depth(self):
-        filtered_profiled_dataset = filter_profile_depth(
-            self.profiled_dataset, 36
+        fdf = filter_profile_depth(
+            self.profiled_dataset,
+            below=10000
         )
-        self.assertNotEqual(
-            len(np.unique(self.profiled_dataset[:, 2])),
-            len(np.unique(filtered_profiled_dataset[:, 2]))
-        )
-        self.assertTrue(is_continuous(filtered_profiled_dataset))
-        self.assertTrue(is_complete(filtered_profiled_dataset, self.dataset))
+        profiles = fdf.profile.unique()
+        # No profiles are deeper than 10000m
+        assert len(profiles) == 0
+        assert is_continuous(fdf) is True
+        assert fdf.empty
 
-    def test_filter_profile_time(self):
-        filtered_profiled_dataset = filter_profile_time(
-            self.profiled_dataset, 300
+    def test_filter_profile_timeperiod(self):
+        fdf = filter_profile_timeperiod(
+            self.profiled_dataset,
+            300
         )
-        self.assertNotEqual(
-            len(np.unique(self.profiled_dataset[:, 2])),
-            len(np.unique(filtered_profiled_dataset[:, 2]))
+        profiles = fdf.profile.unique()
+        # 18 profiles are longer than 300 seconds
+        assert len(profiles) == 18
+        assert is_continuous(fdf) is True
+
+        fdf = filter_profile_timeperiod(
+            self.profiled_dataset,
+            10
         )
-        self.assertTrue(is_continuous(filtered_profiled_dataset))
-        self.assertTrue(is_complete(filtered_profiled_dataset, self.dataset))
+        profiles = fdf.profile.unique()
+        # 32 profiles are longer than 10 seconds
+        assert len(profiles) == 32
+        assert is_continuous(fdf) is True
+
+        fdf = filter_profile_timeperiod(
+            self.profiled_dataset,
+            10000
+        )
+        profiles = fdf.profile.unique()
+        # 0 profiles are longer than 10000
+        assert len(profiles) == 0
+        assert is_continuous(fdf) is True
+        assert fdf.empty
 
     def test_filter_profile_distance(self):
-        filtered_profiled_dataset = filter_profile_distance(
-            self.profiled_dataset, 150
+        fdf = filter_profile_distance(
+            self.profiled_dataset,
+            0
         )
-        self.assertNotEqual(
-            len(np.unique(self.profiled_dataset[:, 2])),
-            len(np.unique(filtered_profiled_dataset[:, 2]))
+        profiles = fdf.profile.unique()
+        # 63 total profiles but only 44 have any depths (the rest are all NaN) and are valid
+        assert len(profiles) == 44
+        assert is_continuous(fdf) is True
+
+        fdf = filter_profile_distance(
+            self.profiled_dataset,
+            10000
         )
-        self.assertTrue(is_continuous(filtered_profiled_dataset))
-        self.assertTrue(is_complete(filtered_profiled_dataset, self.dataset))
+        profiles = fdf.profile.unique()
+        # 0 profiles span 10000m
+        assert len(profiles) == 0
+        assert is_continuous(fdf) is True
+        assert fdf.empty
 
     def test_filter_profile_number_of_points(self):
-        filtered_profiled_dataset = filter_profile_number_of_points(
-            self.profiled_dataset, 20
+        fdf = filter_profile_number_of_points(
+            self.profiled_dataset,
+            0
         )
-        self.assertNotEqual(
-            len(np.unique(self.profiled_dataset[:, 2])),
-            len(np.unique(filtered_profiled_dataset[:, 2]))
+        profiles = fdf.profile.unique()
+        # 63 total profiles but only 47 have more than 0 points
+        assert len(profiles) == 47
+        assert is_continuous(fdf) is True
+
+        fdf = filter_profile_number_of_points(
+            self.profiled_dataset,
+            10000
         )
-        self.assertTrue(is_continuous(filtered_profiled_dataset))
-        self.assertTrue(is_complete(filtered_profiled_dataset, self.dataset))
+        profiles = fdf.profile.unique()
+        # 0 profiles have 10000 points
+        assert len(profiles) == 0
+        assert is_continuous(fdf) is True
+        assert fdf.empty
+
+        fdf = filter_profile_number_of_points(
+            self.profiled_dataset,
+            130
+        )
+        profiles = fdf.profile.unique()
+        # 1 profiles have 130 points (thats the largest)
+        assert len(profiles) == 1
+        assert is_continuous(fdf) is True
+        assert profiles == [0]  # Make sure it reindexed to the "0" profile
 
     def test_default_filter_composite(self):
-        filtered_profiled_dataset = filter_profile_depth(self.profiled_dataset)
-        filtered_profiled_dataset = filter_profile_number_of_points(
-            filtered_profiled_dataset, 20
-        )
-        filtered_profiled_dataset = filter_profile_time(
-            filtered_profiled_dataset
-        )
-        filtered_profiled_dataset = filter_profile_distance(
-            filtered_profiled_dataset
-        )
-        self.assertNotEqual(
-            len(np.unique(self.profiled_dataset[:, 2])),
-            len(np.unique(filtered_profiled_dataset[:, 2]))
-        )
-        self.assertTrue(is_continuous(filtered_profiled_dataset))
-        self.assertTrue(is_complete(filtered_profiled_dataset, self.dataset))
+        fdf = filter_profile_depth(self.profiled_dataset)
+        fdf = filter_profile_number_of_points(fdf)
+        fdf = filter_profile_timeperiod(fdf)
+        fdf = filter_profile_distance(fdf)
 
-        #pp = pprint.PrettyPrinter(indent=4)
-        #pp.pprint(filtered_profiled_dataset)
+        # Make sure something was subset
+        assert len(self.df) != len(fdf)
+        assert is_continuous(fdf) is True
+
+        default_df = default_filter(self.profiled_dataset)
+        # Make surethe default filter works as intended
+        assert len(self.df) != len(default_df)
+        assert is_continuous(default_df) is True
+        assert default_df.equals(fdf)
 
 
 class TestInterpolateGPS(unittest.TestCase):
 
     def setUp(self):
-        self.ctd_dataset = np.loadtxt(ctd_filepath, delimiter=',')
+        sr = SlocumReader(ctd_filepath)
+        self.df = sr.standardize()
 
     def test_interpolate_gps(self):
         est_lat, est_lon = interpolate_gps(
-            self.ctd_dataset[:, 0],
-            self.ctd_dataset[:, 4], self.ctd_dataset[:, 5]
+            timestamps=masked_epoch(self.df.t),
+            latitude=self.df.y,
+            longitude=self.df.x
         )
-        self.assertEqual(len(est_lat), len(est_lon))
-        self.assertEqual(len(self.ctd_dataset[:, 0]), len(est_lat))
+        assert len(est_lat) == len(est_lon)
+        assert len(est_lat) == self.df.y.size
+        assert len(est_lon) == self.df.x.size
 
 
 class TestSalinity(unittest.TestCase):
 
-    def setUp(self):
-        self.ctd_dataset = np.loadtxt(ctd_filepath, delimiter=',')
-
     def test_practical_salinity(self):
+        sr = SlocumReader(ctd_filepath)
         salinity = calculate_practical_salinity(
-            self.ctd_dataset[:, 0],
-            self.ctd_dataset[:, 1],
-            self.ctd_dataset[:, 2],
-            self.ctd_dataset[:, 3]
+            sr.data.sci_m_present_time,
+            sr.data.sci_water_cond,
+            sr.data.sci_water_temp,
+            sr.data.sci_water_pressure,
         )
-        self.assertEqual(len(self.ctd_dataset[:, 0]), len(salinity))
+        assert sr.data.sci_m_present_time.size == salinity.size
 
 
 class TestDensity(unittest.TestCase):
 
-    def setUp(self):
-        self.ctd_dataset = np.loadtxt(ctd_filepath, delimiter=',')
-        self.lat, self.lon = interpolate_gps(
-            self.ctd_dataset[:, 0],
-            self.ctd_dataset[:, 4], self.ctd_dataset[:, 5]
+    def test_density(self):
+        sr = SlocumReader(ctd_filepath)
+        df = sr.standardize()
+
+        salinity = calculate_practical_salinity(
+            sr.data.sci_m_present_time,
+            sr.data.sci_water_cond,
+            sr.data.sci_water_temp,
+            sr.data.sci_water_pressure,
+        )
+        assert sr.data.sci_m_present_time.size == salinity.size
+
+        est_lat, est_lon = interpolate_gps(
+            timestamps=masked_epoch(df.t),
+            latitude=df.y,
+            longitude=df.x
         )
 
-    def test_density(self):
-        salinity = calculate_practical_salinity(
-            self.ctd_dataset[:, 0],
-            self.ctd_dataset[:, 1],
-            self.ctd_dataset[:, 2],
-            self.ctd_dataset[:, 3]
-        )
         density = calculate_density(
-            self.ctd_dataset[:, 0],
-            self.ctd_dataset[:, 2],
-            self.ctd_dataset[:, 3],
+            sr.data.sci_m_present_time,
+            sr.data.sci_water_temp,
+            sr.data.sci_water_pressure,
             salinity,
-            self.lat, self.lon
+            est_lat,
+            est_lon
         )
-        self.assertEqual(len(self.ctd_dataset[:, 0]), len(density))
+        assert sr.data.sci_m_present_time.size == density.size
 
 
 class TestUtility(unittest.TestCase):

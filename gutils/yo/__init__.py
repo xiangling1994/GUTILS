@@ -1,12 +1,20 @@
 #!/usr/bin/env python
+import math
 
 import numpy as np
+import pandas as pd
 
 from gutils import (
+    masked_epoch,
     validate_glider_args,
     clean_dataset,
     boxcar_smooth_dataset
 )
+from gutils.yo.filters import default_filter
+
+import logging
+L = logging.getLogger(__name__)
+
 
 # For Readability
 TIME_DIM = 0
@@ -22,79 +30,89 @@ def binarize_diff(data):
 def calculate_delta_depth(interp_data):
     delta_depth = np.diff(interp_data)
     delta_depth = binarize_diff(delta_depth)
-
     delta_depth = boxcar_smooth_dataset(delta_depth, 2)
-
     return delta_depth
 
 
-def create_profile_entry(dataset, start, end):
-    time_start = dataset[start, TIME_DIM]
-    time_end = dataset[end - 1, TIME_DIM]
-    depth_start = dataset[start, DATA_DIM]
-    depth_end = dataset[end - 1, DATA_DIM]
-    return {
-        'index_bounds': (start, end),
-        'time_bounds': (time_start, time_end),
-        'depth_bounds': (depth_start, depth_end)
-    }
-
-
-def find_yo_extrema(timestamps, depth):
-    """Returns timestamps, row indices, and depth and time bounds
-    corresponding to glider yo profiles
-
-    Returns the timestamps and row indices corresponding the peaks and valleys
-    (profiles start/stop) found in the time-depth array, tz.  All indices are
-    returned.
-
+def assign_profiles(df, tsint=None):
+    """Returns the start and stop timestamps for every profile indexed from the
+    depth timeseries
     Parameters:
         time, depth
-
     Returns:
-        A Nx3 array of timestamps, depth, and profile ids
-
+        A Nx2 array of the start and stop timestamps indexed from the yo
     Use filter_yo_extrema to remove invalid/incomplete profiles
     """
 
-    validate_glider_args(timestamps, depth)
+    profile_df = df.copy()
+    tmp_df = df.copy()
 
-    est_data = np.column_stack((
-        timestamps,
-        depth
-    ))
+    if tsint is None:
+        tsint = 5
 
     # Set negative depth values to NaN
-    est_data[est_data[:, DATA_DIM] <= 0] = float('nan')
+    tmp_df.loc[tmp_df.z <= 0, 'z'] = math.nan
+    # Remove NaN rows
+    tmp_df = tmp_df.dropna(subset=['z'])
 
-    est_data = clean_dataset(est_data)
+    if len(tmp_df) < 2:
+        L.debug('Skipping yo that contains < 2 rows')
+        return np.empty((0, 2))
 
+    # Make 't' epochs and not a DateTimeIndex
+    tmp_df['t'] = masked_epoch(tmp_df.t)
+
+    # Create the fixed timestamp array from the min timestamp to the max timestamp
+    # spaced by tsint intervals
+    ts = np.arange(tmp_df.t.min(), tmp_df.t.max(), tsint)
     # Stretch estimated values for interpolation to span entire dataset
-    interp_data = np.interp(
-        timestamps,
-        est_data[:, 0],
-        est_data[:, 1],
-        left=est_data[0, 1],
-        right=est_data[-1, 1]
+    interp_z = np.interp(
+        ts,
+        tmp_df.t,
+        tmp_df.z,
+        left=tmp_df.z.iloc[0],
+        right=tmp_df.z.iloc[-1]
     )
 
-    interp_data = boxcar_smooth_dataset(interp_data, 5)
+    filtered_z = boxcar_smooth_dataset(interp_z, tsint // 2)
+    delta_depth = calculate_delta_depth(filtered_z)
 
-    delta_depth = calculate_delta_depth(interp_data)
+    p_inds = np.empty((0, 2))
+    inflections = np.where(np.diff(delta_depth) != 0)[0]
+    p_inds = np.append(p_inds, [[0, inflections[0]]], axis=0)
 
-    interp_indices = np.argwhere(delta_depth == 0).flatten()
+    for p in range(len(inflections) - 1):
+        p_inds = np.append(p_inds, [[inflections[p], inflections[p + 1]]], axis=0)
+    p_inds = np.append(p_inds, [[inflections[-1], len(ts) - 1]], axis=0)
 
-    profiled_dataset = np.zeros((len(timestamps), 3))
-    profiled_dataset[:, TIME_DIM] = timestamps
-    profiled_dataset[:, DATA_DIM] = interp_data
+    # Start profile index
+    profile_index = 0
+    ts_window = tsint * 2
+    profile_df['profile'] = math.nan  # Fill profile with nans
 
-    start_index = 0
-    for profile_id, end_index in enumerate(interp_indices):
-        profiled_dataset[start_index:end_index, 2] = profile_id
+    # Iterate through the profile start/stop indices
+    for p0, p1 in p_inds:
 
-        start_index = end_index
+        min_time = pd.to_datetime(ts[int(p0)] - ts_window, unit='s')
+        max_time = pd.to_datetime(ts[int(p1)] + ts_window, unit='s')
 
-    if start_index < len(profiled_dataset):
-        profiled_dataset[start_index:, 2] = len(interp_indices) - 1
+        # Get rows between the min and max time
+        time_between = profile_df.t.between(min_time, max_time, inclusive=True)
 
-    return profiled_dataset
+        # Get indexes of the between rows since we can't assign by the range due to NaT values
+        ixs = profile_df.loc[time_between].index.tolist()
+
+        # Set the rows profile column to the profile id
+        profile_df.loc[ixs[0]:ixs[-1], 'profile'] = profile_index
+
+        # Increment the profile index
+        profile_index += 1
+
+    # L.info(
+    #     list(zip(
+    #         profile_df.t.values[180:200].tolist(),
+    #         profile_df.profile.values[180:200].tolist(),
+    #         profile_df.z.values[180:200].tolist(),
+    #     ))
+    # )
+    return profile_df

@@ -9,19 +9,18 @@ from gsw.gibbs.conversions import SA_from_SP, CT_from_t
 from gsw.gibbs.density_enthalpy_48 import rho
 
 
-def calculate_practical_salinity(timestamps,
-                                 conductivity, temperature, pressure):
+def calculate_practical_salinity(time, conductivity, temperature, pressure):
     """Calculates practical salinity given glider conductivity, temperature,
     and pressure using Gibbs gsw SP_from_C function.
 
     Parameters:
-        timestamp, conductivity (S/m), temperature (C), and pressure (bar).
+        time, conductivity (S/m), temperature (C), and pressure (bar).
 
     Returns:
         salinity (psu PSS-78).
     """
 
-    validate_glider_args(timestamps, conductivity, temperature, pressure)
+    validate_glider_args(time, conductivity, temperature, pressure)
 
     # Convert S/m to mS/cm
     mS_conductivity = conductivity * 10
@@ -36,25 +35,20 @@ def calculate_practical_salinity(timestamps,
     )
 
 
-def calculate_density(timestamps,
-                      temperature, pressure, salinity,
-                      latitude, longitude):
+def calculate_density(time, temperature, pressure, salinity, latitude, longitude):
     """Calculates density given glider practical salinity, pressure, latitude,
     and longitude using Gibbs gsw SA_from_SP and rho functions.
 
     Parameters:
-        timestamps (UNIX epoch),
+        time (UNIX epoch),
         temperature (C), pressure (bar), salinity (psu PSS-78),
         latitude (decimal degrees), longitude (decimal degrees)
 
     Returns:
         density (kg/m**3),
-        absolute salinity(g/kg), conservative temperature (C)
     """
 
-    validate_glider_args(timestamps,
-                         temperature, pressure, salinity,
-                         latitude, longitude)
+    validate_glider_args(time, temperature, pressure, salinity, latitude, longitude)
 
     dBar_pressure = pressure * 10
 

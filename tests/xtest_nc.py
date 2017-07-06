@@ -18,9 +18,9 @@ from gutils.nc import open_glider_netcdf
 from gutils.scripts.create_glider_netcdf import process_dataset
 
 import logging
-logger = logging.getLogger()
-logger.addHandler(logging.StreamHandler())
-logger.setLevel(logging.DEBUG)
+L = logging.getLogger()
+L.handlers = [logging.StreamHandler()]
+L.setLevel(logging.DEBUG)
 
 
 def decoder(x):

@@ -1,103 +1,93 @@
 #!/usr/bin/env python
 
-import numpy as np
+import pandas as pd
 
-from gutils.yo import (
-    TIME_DIM,
-    DATA_DIM
-)
+import logging
+L = logging.getLogger(__name__)
 
 
 def default_filter(dataset):
     dataset = filter_profile_depth(dataset)
     dataset = filter_profile_number_of_points(dataset)
-    dataset = filter_profile_time(dataset)
+    dataset = filter_profile_timeperiod(dataset)
     dataset = filter_profile_distance(dataset)
-
     return dataset
 
 
-def filter_profiles(dataset, conditional):
+def filter_profiles(dataset, conditional, reindex=True):
     """Filters out profiles that do not meet some criteria
 
     Returns the filtered set of profiles
     """
+    filtered = dataset.groupby('profile').filter(conditional).copy()
 
-    filtered_dataset = dataset.copy()
+    # Re-index the profiles
+    if reindex is True:
+        profs = filtered.profile.unique()
+        for ix, p in enumerate(profs):
+            filtered.loc[filtered.profile == p, 'profile'] = ix
 
-    filtered_dataset[:, 2] = 0
-
-    start_index = 0
-    last_good_profile = 0
-    num_profiles = int(max(dataset[:, 2]) + 1)
-    for profile_id in range(0, num_profiles):
-        profile = dataset[dataset[:, 2] == profile_id]
-        end_index = np.where(dataset[:, 2] == profile_id)[0][-1] + 1
-        if conditional(profile):
-            filtered_dataset[start_index:end_index, 2] = last_good_profile
-            start_index = end_index
-            last_good_profile += 1
-        elif len(dataset) == end_index:
-            filtered_dataset[start_index:, 2] = last_good_profile
-
-    return filtered_dataset
-
-# Convenience methods follow
+    return filtered
 
 
-def filter_profile_depth(dataset, below=None):
-    """Filters out profiles that are not below a certain depth (Default: 1m)
+def filter_profile_depth(dataset, below=None, reindex=True):
+    """Filters out profiles that are not completely below a certain depth (Default: 1m). This is
+    depth positive down.
 
-    Returns the filtered set of profiles
+    Returns a DataFrame with a subset of profiles
     """
-    below = below or 1
+
+    if below is None:
+        below = 1
 
     def conditional(profile):
-        depth_max = max(profile[:, DATA_DIM])
-        return depth_max >= below
+        return profile.z.max() >= below
 
-    return filter_profiles(dataset, conditional)
+    return filter_profiles(dataset, conditional, reindex)
 
 
-def filter_profile_time(dataset, timespan_condition=None):
+def filter_profile_timeperiod(dataset, timespan_condition=None, reindex=True):
     """Filters out profiles that do not span a specified number of seconds
     (Default: 10 seconds)
 
-    Returns the filtered set of profiles
+    Returns a DataFrame with a subset of profiles
     """
-    timespan_condition = timespan_condition or 10
+    if timespan_condition is None:
+        timespan_condition = 10
 
     def conditional(profile):
-        timespan = profile[-1, TIME_DIM] - profile[0, TIME_DIM]
-        return timespan >= timespan_condition
+        timespan = profile.t.max() - profile.t.min()
+        return timespan >= pd.Timedelta(timespan_condition, unit='s')
 
-    return filter_profiles(dataset, conditional)
+    return filter_profiles(dataset, conditional, reindex)
 
 
-def filter_profile_distance(dataset, distance_condition=None):
+def filter_profile_distance(dataset, distance_condition=None, reindex=True):
     """Filters out profiles that do not span a specified vertical distance
     (Default: 1m)
 
-    Returns the filtered set of profiles
+    Returns a DataFrame with a subset of profiles
     """
-    distance_condition = distance_condition or 1
+    if distance_condition is None:
+        distance_condition = 1
 
     def conditional(profile):
-        distance = abs(profile[-1, DATA_DIM] - profile[0, DATA_DIM])
+        distance = profile.z.max() - profile.z.min()
         return distance >= distance_condition
 
-    return filter_profiles(dataset, conditional)
+    return filter_profiles(dataset, conditional, reindex)
 
 
-def filter_profile_number_of_points(dataset, points_condition=None):
+def filter_profile_number_of_points(dataset, points_condition=None, reindex=True):
     """Filters out profiles that do not have a specified number of points
     (Default: 5 points)
 
-    Returns the filtered set of profiles
+    Returns a DataFrame with a subset of profiles
     """
-    points_condition = points_condition or 5
+    if points_condition is None:
+        points_condition = 5
 
     def conditional(profile):
         return len(profile) >= points_condition
 
-    return filter_profiles(dataset, conditional)
+    return filter_profiles(dataset, conditional, reindex)

@@ -25,7 +25,6 @@ test:
     imports:
         - gutils
         - gutils.ctd
-        - gutils.gps
         - gutils.yo
         - gutils.yo.filters
         - gutils.nc

@@ -24,8 +24,8 @@ from gutils.gbdr import (
 )
 
 
+from gutils import interpolate_gps
 from gutils.yo import find_yo_extrema
-from gutils.gps import interpolate_gps
 from gutils.yo.filters import default_filter
 from gutils.gbdr.methods import parse_glider_filename
 
@@ -50,27 +50,6 @@ def create_reader(flight_path, science_path):
             return science_reader
 
     return MergedGliderBDReader(flight_reader, science_reader)
-
-
-def find_profiles(flight_path, science_path, time_name, depth_name):
-    profile_values = []
-    reader = create_reader(flight_path, science_path)
-    for line in reader:
-        if depth_name in line:
-            profile_values.append([line[time_name], line[depth_name]])
-
-    if not profile_values:
-        raise ValueError('Not enough profiles found')
-
-    try:
-        profile_values = np.array(profile_values)
-        timestamps = profile_values[:, 0]
-        depths = profile_values[:, 1]
-    except IndexError:
-        raise ValueError('Not enough timestamps or depths found')
-    else:
-        profile_dataset = find_yo_extrema(timestamps, depths)
-        return default_filter(profile_dataset)
 
 
 def get_file_set_gps(flight_path, science_path, time_name, gps_prefix):
