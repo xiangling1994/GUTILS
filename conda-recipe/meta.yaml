@@ -17,6 +17,7 @@ requirements:
         - gsw <3.1.0
         - netcdf4
         - numpy
+        - pandas
         - python
         - scipy
         - six

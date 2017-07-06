@@ -6,19 +6,11 @@ import pandas as pd
 
 from gutils import (
     masked_epoch,
-    validate_glider_args,
-    clean_dataset,
     boxcar_smooth_dataset
 )
-from gutils.yo.filters import default_filter
 
 import logging
 L = logging.getLogger(__name__)
-
-
-# For Readability
-TIME_DIM = 0
-DATA_DIM = 1
 
 
 def binarize_diff(data):

@@ -1,6 +1,6 @@
 include *.txt
-recursive-include tests *.tbd *.sbd *.json *.csv
-recursive-include gutils/gbdr/bin *
+recursive-include tests *.tbd *.sbd *.ebd *.dbd *.json *.csv
+recursive-include gutils/slocum/bin *
 recursive-include gutils *.json
 include README.md
 include LICENSE
