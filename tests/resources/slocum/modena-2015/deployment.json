@@ -1,7 +1,7 @@
 {
     "glider": "modena",
     "trajectory_date": "20160909T1758",
-    "global_attributes": {
+    "attributes": {
         "wmo_id": 4801920,
         "naming_authority" : "edu.uga.skio",
         "institution" : "Skidaway Institute of Oceanography",

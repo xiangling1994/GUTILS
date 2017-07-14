@@ -1,12 +1,6 @@
-#!/usr/bin/env python
-
-# create_glider_netcdf.py - A command line script for generating NetCDF files
-# from a subset of glider binary data files.
-#
-# By: Michael Lindemuth <mlindemu@usf.edu>
-# University of South Florida
-# College of Marine Science
-# Ocean Technology Group
+#!python
+# coding=utf-8
+from __future__ import division
 
 import os
 import sys
@@ -14,198 +8,236 @@ import json
 import shutil
 import argparse
 import tempfile
-from datetime import datetime
 
-import numpy as np
-
-from gutils.gbdr import (
-    GliderBDReader,
-    MergedGliderBDReader
+from gutils import parse_glider_filename
+from gutils.yo import assign_profiles
+from gutils.yo.filters import (
+    filter_profile_depth,
+    filter_profile_timeperiod,
+    filter_profile_distance,
+    filter_profile_number_of_points
 )
 
+from gutils.slocum import SlocumReader
 
-from gutils import interpolate_gps
-from gutils.yo import find_yo_extrema
-from gutils.yo.filters import default_filter
-from gutils.gbdr.methods import parse_glider_filename
-
-from gutils.nc import open_glider_netcdf, GLIDER_UV_DATATYPE_KEYS
+from nco import Nco
+from pocean.utils import dict_update
+from pocean.meta import MetaInterface
+from pocean.dataset import EnhancedDataset
+from pocean.dsg.trajectory.im import IncompleteMultidimensionalTrajectory
 
 import logging
 logger = logging.getLogger('gutils.nc')
 
 
-def create_reader(flight_path, science_path):
-    if flight_path is not None:
-        flight_reader = GliderBDReader(
-            [flight_path]
+def create_glider_filepath(attrs, begin_time, mode):
+    glider_name = attrs['deployment']['glider']
+
+    deployment_name = '{}-{}'.format(
+        glider_name,
+        attrs['deployment']['trajectory_date']
+    )
+
+    filename = "{}_{:%Y%m%dT%H%M%S}Z_{}.nc" % (
+        glider_name,
+        begin_time,
+        mode
+    )
+
+    return os.path.join(
+        deployment_name,
+        filename
+    )
+
+
+def read_attrs(glider_config_path):
+
+    def cfg_file(name):
+        return os.path.join(
+            glider_config_path,
+            name
         )
-        if science_path is None:
-            return flight_reader
-    if science_path is not None:
-        science_reader = GliderBDReader(
-            [science_path]
-        )
-        if flight_path is None:
-            return science_reader
 
-    return MergedGliderBDReader(flight_reader, science_reader)
+    # Load in configurations
+    default_attrs_path = os.path.join(os.path.dirname(__file__), '..', 'trajectory_template.json')
+    defaults = dict(MetaInterface.from_jsonfile(default_attrs_path))
+
+    # Load global attributes
+    globs = {}
+    global_attrs_path = cfg_file("global_attributes.json")
+    if os.path.isfile(global_attrs_path):
+        globs = dict(MetaInterface.from_jsonfile(global_attrs_path))
+
+    # Load instruments
+    ins = {}
+    ins_attrs_path = cfg_file("instruments.json")
+    if os.path.isfile(ins_attrs_path):
+        ins = dict(MetaInterface.from_jsonfile(ins_attrs_path))
+
+    # Load deployment attributes (including some global attributes)
+    deps = {}
+    deps_attrs_path = cfg_file("deployment.json")
+    if os.path.isfile(deps_attrs_path):
+        deps = dict(MetaInterface.from_jsonfile(deps_attrs_path))
+
+    # Update, highest precedence updates last
+    one = dict_update(defaults, globs)
+    two = dict_update(one, ins)
+    three = dict_update(two, deps)
+    return three
 
 
-def get_file_set_gps(flight_path, science_path, time_name, gps_prefix):
-    gps_values = []
-    reader = create_reader(flight_path, science_path)
-    lat_name = gps_prefix + 'lat-lat'
-    lon_name = gps_prefix + 'lon-lon'
-    for line in reader:
-        if lat_name in line:
-            gps_values.append(
-                [line[time_name], line[lat_name], line[lon_name]]
-            )
-        else:
-            gps_values.append([line[time_name], np.nan, np.nan])
+def create_netcdf(attrs, data, output_path, mode, segment_id):
+    # Create NetCDF Files for Each Profile
+    for pi, profile in data.groupby('profile'):
+        try:
+            # Path to hold file while we create it
+            tmp_handle, tmp_path = tempfile.mkstemp(suffix='.nc', prefix='gutils_glider_netcdf_')
 
-    if not gps_values:
-        raise ValueError('Not enough gps posistions found')
+            # Create final filename
+            begin_time = profile.iloc[0].t
+            relative_file = create_glider_filepath(attrs, begin_time, mode)
+            output_file = os.path.join(output_path, relative_file)
+
+            # Add in the trajectory dimension to make pocean happy
+            traj_name = os.path.basename(os.path.dirname(output_file))
+            profile['trajectory'] = traj_name
+
+            # Use pocean to create NetCDF file
+            im = IncompleteMultidimensionalTrajectory.from_dataframe(profile, tmp_path)
+            im.close()
+
+            # Remove the trajectory dimension
+            nco = Nco()
+            options = [
+                '-h'  # no history
+                '-a trajectory'  # average over dimension size of 1 will remove it
+            ]
+            nco.ncwa(input=tmp_path, output=tmp_path, options=options)
+
+            # Open back up
+            with EnhancedDataset(tmp_path, 'a') as ncd:
+                # Load metadata from config files to create the skeleton
+                # This will create scalar variables but not assign the data
+                ncd.__apply_meta_interface__(attrs)
+
+                # Set the values of any scalar variables
+                ncd.variables['profile_id'][:] = pi
+
+                # We set the profile time/lat/lon to the middle index
+                middle_index = len(profile) // 2
+                ncd.variables['profile_time'][:] = profile.t.iloc[middle_index]
+                ncd.variables['profile_lat'][:] = profile.y.iloc[middle_index]
+                ncd.variables['profile_lon'][:] = profile.x.iloc[middle_index]
+
+                # The uv index is the first row where v (originally m_water_vx) is not null
+                uv_index = profile.v[profile.v.notnull()].iloc[0].index
+                ncd.variables['time_uv'][:] = profile.t.iloc[uv_index]
+                ncd.variables['lat_uv'][:] = profile.y.iloc[uv_index]
+                ncd.variables['lon_uv'][:] = profile.x.iloc[uv_index]
+
+                # Set trajectory value
+                ncd.variables['trajectory'][:] = traj_name
+
+                # Set platform value
+                ncd.variables['platform'] = traj_name
+
+                ncd.variables['segment_id'] = segment_id
+
+                # TODO: Calculate bounds variables and attributes?
+
+            # Move to final destination
+            shutil.move(tmp_path, output_file)
+            logger.info('Created: {}'.format(output_file))
+        finally:
+            os.close(tmp_handle)
+            if os.path.exists(tmp_path):
+                os.remove(tmp_path)
+
+
+def process_dataset(args):
+
+    attrs = read_attrs(args.glider_config_path)
+    ascii_path = args.file
 
     try:
-        gps_values = np.array(gps_values)
-        timestamps = gps_values[:, 0]
-        latitudes = gps_values[:, 1]
-        longitudes = gps_values[:, 2]
-    except IndexError:
-        raise ValueError('Not enough timestamps, latitudes, or longitudes found')
-    else:
-        gps_values[:, 1], gps_values[:, 2] = interpolate_gps(
-            timestamps, latitudes, longitudes
-        )
+        sr = SlocumReader(ascii_path)
+        sr.standardize()
+        data = sr.data
 
-    return gps_values
+        # Optionally, remove any variables from the dataframe that do not have metadata assigned
+        if args.subset is True:
+            orphans = set(data.columns) - set(attrs.get('variables', {}).keys())
+            logger.info(
+                "Excluded from output because there was no metadata: {}".format(orphans)
+            )
+            data = data.drop(orphans, axis=1)
 
+        # Find profile breaks
+        profiles = assign_profiles(data)
 
-def fill_gps(line, interp_gps, time_name, gps_prefix):
-    lat_name = gps_prefix + 'lat-lat'
-    lon_name = gps_prefix + 'lon-lon'
-    if lat_name not in line:
-        timestamp = line[time_name]
-        line[lat_name] = interp_gps[interp_gps[:, 0] == timestamp, 1][0]
-        line[lon_name] = interp_gps[interp_gps[:, 0] == timestamp, 2][0]
+        # Filter data
+        filtered = filter_profile_depth(profiles, below=args.filter_z)
+        filtered = filter_profile_number_of_points(filtered, points_condition=args.filter_points)
+        filtered = filter_profile_timeperiod(filtered, timespan_condition=args.filter_time)
+        filtered = filter_profile_distance(filtered, distance_condition=args.filter_distance)
 
-    return line
+        # TODO: Backfill U/V?
+        # TODO: Backfill X/Y?
 
+    except ValueError as e:
+        logger.exception('{} - Skipping'.format(e))
+        return 1
 
-def init_netcdf(file_path, attrs, segment_id, profile_id):
-    with open_glider_netcdf(file_path, 'w') as glider_nc:
-        # Set global attributes
-        glider_nc.set_global_attributes(attrs['global'])
-
-        # Set Trajectory
-        glider_nc.set_trajectory_id(
-            attrs['deployment']['glider'],
-            attrs['deployment']['trajectory_date']
-        )
-
-        # Set Platform
-        glider_nc.set_platform(attrs['deployment']['platform'])
-
-        # Set Instruments
-        glider_nc.set_instruments(attrs['instruments'])
-
-        # Set Segment ID
-        glider_nc.set_segment_id(segment_id)
-
-        # Set Profile ID
-        glider_nc.set_profile_id(profile_id)
-
-
-def find_segment_id(flight_path, science_path):
-    if flight_path is None:
-        filename = science_path
-    else:
-        filename = flight_path
-
-    details = parse_glider_filename(filename)
-    return details['segment']
-
-
-def fill_uv_variables(dst_glider_nc, uv_values):
-    for key, value in uv_values.items():
-        dst_glider_nc.set_scalar(key, value)
-
-
-def backfill_uv_variables(src_glider_nc, empty_uv_processed_paths):
-    uv_values = {}
-    for key_name in GLIDER_UV_DATATYPE_KEYS:
-        uv_values[key_name] = src_glider_nc.get_scalar(key_name)
-
-    for file_path in empty_uv_processed_paths:
-        with open_glider_netcdf(file_path, 'a') as dst_glider_nc:
-            fill_uv_variables(dst_glider_nc, uv_values)
-
-    return uv_values
+    return create_netcdf(attrs, filtered, args.output_path, sr.mode, args.segment_id)
 
 
 def create_arg_parser():
     parser = argparse.ArgumentParser(
-        description='Parses a set of glider binary data files to a '
-                    'single NetCDF file according to configurations '
+        description='Parses a single combined ASCII file into a set of '
+                    'NetCDFs file according to JSON configurations '
                     'for institution, deployment, glider, and datatypes.'
     )
-
     parser.add_argument(
         'glider_config_path',
         help='Path to configuration files for this specific glider deployment.'
     )
-
     parser.add_argument(
         'output_path',
         help='Path to folder to save NetCDF output. A directory named after '
              'the deployment will be created here'
     )
-
     parser.add_argument(
-        '-m', '--mode',
-        help="Set the mode for the file naming convention (rt or delayed?)",
-        default="delayed"
+        '-f', '--file',
+        help="Combined ASCII file to process into NetCDF",
+        default=None
     )
-
     parser.add_argument(
         '--segment_id',
         nargs=1,
         help='Set the segment ID',
         default=None
     )
-
     parser.add_argument(
-        '-t', '--time',
-        help="Set time parameter to use for profile recognition",
-        default="timestamp"
+        '-fp', '--filter_points',
+        help="Filter out profiles that do not have at least this number of points",
+        default=5
     )
-
     parser.add_argument(
-        '-d', '--depth',
-        help="Set depth parameter to use for profile recognition",
-        default="m_depth-m"
+        '-fd', '--filter_distance',
+        help="Filter out profiles that do not span at least this vertical distance (meters)",
+        default=1
     )
-
     parser.add_argument(
-        '-g', '--gps_prefix',
-        help="Set prefix for gps parameters to use for location estimation",
-        default="m_gps_"
+        '-ft', '--filter_time',
+        help="Filter out profiles that last less than this numer of seconds",
+        default=10
     )
-
     parser.add_argument(
-        '-f', '--flight',
-        help="Flight data file to process",
-        default=None
+        '-fz', '--filter_z',
+        help="Filter out profiles that are not completely below this depth (meters)",
+        default=1
     )
-
-    parser.add_argument(
-        '-s', '--science',
-        help="Science data file to process",
-        default=None
-    )
-
     parser.add_argument(
         '--no-subset',
         dest='subset',
@@ -217,164 +249,17 @@ def create_arg_parser():
     return parser
 
 
-def read_attrs(glider_config_path):
-    # Load in configurations
-    attrs = {}
-
-    def cfg_file(name):
-        return os.path.join(
-            glider_config_path,
-            name
-        )
-
-    # Load institute global attributes
-    global_attrs_path = cfg_file("global_attributes.json")
-    with open(global_attrs_path, 'r') as f:
-        attrs['global'] = json.load(f)
-
-    # Load deployment attributes (including global attributes)
-    deployment_attrs_path = cfg_file("deployment.json")
-    with open(deployment_attrs_path, 'r') as f:
-        attrs['deployment'] = json.load(f)
-
-    # Load instruments
-    instruments_attrs_path = cfg_file("instruments.json")
-    with open(instruments_attrs_path, 'r') as f:
-        attrs['instruments'] = json.load(f)
-
-    # Fill in global attributes
-    attrs['global'].update(attrs['deployment']['global_attributes'])
-
-    return attrs
-
-
-def process_dataset(args):
-
-    attrs = read_attrs(args.glider_config_path)
-
-    timestr = 'timestamp'
-
-    flight_path = args.flight
-    science_path = args.science
-    subset_datatypes = args.subset
-
-    glider_name = attrs['deployment']['glider']
-    deployment_name = '{}-{}'.format(
-        glider_name,
-        attrs['deployment']['trajectory_date']
-    )
-
-    try:
-        # Find profile breaks
-        profiles = find_profiles(flight_path, science_path, args.time, args.depth)
-
-        # Interpolate GPS
-        interp_gps = get_file_set_gps(
-            flight_path, science_path, args.time, args.gps_prefix
-        )
-    except ValueError as e:
-        logger.error('{} - Skipping'.format(e))
-        return 1
-
-    # Create NetCDF Files for Each Profile
-    profile_id = 0
-    profile_end = 0
-    file_path = None
-    uv_values = None
-    movepairs = []
-    empty_uv_processed_paths = []
-    reader = create_reader(flight_path, science_path)
-
-    # Tempdirectory
-    tmpdir = tempfile.mkdtemp()
-
-    for line in reader:
-        if profile_end < line[timestr]:
-            # New profile! init the NetCDF output file
-
-            # Path to hold file while we create it
-            tmp_handle, tmp_path = tempfile.mkstemp(dir=tmpdir, suffix='.nc', prefix='gutils')
-
-            # Open new NetCDF
-            begin_time = datetime.utcfromtimestamp(line[timestr])
-            filename = "%s_%s_%s.nc" % (
-                glider_name,
-                begin_time.strftime("%Y%m%dT%H%M%SZ"),
-                args.mode
-            )
-
-            file_path = os.path.join(
-                args.output_path,
-                deployment_name,
-                filename
-            )
-
-            # NOTE: Store 1 based profile id
-            init_netcdf(tmp_path, attrs, args.segment_id, profile_id + 1)
-            profile = profiles[profiles[:, 2] == profile_id]
-            profile_end = max(profile[:, 0])
-
-        with open_glider_netcdf(tmp_path, 'a') as glider_nc:
-            while line[timestr] <= profile_end:
-                line = fill_gps(line, interp_gps, args.time, args.gps_prefix)
-                glider_nc.stream_dict_insert(line, subset_datatypes)
-                try:
-                    line = reader.__next__()
-                except StopIteration:
-                    break
-
-            # Handle UV Variables
-            if glider_nc.contains('time_uv'):
-                uv_values = backfill_uv_variables(
-                    glider_nc, empty_uv_processed_paths
-                )
-            elif uv_values is not None:
-                fill_uv_variables(glider_nc, uv_values)
-                del empty_uv_processed_paths[:]
-            else:
-                empty_uv_processed_paths.append(tmp_path)
-
-            glider_nc.update_profile_vars()
-            try:
-                glider_nc.calculate_salinity()
-                glider_nc.calculate_density()
-            except BaseException as e:
-                logger.error(e)
-            glider_nc.update_bounds()
-
-        movepairs.append((tmp_path, file_path))
-        os.close(tmp_handle)
-
-        profile_id += 1
-
-    for tp, fp in movepairs:
-        try:
-            os.makedirs(os.path.dirname(fp))
-        except OSError:
-            pass  # destination folder exists
-        shutil.move(tp, fp)
-    shutil.rmtree(tmpdir)
-
-    return 0
-
-
 def main():
     parser = create_arg_parser()
     args = parser.parse_args()
 
     # Check filenames
-    if args.flight is None and args.science is None:
-        raise ValueError('Must specify flight, science or both paths')
-
-    if args.flight is not None and args.science is not None:
-        flight_prefix = os.path.split(args.flight)[1].rsplit('.')[0]
-        science_prefix = os.path.split(args.science)[1].rsplit('.')[0]
-        if flight_prefix != science_prefix:
-            raise ValueError('Flight and science file names must match')
+    if args.file is None:
+        raise ValueError('Must specify path to combined ASCII file')
 
     # Fill in segment ID
     if args.segment_id is None:
-        args.segment_id = find_segment_id(args.flight, args.science)
+        args.segment_id = parse_glider_filename(args.file)['segment']
 
     return process_dataset(args)
 

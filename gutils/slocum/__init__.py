@@ -17,6 +17,12 @@ import logging
 L = logging.getLogger(__name__)
 
 
+MODE_MAPPING = {
+    "rt": ["sbd", "tbd", "mbd", "nbd"],
+    "delayed": ["dbd", "ebd"]
+}
+
+
 class SlocumReader(object):
 
     TIMESTAMP_SENSORS = ['m_present_time', 'sci_m_present_time']
@@ -25,6 +31,15 @@ class SlocumReader(object):
     def __init__(self, ascii_file):
         self.ascii_file = ascii_file
         self.metadata, self.data = self.read()
+
+        # Set the mode to 'rt' or 'delayed'
+        self.mode = None
+        if 'filename_extension' in self.metadata:
+            filemode = self.metadata['filename_extension']
+            for m, extensions in MODE_MAPPING.items():
+                if filemode in extensions:
+                    self.mode = m
+                    break
 
     def read(self):
         metadata = OrderedDict()
@@ -85,6 +100,7 @@ class SlocumReader(object):
                 y_interp = np.empty(df.y.size) * math.nan
                 x_interp = np.empty(df.x.size) * math.nan
 
+            # TODO: Do we will x and y forward? Or at NetCDF creation time?
             df['y_interp'] = y_interp
             df['x_interp'] = x_interp
 
@@ -95,6 +111,7 @@ class SlocumReader(object):
                 # Negate the results so that increasing values note increasing depths
                 depths = -z_from_p(df[p] * 10, df.y_interp)
                 df['z'] = depths
+                break
 
         standard_columns = {
             'm_altitude': 'altitude',

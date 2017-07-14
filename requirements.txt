@@ -2,6 +2,8 @@ gsw<3.1.0
 netCDF4
 numpy
 pandas
+pocean-core>=1.1.0
+pynco
 scipy
 six
 whichcraft
