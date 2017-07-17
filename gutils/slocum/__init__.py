@@ -27,6 +27,7 @@ class SlocumReader(object):
 
     TIMESTAMP_SENSORS = ['m_present_time', 'sci_m_present_time']
     PRESSURE_SENSORS = ['sci_water_pressure', 'm_water_pressure', 'm_pressure']
+    DEPTH_SENSORS = ['m_depth']
 
     def __init__(self, ascii_file):
         self.ascii_file = ascii_file
@@ -82,36 +83,50 @@ class SlocumReader(object):
         for t in self.TIMESTAMP_SENSORS:
             if t in df.columns:
                 df['t'] = pd.to_datetime(df[t], unit='s')
+                break
 
         # Interpolate GPS coordinates
         if 'm_gps_lat' in df.columns and 'm_gps_lon' in df.columns:
 
-            df['y'] = df.m_gps_lat.copy()
-            df['x'] = df.m_gps_lon.copy()
+            df['drv_m_gps_lat'] = df.m_gps_lat.copy()
+            df['drv_m_gps_lon'] = df.m_gps_lon.copy()
+
+            # Fill in data will nulls where value is the default masterdata value
+            masterdatas = (df.drv_m_gps_lon >= 18000) | (df.drv_m_gps_lat > 9000)
+            df.loc[masterdatas, 'drv_m_gps_lat'] = np.nan
+            df.loc[masterdatas, 'drv_m_gps_lon'] = np.nan
 
             try:
+                # Interpolate the filled in 'x' and 'y'
                 y_interp, x_interp = interpolate_gps(
                     masked_epoch(df.t),
-                    df.y,
-                    df.x
+                    df.drv_m_gps_lat,
+                    df.drv_m_gps_lon
                 )
             except ValueError:
-                L.warning("Raw GPS values no found!")
-                y_interp = np.empty(df.y.size) * math.nan
-                x_interp = np.empty(df.x.size) * math.nan
+                L.warning("Raw GPS values not found!")
+                y_interp = np.empty(df.drv_m_gps_lat.size) * math.nan
+                x_interp = np.empty(df.drv_m_gps_lon.size) * math.nan
 
-            # TODO: Do we will x and y forward? Or at NetCDF creation time?
-            df['y_interp'] = y_interp
-            df['x_interp'] = x_interp
+            df['y'] = y_interp
+            df['x'] = x_interp
 
         # Standardize 'pressure' to the 'z' column
         for p in self.PRESSURE_SENSORS:
             if p in df.columns:
                 # Calculate depth from pressure (multiplied by 10 to get to decibars) and latitude
                 # Negate the results so that increasing values note increasing depths
-                depths = -z_from_p(df[p] * 10, df.y_interp)
-                df['z'] = depths
+                df['z'] = -z_from_p(df[p] * 10, df.y)
                 break
+
+        if 'z' not in df.columns:
+            # Try the depth sensor
+            for p in self.DEPTH_SENSORS:
+                if p in df.columns:
+                    # Calculate depth from pressure (multiplied by 10 to get to decibars) and latitude
+                    # Negate the results so that increasing values note increasing depths
+                    df['z'] = df[p].copy()
+                    break
 
         standard_columns = {
             'm_altitude': 'altitude',
@@ -156,8 +171,8 @@ class SlocumReader(object):
                 temperature=df.temperature.values,
                 pressure=df.pressure.values,
                 salinity=df.salinity.values,
-                latitude=df.y_interp,
-                longitude=df.x_interp,
+                latitude=df.y,
+                longitude=df.x,
             )
         except (ValueError, AttributeError) as e:
             L.error("Could not compute density: {}".format(e))

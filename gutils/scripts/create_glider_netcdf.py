@@ -4,10 +4,12 @@ from __future__ import division
 
 import os
 import sys
-import json
+import math
 import shutil
 import argparse
 import tempfile
+
+import pandas as pd
 
 from gutils import parse_glider_filename
 from gutils.yo import assign_profiles
@@ -21,7 +23,8 @@ from gutils.yo.filters import (
 from gutils.slocum import SlocumReader
 
 from nco import Nco
-from pocean.utils import dict_update
+import netCDF4 as nc4
+from pocean.utils import dict_update, get_fill_value
 from pocean.meta import MetaInterface
 from pocean.dataset import EnhancedDataset
 from pocean.dsg.trajectory.im import IncompleteMultidimensionalTrajectory
@@ -31,14 +34,14 @@ logger = logging.getLogger('gutils.nc')
 
 
 def create_glider_filepath(attrs, begin_time, mode):
-    glider_name = attrs['deployment']['glider']
+    glider_name = attrs['glider']
 
     deployment_name = '{}-{}'.format(
         glider_name,
-        attrs['deployment']['trajectory_date']
+        attrs['trajectory_date']
     )
 
-    filename = "{}_{:%Y%m%dT%H%M%S}Z_{}.nc" % (
+    filename = "{}_{:%Y%m%dT%H%M%S}Z_{}.nc".format(
         glider_name,
         begin_time,
         mode
@@ -87,9 +90,82 @@ def read_attrs(glider_config_path):
     return three
 
 
-def create_netcdf(attrs, data, output_path, mode, segment_id):
+def set_profile_data(ncd, profile):
+    # Skipping profile_ variables for now
+    prof_t = ncd.variables['profile_time']
+    prof_y = ncd.variables['profile_lat']
+    prof_x = ncd.variables['profile_lon']
+
+    # T,X,Y: MIDDLE INDEX
+    # This should be changed so null values are taken into account
+    # middle_index = len(profile) // 2
+    # prof_t[:] = nc4.date2num(
+    #     profile.t.iloc[middle_index].to_pydatetime(),
+    #     units=prof_t.units,
+    #     calendar=getattr(prof_t, 'calendar', 'standard')
+    # )
+    # prof_y[:] = profile.y.iloc[middle_index] or prof_y.fill_value
+    # prof_x[:] = profile.x.iloc[middle_index] or prof_x.fill_value
+
+    # T: MIN
+    # X,Y: AVERAGE
+    # prof_t_min = nc4.date2num(
+    #     profile.t.min().to_pydatetime(),
+    #     units=prof_t.units,
+    #     calendar=getattr(prof_t, 'calendar', 'standard')
+    # )
+    # prof_t[:] = prof_t_min
+
+    # prof_y_avg = profile.y.mean()
+    # if math.isnan(prof_y_avg):
+    #     prof_y_avg = get_fill_value(prof_y)
+    # prof_y[:] = prof_y_avg
+
+    # prof_x_avg = profile.x.mean()
+    # if math.isnan(prof_x_avg):
+    #     prof_x_avg = get_fill_value(prof_x)
+    # prof_x[:] = prof_x_avg
+
+    # ncd.sync()
+
+
+def set_uv_data(ncd, profile):
+    # The uv index is the first row where v (originally m_water_vx) is not null
+    uv_t = ncd.variables['time_uv']
+    uv_x = ncd.variables['lon_uv']
+    uv_y = ncd.variables['lat_uv']
+
+    # uv_index = profile.v.first_valid_index()
+    # if uv_index is None:
+    #     uv_t[:] = get_fill_value(uv_t)
+    #     uv_y[:] = get_fill_value(uv_y)
+    #     uv_x[:] = get_fill_value(uv_x)
+    # else:
+    #     uv_t = uv_t
+    #     uv_t_first = nc4.date2num(
+    #         profile.t.loc[uv_index].to_pydatetime(),
+    #         units=uv_t.units,
+    #         calendar=getattr(uv_t, 'calendar', 'standard')
+    #     )
+    #     if math.isnan(uv_t_first):
+    #         uv_t_first = get_fill_value(uv_t)
+    #     uv_t[:] = uv_t_first
+
+    #     uv_y_first = profile.y.loc[uv_index]
+    #     if math.isnan(uv_y_first):
+    #         uv_y_first = get_fill_value(uv_x)
+    #     uv_y[:] = uv_y_first
+
+    #     uv_x_first = profile.x.loc[uv_index]
+    #     if math.isnan(uv_x_first):
+    #         uv_x_first = get_fill_value(uv_x)
+    #     uv_x[:] = uv_x_first
+    # ncd.sync()
+
+
+def create_netcdf(attrs, data, output_path, mode):
     # Create NetCDF Files for Each Profile
-    for pi, profile in data.groupby('profile'):
+    for pi, profile in data.groupby('profile_id'):
         try:
             # Path to hold file while we create it
             tmp_handle, tmp_path = tempfile.mkstemp(suffix='.nc', prefix='gutils_glider_netcdf_')
@@ -101,54 +177,44 @@ def create_netcdf(attrs, data, output_path, mode, segment_id):
 
             # Add in the trajectory dimension to make pocean happy
             traj_name = os.path.basename(os.path.dirname(output_file))
-            profile['trajectory'] = traj_name
+            profile = profile.assign(trajectory=traj_name)
 
             # Use pocean to create NetCDF file
-            im = IncompleteMultidimensionalTrajectory.from_dataframe(profile, tmp_path)
-            im.close()
+            with IncompleteMultidimensionalTrajectory.from_dataframe(
+                    profile,
+                    tmp_path,
+                    reduce_dims=True,
+                    mode='a') as ncd:
 
-            # Remove the trajectory dimension
-            nco = Nco()
-            options = [
-                '-h'  # no history
-                '-a trajectory'  # average over dimension size of 1 will remove it
-            ]
-            nco.ncwa(input=tmp_path, output=tmp_path, options=options)
+                ncd.renameVariable('latitude', 'lat')
+                ncd.renameVariable('longitude', 'lon')
+                ncd.renameVariable('z', 'depth')
 
-            # Open back up
-            with EnhancedDataset(tmp_path, 'a') as ncd:
                 # Load metadata from config files to create the skeleton
                 # This will create scalar variables but not assign the data
                 ncd.__apply_meta_interface__(attrs)
 
-                # Set the values of any scalar variables
-                ncd.variables['profile_id'][:] = pi
-
-                # We set the profile time/lat/lon to the middle index
-                middle_index = len(profile) // 2
-                ncd.variables['profile_time'][:] = profile.t.iloc[middle_index]
-                ncd.variables['profile_lat'][:] = profile.y.iloc[middle_index]
-                ncd.variables['profile_lon'][:] = profile.x.iloc[middle_index]
-
-                # The uv index is the first row where v (originally m_water_vx) is not null
-                uv_index = profile.v[profile.v.notnull()].iloc[0].index
-                ncd.variables['time_uv'][:] = profile.t.iloc[uv_index]
-                ncd.variables['lat_uv'][:] = profile.y.iloc[uv_index]
-                ncd.variables['lon_uv'][:] = profile.x.iloc[uv_index]
-
                 # Set trajectory value
-                ncd.variables['trajectory'][:] = traj_name
-
-                # Set platform value
-                ncd.variables['platform'] = traj_name
-
-                ncd.variables['segment_id'] = segment_id
+                ncd.variables['trajectory'][0] = traj_name
 
                 # TODO: Calculate bounds variables and attributes?
 
+                # Set profile_* data
+                set_profile_data(ncd, profile)
+
+                # Set *_uv data
+                set_uv_data(ncd, profile)
+                ncd.sync()
+
+                # ncd.renameVariable('t', 'drv_timestamp')
+                # ncd.renameVariable('y', 'drv_m_gps_lat')
+                # ncd.renameVariable('x', 'drv_m_gps_lon')
+                # ncd.renameVariable('z', 'drv_depth')
+
             # Move to final destination
+            os.makedirs(os.path.dirname(output_file), exist_ok=True)
             shutil.move(tmp_path, output_file)
-            logger.info('Created: {}'.format(output_file))
+            logger.debug('Created: {}'.format(output_file))
         finally:
             os.close(tmp_handle)
             if os.path.exists(tmp_path):
@@ -162,8 +228,7 @@ def process_dataset(args):
 
     try:
         sr = SlocumReader(ascii_path)
-        sr.standardize()
-        data = sr.data
+        data = sr.standardize()
 
         # Optionally, remove any variables from the dataframe that do not have metadata assigned
         if args.subset is True:
@@ -182,6 +247,14 @@ def process_dataset(args):
         filtered = filter_profile_timeperiod(filtered, timespan_condition=args.filter_time)
         filtered = filter_profile_distance(filtered, distance_condition=args.filter_distance)
 
+        # Downscale profile
+        # filtered['profile'] = pd.to_numeric(filtered.profile, downcast='integer')
+        filtered['profile'] = filtered.profile.astype('int32')
+        # Profiles are 1-indexed, so add one to each
+        filtered['profile'] = filtered.profile.values + 1
+        # Rename the profile column to profile_id
+        filtered = filtered.rename(columns={'profile': 'profile_id'})
+
         # TODO: Backfill U/V?
         # TODO: Backfill X/Y?
 
@@ -189,7 +262,7 @@ def process_dataset(args):
         logger.exception('{} - Skipping'.format(e))
         return 1
 
-    return create_netcdf(attrs, filtered, args.output_path, sr.mode, args.segment_id)
+    return create_netcdf(attrs, filtered, args.output_path, sr.mode)
 
 
 def create_arg_parser():
@@ -210,12 +283,6 @@ def create_arg_parser():
     parser.add_argument(
         '-f', '--file',
         help="Combined ASCII file to process into NetCDF",
-        default=None
-    )
-    parser.add_argument(
-        '--segment_id',
-        nargs=1,
-        help='Set the segment ID',
         default=None
     )
     parser.add_argument(
@@ -256,10 +323,6 @@ def main():
     # Check filenames
     if args.file is None:
         raise ValueError('Must specify path to combined ASCII file')
-
-    # Fill in segment ID
-    if args.segment_id is None:
-        args.segment_id = parse_glider_filename(args.file)['segment']
 
     return process_dataset(args)
 
