@@ -99,7 +99,7 @@ def masked_epoch(timeseries):
     tmask = pd.isnull(timeseries)
     epochs = np.ma.MaskedArray(timeseries.astype(np.int64) // 1e9)
     epochs.mask = tmask
-    return epochs
+    return pd.Series(epochs)
 
 
 def interpolate_gps(timestamps, latitude, longitude):
@@ -112,40 +112,37 @@ def interpolate_gps(timestamps, latitude, longitude):
 
     validate_glider_args(timestamps, latitude, longitude)
 
-    dataset = np.column_stack((
-        timestamps,
-        latitude,
-        longitude
-    ))
+    est_lat = np.array([np.nan] * latitude.size)
+    est_lon = np.array([np.nan] * longitude.size)
 
-    est_lat = np.empty((len(dataset))) * np.nan
-    est_lon = np.empty((len(dataset))) * np.nan
+    anynull = (timestamps.isnull()) | (latitude.isnull()) | (longitude.isnull())
+    newtimes = timestamps.loc[~anynull]
+    latitude = latitude.loc[~anynull]
+    longitude = longitude.loc[~anynull]
 
-    dataset = dataset[~np.isnan(dataset).any(axis=1), :]
-
-    if len(dataset) == 0:
+    if latitude.size == 0 or longitude.size == 0:
         L.warning('GPS time-seies contains no valid GPS fixes for interpolation')
         return est_lat, est_lon
 
     # If only one GPS point, make it the same for the entire dataset
-    if len(dataset) == 1:
-        est_lat[:] = dataset[0, 1]
-        est_lon[:] = dataset[0, 2]
+    if latitude.size == 1 and longitude.size == 1:
+        est_lat[:] = latitude.iloc[0]
+        est_lon[:] = longitude.iloc[0]
     else:
         # Interpolate data
         est_lat = np.interp(
             timestamps,
-            dataset[:, 0],
-            dataset[:, 1],
-            left=dataset[0, 1],
-            right=dataset[-1, 1]
+            newtimes,
+            latitude,
+            left=latitude.iloc[0],
+            right=latitude.iloc[-1]
         )
         est_lon = np.interp(
             timestamps,
-            dataset[:, 0],
-            dataset[:, 2],
-            left=dataset[0, 2],
-            right=dataset[-1, 2]
+            newtimes,
+            longitude,
+            left=longitude.iloc[0],
+            right=longitude.iloc[-1]
         )
 
     return est_lat, est_lon

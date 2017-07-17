@@ -23,12 +23,16 @@
         "sea_name" : "North Atlantic Ocean",
         "title" : "Modena Slocum Glider Dataset"
     },
-    "platform": {
-        "id": 4801920,
-        "wmo_id": 4801920,
-        "long_name": "Slocum Glider Bass",
-        "comment": "",
-        "instrument": "",
-        "type": "platform"
+    "variables": {
+        "platform": {
+            "attributes": {
+                "id": 4801920,
+                "wmo_id": 4801920,
+                "long_name": "Slocum Glider Bass",
+                "comment": "",
+                "instrument": "",
+                "type": "platform"
+            }
+        }
     }
 }

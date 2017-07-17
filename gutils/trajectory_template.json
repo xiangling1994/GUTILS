@@ -1,10 +1,10 @@
 {
   "dimensions": {
-    "time": null
+    "obs": -1
   },
   "variables": {
     "conductivity": {
-      "shape": ["time"],
+      "shape": ["obs"],
       "type": "double",
       "attributes": {
         "_FillValue": { "type": "double", "data": -999.0},
@@ -23,7 +23,7 @@
       }
     },
     "density": {
-      "shape": ["time"],
+      "shape": ["obs"],
       "type": "double",
       "attributes": {
         "_FillValue": { "type": "double", "data": -999.0},
@@ -42,7 +42,7 @@
       }
     },
     "depth": {
-      "shape": ["time"],
+      "shape": ["obs"],
       "type": "double",
       "attributes": {
         "_FillValue": { "type": "double", "data": -999.0},
@@ -79,7 +79,7 @@
       }
     },
     "lat": {
-      "shape": ["time"],
+      "shape": ["obs"],
       "type": "double",
       "attributes": {
         "_FillValue": { "type": "double", "data": -999.0},
@@ -111,7 +111,7 @@
       }
     },
     "lon": {
-      "shape": ["time"],
+      "shape": ["obs"],
       "type": "double",
       "attributes": {
         "_FillValue": { "type": "double", "data": -999.0},
@@ -155,7 +155,7 @@
       }
     },
     "pressure": {
-      "shape": ["time"],
+      "shape": ["obs"],
       "type": "double",
       "attributes": {
         "_FillValue": { "type": "double", "data": -999.0},
@@ -228,7 +228,7 @@
       }
     },
     "salinity": {
-      "shape": ["time"],
+      "shape": ["obs"],
       "type": "double",
       "attributes": {
         "_FillValue": { "type": "double", "data": -999.0},
@@ -247,7 +247,7 @@
       }
     },
     "temperature": {
-      "shape": ["time"],
+      "shape": ["obs"],
       "type": "double",
       "attributes": {
         "_FillValue": { "type": "double", "data": -999.0},
@@ -266,7 +266,7 @@
       }
     },
     "time": {
-      "shape": ["time"],
+      "shape": ["obs"],
       "type": "double",
       "attributes": {
         "ancillary_variables": " ",

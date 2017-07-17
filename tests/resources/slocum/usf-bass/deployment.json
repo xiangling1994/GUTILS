@@ -1,7 +1,7 @@
 {
     "glider": "bass",
     "trajectory_date": "20150407T1300Z",
-    "global_attributes": {
+    "attributes": {
         "wmo_id": 4801918,
         "naming_authority" : "edu.usf.marine",
         "institution" : "University of South Florida College of Marine Science Ocean Technology Group",
@@ -23,13 +23,17 @@
         "sea_name" : "Gulf of Mexico",
         "title" : "USF Bass Slocum Glider Dataset"
     },
-    "platform": {
-        "type": "platform",
-        "id": 4801516,
-        "wmo_id": 4801516,
-        "long_name": "Slocum Glider USF Bass",
-        "comment": "",
-        "instrument": "",
-        "type": "platform"
+    "variables": {
+        "platform": {
+            "attributes": {
+                "type": "platform",
+                "id": 4801516,
+                "wmo_id": 4801516,
+                "long_name": "Slocum Glider USF Bass",
+                "comment": "",
+                "instrument": "",
+                "type": "platform"
+            }
+        }
     }
 }

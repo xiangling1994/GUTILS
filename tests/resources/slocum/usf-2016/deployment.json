@@ -25,12 +25,14 @@
     },
     "variables": {
         "platform": {
-            "id": 4801918,
-            "wmo_id": 4801918,
-            "long_name": "Slocum Glider USF Bass",
-            "comment": "",
-            "instrument": "",
-            "type": "platform"
+            "attributes": {
+                "id": 4801918,
+                "wmo_id": 4801918,
+                "long_name": "Slocum Glider USF Bass",
+                "comment": "",
+                "instrument": "",
+                "type": "platform"
+            }
         }
     }
 }
