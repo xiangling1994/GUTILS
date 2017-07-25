@@ -81,7 +81,7 @@ class TestCreateGliderScript(unittest.TestCase):
         assert 'bass-20160909T1733Z' in output_folders
 
         output_files = sorted(os.listdir(output('usf-2016', 'bass-20160909T1733Z')))
-        assert len(output_files) == 32
+        assert len(output_files) == 8
 
         first_profile = os.path.join(output('usf-2016', 'bass-20160909T1733Z'), output_files[0])
         with nc4.Dataset(first_profile) as ncd:
@@ -89,7 +89,7 @@ class TestCreateGliderScript(unittest.TestCase):
 
         last_profile = os.path.join(output('usf-2016', 'bass-20160909T1733Z'), output_files[-1])
         with nc4.Dataset(last_profile) as ncd:
-            assert ncd.variables['profile_id'][0] == 32
+            assert ncd.variables['profile_id'][0] == 8
 
     def test_delayed(self):
         args = self.nt(
@@ -110,7 +110,7 @@ class TestCreateGliderScript(unittest.TestCase):
         assert 'modena-20160909T1758' in output_folders
 
         output_files = sorted(os.listdir(output('modena-2015', 'modena-20160909T1758')))
-        assert len(output_files) == 6
+        assert len(output_files) == 2
 
         first_profile = os.path.join(output('modena-2015', 'modena-20160909T1758'), output_files[0])
         with nc4.Dataset(first_profile) as ncd:
@@ -118,4 +118,4 @@ class TestCreateGliderScript(unittest.TestCase):
 
         last_profile = os.path.join(output('modena-2015', 'modena-20160909T1758'), output_files[-1])
         with nc4.Dataset(last_profile) as ncd:
-            assert ncd.variables['profile_id'][0] == 6
+            assert ncd.variables['profile_id'][0] == 2

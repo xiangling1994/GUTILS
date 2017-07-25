@@ -71,105 +71,122 @@ class TestFindProfile(unittest.TestCase):
         assert len(self.profiled_dataset) == len(self.df)
 
     def test_extreme_depth_filter(self):
-        # All profiles have at least 1m of depth, so this should filter all profiles with at least
-        # one depth (44 of them)
+        # This should filter all profiles with at least 1m of depth
+        meters = 1
+        # Compute manually
+        df = self.profiled_dataset.copy()
+        df = df[df.z > meters]
+        df = df[~df.z.isnull()]
+        profs = df.profile[~df.profile.isnull()].unique()
+
         fdf = filter_profile_depth(
             self.profiled_dataset,
-            below=1
+            below=meters
         )
         profiles = fdf.profile.unique()
-        # 63 total profiles but only 44 have any depths (the rest are all NaN) and are valid
-        assert len(profiles) == 44
+        assert len(profiles) == profs.size
         assert is_continuous(fdf) is True
 
+        # No profiles are deeper than 10000m
         fdf = filter_profile_depth(
             self.profiled_dataset,
             below=10000
         )
         profiles = fdf.profile.unique()
-        # No profiles are deeper than 10000m
         assert len(profiles) == 0
         assert is_continuous(fdf) is True
         assert fdf.empty
 
     def test_filter_profile_timeperiod(self):
+        # This should filter all profiles that are less than 300 seconds long
         fdf = filter_profile_timeperiod(
             self.profiled_dataset,
-            300
+            timespan_condition=300
         )
         profiles = fdf.profile.unique()
-        # 18 profiles are longer than 300 seconds
-        assert len(profiles) == 18
+        assert len(profiles) == 8
         assert is_continuous(fdf) is True
 
+        # This should filter all profiles that are less than 0 seconds (none of them)
         fdf = filter_profile_timeperiod(
             self.profiled_dataset,
-            10
+            timespan_condition=0
         )
         profiles = fdf.profile.unique()
-        # 32 profiles are longer than 10 seconds
-        assert len(profiles) == 32
+        assert len(profiles) == 15
         assert is_continuous(fdf) is True
 
+        # This should filter all profiles that are less than 10000 seconds (all of them)
         fdf = filter_profile_timeperiod(
             self.profiled_dataset,
-            10000
+            timespan_condition=10000
         )
         profiles = fdf.profile.unique()
-        # 0 profiles are longer than 10000
         assert len(profiles) == 0
         assert is_continuous(fdf) is True
         assert fdf.empty
 
     def test_filter_profile_distance(self):
+        # This should filter all profiles that are not 0m in deph distance
         fdf = filter_profile_distance(
             self.profiled_dataset,
-            0
+            distance_condition=0
         )
         profiles = fdf.profile.unique()
-        # 63 total profiles but only 44 have any depths (the rest are all NaN) and are valid
-        assert len(profiles) == 44
+        assert len(profiles) == 10
         assert is_continuous(fdf) is True
 
+        # This should filter all profiles that are not 10000m in depth distance (all of them)
         fdf = filter_profile_distance(
             self.profiled_dataset,
-            10000
+            distance_condition=10000
         )
         profiles = fdf.profile.unique()
-        # 0 profiles span 10000m
         assert len(profiles) == 0
         assert is_continuous(fdf) is True
         assert fdf.empty
 
     def test_filter_profile_number_of_points(self):
+        # This should filter all profiles that don't have any points
         fdf = filter_profile_number_of_points(
             self.profiled_dataset,
-            0
+            points_condition=0
         )
         profiles = fdf.profile.unique()
-        # 63 total profiles but only 47 have more than 0 points
-        assert len(profiles) == 47
+        assert len(profiles) == 15
         assert is_continuous(fdf) is True
 
+        # This should filter all profiles that don't have at least 100000 points (all of them)
         fdf = filter_profile_number_of_points(
             self.profiled_dataset,
-            10000
+            points_condition=100000
         )
         profiles = fdf.profile.unique()
-        # 0 profiles have 10000 points
         assert len(profiles) == 0
         assert is_continuous(fdf) is True
         assert fdf.empty
 
+        # Compute manually the longest profile in terms of points and filter by that
+        # so we only have one as a result
+        max_points = self.profiled_dataset.groupby('profile').size().max()
         fdf = filter_profile_number_of_points(
             self.profiled_dataset,
-            130
+            points_condition=max_points
         )
         profiles = fdf.profile.unique()
-        # 1 profiles have 130 points (thats the largest)
         assert len(profiles) == 1
         assert is_continuous(fdf) is True
         assert profiles == [0]  # Make sure it reindexed to the "0" profile
+
+        # Now if we add one we should get no profiles
+        fdf = filter_profile_number_of_points(
+            self.profiled_dataset,
+            points_condition=max_points + 1
+        )
+        profiles = fdf.profile.unique()
+        assert len(profiles) == 0
+        assert is_continuous(fdf) is True
+        assert fdf.empty
 
     def test_default_filter_composite(self):
         fdf = filter_profile_depth(self.profiled_dataset)

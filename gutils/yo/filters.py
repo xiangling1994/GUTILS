@@ -85,7 +85,7 @@ def filter_profile_number_of_points(dataset, points_condition=None, reindex=True
     Returns a DataFrame with a subset of profiles
     """
     if points_condition is None:
-        points_condition = 5
+        points_condition = 3
 
     def conditional(profile):
         return len(profile) >= points_condition
