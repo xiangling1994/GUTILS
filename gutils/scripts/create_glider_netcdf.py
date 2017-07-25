@@ -4,7 +4,7 @@ from __future__ import division
 
 import os
 import sys
-import math
+import errno
 import shutil
 import argparse
 import tempfile
@@ -212,7 +212,11 @@ def create_netcdf(attrs, data, output_path, mode):
                 # ncd.renameVariable('z', 'drv_depth')
 
             # Move to final destination
-            os.makedirs(os.path.dirname(output_file), exist_ok=True)
+            try:
+                os.makedirs(os.path.dirname(output_file))
+            except OSError as e:
+                if e.errno != errno.EEXIST:
+                    raise
             shutil.move(tmp_path, output_file)
             logger.debug('Created: {}'.format(output_file))
         finally:

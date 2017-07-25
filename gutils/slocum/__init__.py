@@ -1,10 +1,9 @@
 #!/usr/bin/env python
 import os
-import math
 import shutil
-from collections import OrderedDict
 from glob import glob
 from tempfile import mkdtemp
+from collections import OrderedDict
 
 import numpy as np
 import pandas as pd
@@ -53,7 +52,7 @@ class SlocumReader(object):
                     data_start = li + 2  # Skip units line and the interger row after that
                     break
                 else:
-                    title, value = al.split(':', maxsplit=1)
+                    title, value = al.split(':', 1)
                     metadata[title.strip()] = value.strip()
 
         df = pd.read_csv(
@@ -75,9 +74,9 @@ class SlocumReader(object):
         for col in df.columns:
             # Ignore if the m_gps_lat and/or m_gps_lon value is the default masterdata value
             if '_lat' in col:
-                df[col] = df[col].map(lambda x: get_decimal_degrees(x) if x <= 9000 else math.nan)
+                df[col] = df[col].map(lambda x: get_decimal_degrees(x) if x <= 9000 else np.nan)
             elif '_lon' in col:
-                df[col] = df[col].map(lambda x: get_decimal_degrees(x) if x < 18000 else math.nan)
+                df[col] = df[col].map(lambda x: get_decimal_degrees(x) if x < 18000 else np.nan)
 
         # Standardize 'time' to the 't' column
         for t in self.TIMESTAMP_SENSORS:
@@ -105,8 +104,8 @@ class SlocumReader(object):
                 )
             except ValueError:
                 L.warning("Raw GPS values not found!")
-                y_interp = np.empty(df.drv_m_gps_lat.size) * math.nan
-                x_interp = np.empty(df.drv_m_gps_lon.size) * math.nan
+                y_interp = np.empty(df.drv_m_gps_lat.size) * np.nan
+                x_interp = np.empty(df.drv_m_gps_lon.size) * np.nan
 
             df['y'] = y_interp
             df['x'] = x_interp
@@ -123,8 +122,6 @@ class SlocumReader(object):
             # Try the depth sensor
             for p in self.DEPTH_SENSORS:
                 if p in df.columns:
-                    # Calculate depth from pressure (multiplied by 10 to get to decibars) and latitude
-                    # Negate the results so that increasing values note increasing depths
                     df['z'] = df[p].copy()
                     break
 

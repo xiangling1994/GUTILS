@@ -1,6 +1,4 @@
 #!/usr/bin/env python
-import math
-
 import numpy as np
 import pandas as pd
 
@@ -43,7 +41,7 @@ def assign_profiles(df, tsint=None):
         tsint = 5
 
     # Set negative depth values to NaN
-    tmp_df.loc[tmp_df.z <= 0, 'z'] = math.nan
+    tmp_df.loc[tmp_df.z <= 0, 'z'] = np.nan
     # Remove NaN rows
     tmp_df = tmp_df.dropna(subset=['z'])
 
@@ -80,7 +78,7 @@ def assign_profiles(df, tsint=None):
     # Start profile index
     profile_index = 0
     ts_window = tsint * 2
-    profile_df['profile'] = math.nan  # Fill profile with nans
+    profile_df['profile'] = np.nan  # Fill profile with nans
 
     # Iterate through the profile start/stop indices
     for p0, p1 in p_inds:

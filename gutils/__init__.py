@@ -15,13 +15,6 @@ import logging
 L = logging.getLogger(__name__)
 
 
-def clean_dataset(dataset):
-    # Get rid of NaNs
-    dataset = dataset[~np.isnan(dataset[:, 1:]).any(axis=1), :]
-
-    return dataset
-
-
 def boxcar_smooth_dataset(dataset, window_size):
     window = boxcar(window_size)
     return convolve(dataset, window, 'same') / window_size
@@ -104,7 +97,7 @@ def masked_epoch(timeseries):
 
 def interpolate_gps(timestamps, latitude, longitude):
     """Calculates interpolated GPS coordinates between the two surfacings
-    in a single glider binary data file.
+
     Parameters:
         'dataset': An N by 3 numpy array of time, lat, lon pairs
     Returns interpolated gps dataset over entire time domain of dataset

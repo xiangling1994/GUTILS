@@ -3,7 +3,6 @@
 import os
 import shutil
 import unittest
-from types import SimpleNamespace
 from collections import namedtuple
 
 import netCDF4 as nc4

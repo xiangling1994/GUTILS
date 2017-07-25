@@ -1,11 +1,11 @@
 language: python
 
+sudo: false
+
 python:
   - "2.7"
   - "3.5"
   - "3.6"
-
-sudo: false
 
 before_install:
   # Install miniconda
@@ -35,14 +35,14 @@ before_install:
 
   # Install testing requirements
   # ------------------------------------
-  - conda install --file requirements.txt pytest
+  - conda install --file requirements.txt --file tests/requirements.txt
   - conda list --export
 
 install:
   - python setup.py sdist && version=$(python setup.py --version) && pushd dist && pip install gutils-${version}.tar.gz && popd
 
 script:
-  - py.test -s -rxs -v
+  - py.test
 
 after_success:
   - if [ "$TRAVIS_PULL_REQUEST" == "false" ] && [ "$TRAVIS_TAG" != "" ]; then
