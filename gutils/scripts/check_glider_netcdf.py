@@ -1,209 +1,78 @@
-#!/usr/bin/env python
-
-# check_glider_netcdf.py - Verifies that a glider NetCDF file from a provider
-#   contains all the required global attributes, dimensions, scalar variables
-#   and dimensioned variables. Prints out missing items.
-#
-# Returns:
-#   0 - File complies to NGDAC standard
-#   1+ - Number of errors
-#
-# By: Michael Lindemuth <mlindemu@usf.edu>
-# University of South Florida
-# College of Marine Science
-# Ocean Technology Group
-
+#!python
+# coding=utf-8
+import os
 import sys
 import json
+import tempfile
 import argparse
-from os import path
 
-from netCDF4 import Dataset
+from compliance_checker.runner import ComplianceChecker, CheckSuite
 
 import logging
-logger = logging.getLogger('gutils.nc')
+L = logging.getLogger('gutils.nc')
 
 
-def test_global_attributes(nc, requirements):
-    """ Tests for required global attributes
-    """
-    retVal = 0
+def check_dataset(args):
+    check_suite = CheckSuite()
+    check_suite.load_all_available_checkers()
 
-    global_attributes = nc.ncattrs()
-    for req_attribute in requirements['global_attributes']:
-        if req_attribute not in global_attributes:
-            logger.info("Global Attribute Missing: %s" % (req_attribute))
-            retVal += 1
-    return retVal
+    outhandle, outfile = tempfile.mkstemp()
 
-
-def test_dimensions(nc, requirements):
-    """ Tests for required dimensions
-    """
-    retVal = 0
-
-    for req_dimension in requirements['dimensions']:
-        if req_dimension not in nc.dimensions:
-            logger.info("Dimension Missing: %s" % (req_dimension))
-            retVal += 1
-
-    return retVal
-
-
-def test_required_variables(nc, requirements):
-    """ Tests for required variables
-    """
-    retVal = 0
-
-    for req_variable in requirements['required_variables']:
-        variables = nc.variables
-        if req_variable not in variables:
-            logger.info("Missing required variable %s" % req_variable)
-            retVal += 1
-
-    return retVal
+    try:
+        return_value, errors = ComplianceChecker.run_checker(
+            ds_loc=args.file,
+            checker_names=['gliderdac'],
+            verbose=True,
+            criteria='normal',
+            output_format='json',
+            output_filename=outfile
+        )
+        assert errors is False
+        return 0
+    except AssertionError:
+        with open(outfile, 'rt') as f:
+            ers = json.loads(f.read())
+            for k, v in ers.items():
+                if isinstance(v, list):
+                    for x in v:
+                        if 'msgs' in x and x['msgs']:
+                            L.debug(x['msgs'])
+        return 1
+    except BaseException as e:
+        L.warning(e)
+        return 1
+    finally:
+        os.close(outhandle)
+        if os.path.isfile(outfile):
+            os.remove(outfile)
 
 
-def test_variable_attributes(nc, requirements):
-    """ Tests for required variable attributes
-    """
-    retVal = 0
-
-    for variable_name in nc.variables:
-        # Skip QC variables
-        if variable_name[-2:] == "qc":
-            continue
-
-        # Ignore configured variables
-        if variable_name in requirements['ignore_variable_check']:
-            continue
-
-        variable = nc.variables[variable_name]
-        # Skip scalar and descriptive variables
-        if variable.size < 2:
-            continue
-
-        var_attrs = nc.variables[variable_name].ncattrs()
-        for req_var_attr in requirements['variable_attributes']:
-            if req_var_attr not in var_attrs:
-                logger.info("Variable attribute %s is misssing in %s variable"
-                            % (req_var_attr, variable_name))
-                retVal += 1
-
-    return retVal
-
-
-def test_qc_variables(nc, requirements):
-    """ Tests that all variables have a corresponding qc variable
-    """
-    retVal = 0
-
-    for variable_name in nc.variables:
-        # Skip QC variables
-        if variable_name[-2:] == "qc":
-            continue
-
-        # Ignore configured variables
-        if variable_name in requirements['ignore_variable_check']:
-            continue
-
-        variable = nc.variables[variable_name]
-        if variable.size < 2:
-            continue
-
-        qc_name = "%s_qc" % variable_name
-        if qc_name not in nc.variables:
-            logger.info("QC variable missing for %s" % variable_name)
-            retVal += 1
-
-    return retVal
-
-
-def test_platform_attributes(nc, requirements):
-    """ Tests for required platform attributes
-    """
-    retVal = 0
-
-    platform_attrs = nc.variables['platform'].ncattrs()
-    for req_platform_attr in requirements['platform_attributes']:
-        if req_platform_attr not in platform_attrs:
-            logger.info("Platform attribute %s missing" % req_platform_attr)
-            retVal += 1
-
-    return retVal
-
-
-def test_ctd_attributes(nc, requirements):
-    """ Tests for required ctd attributes
-    """
-    retVal = 0
-
-    ctd_attrs = nc.variables['instrument_ctd'].ncattrs()
-    for req_ctd_attr in requirements['ctd_attributes']:
-        if req_ctd_attr not in ctd_attrs:
-            logger.info("CTD attribute %s missing" % req_ctd_attr)
-            retVal += 1
-
-    return retVal
-
-
-test_functions = [
-    test_global_attributes,
-    test_dimensions,
-    test_required_variables,
-    test_variable_attributes,
-    test_qc_variables,
-    test_platform_attributes,
-    test_ctd_attributes
-]
-
-
-def main():
+def create_arg_parser():
     parser = argparse.ArgumentParser(
         description='Verifies that a glider NetCDF file from a provider '
                     'contains all the required global attributes, dimensions,'
                     'scalar variables and dimensioned variables.'
     )
 
-    default_standard_path = (
-        path.join(
-            path.dirname(__file__),
-            'glider_DAC-2.0.json'
-        )
-    )
     parser.add_argument(
-        '-s', '--path_to_standard',
-        default=default_standard_path
-    )
-
-    parser.add_argument(
-        'path_to_glider_netcdf',
+        'file',
         help='Path to Glider NetCDF file.'
     )
+    return parser
 
+
+def main():
+    parser = create_arg_parser()
     args = parser.parse_args()
 
-    # Load requirements spec
-    with open(args.path_to_standard, 'r') as f:
-        contents = f.read()
-    requirements = json.loads(contents)
+    # Check filenames
+    if args.file is None:
+        raise ValueError('Must specify path to NetCDF file')
 
-    # Load NetCDF file
-    nc = Dataset(
-        args.path_to_glider_netcdf, 'r',
-        format='NETCDF4_CLASSIC'
-    )
+    # If running on command line, add a console handler
+    L.addHandler(logging.StreamHandler())
 
-    # Initialize return value
-    retVal = 0
-
-    for test_fun in test_functions:
-        retVal += test_fun(nc, requirements)
-
-    if retVal == 0:
-        logger.info("PASS")
-
-    return retVal
+    return check_dataset(args)
 
 
 if __name__ == '__main__':

@@ -7,6 +7,7 @@ from collections import namedtuple
 
 import netCDF4 as nc4
 
+from gutils.scripts.check_glider_netcdf import check_dataset
 from gutils.scripts.create_glider_netcdf import process_dataset
 
 import logging
@@ -95,6 +96,11 @@ class TestCreateGliderScript(unittest.TestCase):
         with nc4.Dataset(output_files[-1]) as ncd:
             assert ncd.variables['profile_id'][0] == 32
 
+        # Check netCDF file for compliance
+        ds = namedtuple('Arguments', ['file'])
+        for o in output_files:
+            assert check_dataset(ds(file=o)) == 0
+
     def test_delayed(self):
         args = self.nt(
             file=resource('slocum', 'modena-2015', 'modena_2015_175_0_9_dbd.dat'),
@@ -126,3 +132,8 @@ class TestCreateGliderScript(unittest.TestCase):
         # Last profile
         with nc4.Dataset(output_files[-1]) as ncd:
             assert ncd.variables['profile_id'][0] == 6
+
+        # Check netCDF file for compliance
+        ds = namedtuple('Arguments', ['file'])
+        for o in output_files:
+            assert check_dataset(ds(file=o)) == 0
