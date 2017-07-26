@@ -72,7 +72,7 @@ def filter_profile_distance(dataset, distance_condition=None, reindex=True):
         distance_condition = 1
 
     def conditional(profile):
-        distance = profile.z.max() - profile.z.min()
+        distance = abs(profile.z.max() - profile.z.min())
         return distance >= distance_condition
 
     return filter_profiles(dataset, conditional, reindex)
