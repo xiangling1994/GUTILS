@@ -53,7 +53,8 @@ class TestCreateGliderScript(unittest.TestCase):
         outputs = [
             #output('bass-20150407T1300Z'),
             #output('bass-20160909T1733Z'),
-            #output('usf-2016')
+            #output('usf-2016'),
+            #output('modena-2015')
         ]
 
         for d in outputs:
@@ -80,16 +81,19 @@ class TestCreateGliderScript(unittest.TestCase):
         assert len(output_folders) == 1
         assert 'bass-20160909T1733Z' in output_folders
 
-        output_files = sorted(os.listdir(output('usf-2016', 'bass-20160909T1733Z')))
-        assert len(output_files) == 8
+        out_base = output('usf-2016', 'bass-20160909T1733Z')
 
-        first_profile = os.path.join(output('usf-2016', 'bass-20160909T1733Z'), output_files[0])
-        with nc4.Dataset(first_profile) as ncd:
+        output_files = sorted(os.listdir(out_base))
+        output_files = [ os.path.join(out_base, o) for o in output_files ]
+        assert len(output_files) == 32
+
+        # First profile
+        with nc4.Dataset(output_files[0]) as ncd:
             assert ncd.variables['profile_id'][0] == 1
 
-        last_profile = os.path.join(output('usf-2016', 'bass-20160909T1733Z'), output_files[-1])
-        with nc4.Dataset(last_profile) as ncd:
-            assert ncd.variables['profile_id'][0] == 8
+        # Last profile
+        with nc4.Dataset(output_files[-1]) as ncd:
+            assert ncd.variables['profile_id'][0] == 32
 
     def test_delayed(self):
         args = self.nt(
@@ -109,13 +113,16 @@ class TestCreateGliderScript(unittest.TestCase):
         assert len(output_folders) == 1
         assert 'modena-20160909T1758' in output_folders
 
-        output_files = sorted(os.listdir(output('modena-2015', 'modena-20160909T1758')))
-        assert len(output_files) == 2
+        out_base = output('modena-2015', 'modena-20160909T1758')
 
-        first_profile = os.path.join(output('modena-2015', 'modena-20160909T1758'), output_files[0])
-        with nc4.Dataset(first_profile) as ncd:
+        output_files = sorted(os.listdir(out_base))
+        output_files = [ os.path.join(out_base, o) for o in output_files ]
+        assert len(output_files) == 6
+
+        # First profile
+        with nc4.Dataset(output_files[0]) as ncd:
             assert ncd.variables['profile_id'][0] == 1
 
-        last_profile = os.path.join(output('modena-2015', 'modena-20160909T1758'), output_files[-1])
-        with nc4.Dataset(last_profile) as ncd:
-            assert ncd.variables['profile_id'][0] == 2
+        # Last profile
+        with nc4.Dataset(output_files[-1]) as ncd:
+            assert ncd.variables['profile_id'][0] == 6

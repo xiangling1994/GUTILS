@@ -4,11 +4,14 @@ from __future__ import division
 
 import os
 import sys
+import math
 import errno
 import shutil
 import argparse
 import tempfile
+from datetime import datetime
 
+import numpy as np
 import pandas as pd
 
 from gutils import parse_glider_filename
@@ -30,7 +33,11 @@ from pocean.dataset import EnhancedDataset
 from pocean.dsg.trajectory.im import IncompleteMultidimensionalTrajectory
 
 import logging
-logger = logging.getLogger('gutils.nc')
+L = logging.getLogger('gutils.nc')
+
+
+PROFILE_MEDIAN = 0
+PROFILE_MINIMUM = 1
 
 
 def create_glider_filepath(attrs, begin_time, mode):
@@ -65,12 +72,6 @@ def read_attrs(glider_config_path):
     default_attrs_path = os.path.join(os.path.dirname(__file__), '..', 'trajectory_template.json')
     defaults = dict(MetaInterface.from_jsonfile(default_attrs_path))
 
-    # Load global attributes
-    globs = {}
-    global_attrs_path = cfg_file("global_attributes.json")
-    if os.path.isfile(global_attrs_path):
-        globs = dict(MetaInterface.from_jsonfile(global_attrs_path))
-
     # Load instruments
     ins = {}
     ins_attrs_path = cfg_file("instruments.json")
@@ -84,49 +85,54 @@ def read_attrs(glider_config_path):
         deps = dict(MetaInterface.from_jsonfile(deps_attrs_path))
 
     # Update, highest precedence updates last
-    one = dict_update(defaults, globs)
-    two = dict_update(one, ins)
-    three = dict_update(two, deps)
-    return three
+    one = dict_update(defaults, ins)
+    two = dict_update(one, deps)
+    return two
 
 
-def set_profile_data(ncd, profile):
+def set_profile_data(ncd, profile, method=None):
+
+    if method is None:
+        method = 0
+
     # Skipping profile_ variables for now
     prof_t = ncd.variables['profile_time']
     prof_y = ncd.variables['profile_lat']
     prof_x = ncd.variables['profile_lon']
 
-    # T,X,Y: MIDDLE INDEX
-    # This should be changed so null values are taken into account
-    # middle_index = len(profile) // 2
-    # prof_t[:] = nc4.date2num(
-    #     profile.t.iloc[middle_index].to_pydatetime(),
-    #     units=prof_t.units,
-    #     calendar=getattr(prof_t, 'calendar', 'standard')
-    # )
-    # prof_y[:] = profile.y.iloc[middle_index] or prof_y.fill_value
-    # prof_x[:] = profile.x.iloc[middle_index] or prof_x.fill_value
+    if method == PROFILE_MEDIAN:
+        # T,X,Y: MIDDLE INDEX (median)
+        amedian = np.nanmedian(profile.y.values)
+        middle_index = np.nanargmin(np.abs(profile.y.values - amedian))
+        prof_t[:] = nc4.date2num(
+            profile.t.iloc[middle_index].to_pydatetime(),
+            units=prof_t.units,
+            calendar=getattr(prof_t, 'calendar', 'standard')
+        )
+        prof_y[:] = profile.y.iloc[middle_index] or prof_y.fill_value
+        prof_x[:] = profile.x.iloc[middle_index] or prof_x.fill_value
 
-    # T: MIN
-    # X,Y: AVERAGE
-    # prof_t_min = nc4.date2num(
-    #     profile.t.min().to_pydatetime(),
-    #     units=prof_t.units,
-    #     calendar=getattr(prof_t, 'calendar', 'standard')
-    # )
-    # prof_t[:] = prof_t_min
+    elif method == PROFILE_MINIMUM:
+        # T: MIN
+        # X,Y: AVERAGE
+        prof_t_min = nc4.date2num(
+            profile.t.min().to_pydatetime(),
+            units=prof_t.units,
+            calendar=getattr(prof_t, 'calendar', 'standard')
+        )
+        prof_t[:] = prof_t_min
 
-    # prof_y_avg = profile.y.mean()
-    # if math.isnan(prof_y_avg):
-    #     prof_y_avg = get_fill_value(prof_y)
-    # prof_y[:] = prof_y_avg
+        prof_y_avg = profile.y.mean()
+        if math.isnan(prof_y_avg):
+            prof_y_avg = get_fill_value(prof_y)
+        prof_y[:] = prof_y_avg
 
-    # prof_x_avg = profile.x.mean()
-    # if math.isnan(prof_x_avg):
-    #     prof_x_avg = get_fill_value(prof_x)
-    # prof_x[:] = prof_x_avg
+        prof_x_avg = profile.x.mean()
+        if math.isnan(prof_x_avg):
+            prof_x_avg = get_fill_value(prof_x)
+        prof_x[:] = prof_x_avg
 
-    # ncd.sync()
+    ncd.sync()
 
 
 def set_uv_data(ncd, profile):
@@ -135,32 +141,82 @@ def set_uv_data(ncd, profile):
     uv_x = ncd.variables['lon_uv']
     uv_y = ncd.variables['lat_uv']
 
-    # uv_index = profile.v.first_valid_index()
-    # if uv_index is None:
-    #     uv_t[:] = get_fill_value(uv_t)
-    #     uv_y[:] = get_fill_value(uv_y)
-    #     uv_x[:] = get_fill_value(uv_x)
-    # else:
-    #     uv_t = uv_t
-    #     uv_t_first = nc4.date2num(
-    #         profile.t.loc[uv_index].to_pydatetime(),
-    #         units=uv_t.units,
-    #         calendar=getattr(uv_t, 'calendar', 'standard')
-    #     )
-    #     if math.isnan(uv_t_first):
-    #         uv_t_first = get_fill_value(uv_t)
-    #     uv_t[:] = uv_t_first
+    uv_index = profile.v.first_valid_index()
+    if uv_index is None:
+        uv_t[:] = get_fill_value(uv_t)
+        uv_y[:] = get_fill_value(uv_y)
+        uv_x[:] = get_fill_value(uv_x)
+    else:
+        uv_t_first = nc4.date2num(
+            profile.t.loc[uv_index].to_pydatetime(),
+            units=uv_t.units,
+            calendar=getattr(uv_t, 'calendar', 'standard')
+        )
+        if math.isnan(uv_t_first):
+            uv_t_first = get_fill_value(uv_t)
+        uv_t[:] = uv_t_first
 
-    #     uv_y_first = profile.y.loc[uv_index]
-    #     if math.isnan(uv_y_first):
-    #         uv_y_first = get_fill_value(uv_x)
-    #     uv_y[:] = uv_y_first
+        uv_y_first = profile.y.loc[uv_index]
+        if math.isnan(uv_y_first):
+            uv_y_first = get_fill_value(uv_x)
+        uv_y[:] = uv_y_first
 
-    #     uv_x_first = profile.x.loc[uv_index]
-    #     if math.isnan(uv_x_first):
-    #         uv_x_first = get_fill_value(uv_x)
-    #     uv_x[:] = uv_x_first
-    # ncd.sync()
+        uv_x_first = profile.x.loc[uv_index]
+        if math.isnan(uv_x_first):
+            uv_x_first = get_fill_value(uv_x)
+        uv_x[:] = uv_x_first
+    ncd.sync()
+
+
+def update_geographic_attributes(ncd, profile):
+    miny = profile.y.min().round(5)
+    maxy = profile.y.max().round(5)
+    minx = profile.x.min().round(5)
+    maxx = profile.y.max().round(5)
+    ncd.setncattr('geospatial_lat_min', miny)
+    ncd.setncattr('geospatial_lat_max', maxy)
+    ncd.setncattr('geospatial_lon_min', minx)
+    ncd.setncattr('geospatial_lon_max', maxx)
+
+    polygon_wkt = 'POLYGON ((' \
+        '{maxy:.6f} {minx:.6f}, '  \
+        '{maxy:.6f} {maxx:.6f}, '  \
+        '{miny:.6f} {maxx:.6f}, '  \
+        '{miny:.6f} {minx:.6f}, '  \
+        '{maxy:.6f} {minx:.6f}'    \
+        '))'.format(
+            miny=miny,
+            maxy=maxy,
+            minx=minx,
+            maxx=maxx
+        )
+    ncd.setncattr('geospatial_bounds', polygon_wkt)
+
+
+def update_vertical_attributes(ncd, profile):
+    ncd.setncattr('geospatial_vertical_min', profile.z.min().round(6))
+    ncd.setncattr('geospatial_vertical_max', profile.z.max().round(6))
+    ncd.setncattr('geospatial_vertical_units', 'm')
+
+
+def update_temporal_attributes(ncd, profile):
+    mint = profile.t.min()
+    maxt = profile.t.max()
+    ncd.setncattr('time_coverage_start', mint.strftime('%Y-%m-%dT%H:%M:%SZ'))
+    ncd.setncattr('time_coverage_end', maxt.strftime('%Y-%m-%dT%H:%M:%SZ'))
+    ncd.setncattr('time_coverage_duration', (maxt - mint).isoformat())
+
+
+def update_creation_attributes(ncd, profile):
+    nc_create_ts = datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')
+    ncd.setncattr('date_created', nc_create_ts)
+    ncd.setncattr('date_issued', nc_create_ts)
+    ncd.setncattr('date_modified', nc_create_ts)
+
+    ncd.history = '{} - {}'.format(
+        nc_create_ts,
+        'Created with the GUTILS package: "{}"'.format(sys.argv[0])
+    )
 
 
 def create_netcdf(attrs, data, output_path, mode):
@@ -171,7 +227,7 @@ def create_netcdf(attrs, data, output_path, mode):
             tmp_handle, tmp_path = tempfile.mkstemp(suffix='.nc', prefix='gutils_glider_netcdf_')
 
             # Create final filename
-            begin_time = profile.iloc[0].t
+            begin_time = profile.t.dropna().iloc[0]
             relative_file = create_glider_filepath(attrs, begin_time, mode)
             output_file = os.path.join(output_path, relative_file)
 
@@ -186,30 +242,41 @@ def create_netcdf(attrs, data, output_path, mode):
                     reduce_dims=True,
                     mode='a') as ncd:
 
+                # BEFORE RENAMING VARIABLES
+                # Calculate some geographic global attributes
+                update_geographic_attributes(ncd, profile)
+
+                # Calculate some vertical global attributes
+                update_vertical_attributes(ncd, profile)
+
+                # Calculate some temporal global attributes
+                update_temporal_attributes(ncd, profile)
+
+                # Set the creation dates and history
+                update_creation_attributes(ncd, profile)
+
+                # Standardize some variable names before applying the metadata dict
                 ncd.renameVariable('latitude', 'lat')
                 ncd.renameVariable('longitude', 'lon')
                 ncd.renameVariable('z', 'depth')
 
+                # AFTER RENAMING VARIABLES
                 # Load metadata from config files to create the skeleton
                 # This will create scalar variables but not assign the data
                 ncd.__apply_meta_interface__(attrs)
 
                 # Set trajectory value
+                ncd.id = traj_name
                 ncd.variables['trajectory'][0] = traj_name
 
                 # TODO: Calculate bounds variables and attributes?
 
                 # Set profile_* data
-                set_profile_data(ncd, profile)
+                set_profile_data(ncd, profile, method=PROFILE_MEDIAN)
 
                 # Set *_uv data
-                set_uv_data(ncd, profile)
-                ncd.sync()
-
-                # ncd.renameVariable('t', 'drv_timestamp')
-                # ncd.renameVariable('y', 'drv_m_gps_lat')
-                # ncd.renameVariable('x', 'drv_m_gps_lon')
-                # ncd.renameVariable('z', 'drv_depth')
+                # LOOK: Skipped for now
+                # set_uv_data(ncd, profile)
 
             # Move to final destination
             try:
@@ -218,7 +285,7 @@ def create_netcdf(attrs, data, output_path, mode):
                 if e.errno != errno.EEXIST:
                     raise
             shutil.move(tmp_path, output_file)
-            logger.debug('Created: {}'.format(output_file))
+            L.debug('Created: {}'.format(output_file))
         finally:
             os.close(tmp_handle)
             if os.path.exists(tmp_path):
@@ -237,7 +304,7 @@ def process_dataset(args):
         # Optionally, remove any variables from the dataframe that do not have metadata assigned
         if args.subset is True:
             orphans = set(data.columns) - set(attrs.get('variables', {}).keys())
-            logger.info(
+            L.info(
                 "Excluded from output because there was no metadata: {}".format(orphans)
             )
             data = data.drop(orphans, axis=1)
@@ -263,7 +330,7 @@ def process_dataset(args):
         # TODO: Backfill X/Y?
 
     except ValueError as e:
-        logger.exception('{} - Skipping'.format(e))
+        L.exception('{} - Skipping'.format(e))
         return 1
 
     return create_netcdf(attrs, filtered, args.output_path, sr.mode)
@@ -327,6 +394,9 @@ def main():
     # Check filenames
     if args.file is None:
         raise ValueError('Must specify path to combined ASCII file')
+
+    # If running on command line, add a console handler
+    L.addHandler(logging.StreamHandler())
 
     return process_dataset(args)
 

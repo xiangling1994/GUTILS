@@ -38,19 +38,19 @@ def assign_profiles(df, tsint=None):
     tmp_df = df.copy()
 
     if tsint is None:
-        tsint = 5
+        tsint = 10
 
+    # Make 't' epochs and not a DateTimeIndex
+    tmp_df['t'] = masked_epoch(tmp_df.t)
     # Set negative depth values to NaN
     tmp_df.loc[tmp_df.z <= 0, 'z'] = np.nan
+
     # Remove NaN rows
-    tmp_df = tmp_df.dropna(subset=['z'])
+    tmp_df = tmp_df.dropna(subset=['t', 'z'], how='any')
 
     if len(tmp_df) < 2:
         L.debug('Skipping yo that contains < 2 rows')
         return np.empty((0, 2))
-
-    # Make 't' epochs and not a DateTimeIndex
-    tmp_df['t'] = masked_epoch(tmp_df.t)
 
     # Create the fixed timestamp array from the min timestamp to the max timestamp
     # spaced by tsint intervals
@@ -98,11 +98,14 @@ def assign_profiles(df, tsint=None):
         # Increment the profile index
         profile_index += 1
 
+    # Remove rows that were not assigned a profile
+    # profile_df = profile_df.loc[~profile_df.profile.isnull()]
+
     # L.info(
     #     list(zip(
-    #         profile_df.t.values[180:200].tolist(),
-    #         profile_df.profile.values[180:200].tolist(),
-    #         profile_df.z.values[180:200].tolist(),
-    #     ))
+    #         profile_df.t,
+    #         profile_df.profile,
+    #         profile_df.z,
+    #     ))[0:20]
     # )
     return profile_df

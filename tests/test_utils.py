@@ -12,9 +12,9 @@ from gutils.yo import (
 from gutils.yo.filters import (
     default_filter,
     filter_profile_depth,
-    filter_profile_timeperiod,
     filter_profile_distance,
-    filter_profile_number_of_points
+    filter_profile_number_of_points,
+    filter_profile_timeperiod
 )
 
 from gutils.ctd import (
@@ -69,6 +69,13 @@ class TestFindProfile(unittest.TestCase):
     def test_find_profile(self):
         assert len(self.profiled_dataset) != 0
         assert len(self.profiled_dataset) == len(self.df)
+        assert len(self.profiled_dataset.profile.dropna().unique()) == 63
+
+        # import matplotlib.dates as mpd
+        # df = self.profiled_dataset.copy()
+        # df['z'] = df.z.values * -1
+        # df['t'] = mpd.date2num(df.t.dt.to_pydatetime())
+        # df.plot.scatter(x='t', y='z', c='profile', cmap='viridis')
 
     def test_extreme_depth_filter(self):
         # This should filter all profiles with at least 1m of depth
@@ -104,7 +111,7 @@ class TestFindProfile(unittest.TestCase):
             timespan_condition=300
         )
         profiles = fdf.profile.unique()
-        assert len(profiles) == 8
+        assert len(profiles) == 17
         assert is_continuous(fdf) is True
 
         # This should filter all profiles that are less than 0 seconds (none of them)
@@ -113,7 +120,7 @@ class TestFindProfile(unittest.TestCase):
             timespan_condition=0
         )
         profiles = fdf.profile.unique()
-        assert len(profiles) == 15
+        assert len(profiles) == 63
         assert is_continuous(fdf) is True
 
         # This should filter all profiles that are less than 10000 seconds (all of them)
@@ -127,13 +134,13 @@ class TestFindProfile(unittest.TestCase):
         assert fdf.empty
 
     def test_filter_profile_distance(self):
-        # This should filter all profiles that are not 0m in deph distance
+        # This should filter all profiles that are not 0m in depth distance
         fdf = filter_profile_distance(
             self.profiled_dataset,
             distance_condition=0
         )
         profiles = fdf.profile.unique()
-        assert len(profiles) == 10
+        assert len(profiles) == 58
         assert is_continuous(fdf) is True
 
         # This should filter all profiles that are not 10000m in depth distance (all of them)
@@ -153,7 +160,7 @@ class TestFindProfile(unittest.TestCase):
             points_condition=0
         )
         profiles = fdf.profile.unique()
-        assert len(profiles) == 15
+        assert len(profiles) == 63
         assert is_continuous(fdf) is True
 
         # This should filter all profiles that don't have at least 100000 points (all of them)
@@ -193,16 +200,23 @@ class TestFindProfile(unittest.TestCase):
         fdf = filter_profile_number_of_points(fdf)
         fdf = filter_profile_timeperiod(fdf)
         fdf = filter_profile_distance(fdf)
-
-        # Make sure something was subset
-        assert len(self.df) != len(fdf)
+        profiles = fdf.profile.unique()
+        assert len(profiles) == 32
         assert is_continuous(fdf) is True
 
         default_df = default_filter(self.profiled_dataset)
-        # Make surethe default filter works as intended
-        assert len(self.df) != len(default_df)
+        # Make sure the default filter works as intended
+        assert len(profiles) == 32
         assert is_continuous(default_df) is True
         assert default_df.equals(fdf)
+
+        # import matplotlib.dates as mpd
+        # import matplotlib.pyplot as plt
+        # df = default_df.copy()
+        # df['z'] = df.z.values * -1
+        # df['t'] = mpd.date2num(df.t.dt.to_pydatetime())
+        # df.plot.scatter(x='t', y='z', c='profile', cmap='viridis')
+        # plt.show()
 
 
 class TestInterpolateGPS(unittest.TestCase):
