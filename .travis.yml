@@ -2,10 +2,22 @@ language: python
 
 sudo: false
 
-python:
-  - "2.7"
-  - "3.5"
-  - "3.6"
+env: # important!
+
+matrix:
+  fast_finish: true
+  include:
+    - python: 2.7
+      env: TEST_TARGET=default
+    - python: 3.5
+      env: TEST_TARGET=default
+    - python: 3.6
+      env: TEST_TARGET=default
+    - python: 3.6
+      env: TEST_TARGET=coding_standards
+  allow_failures:
+    - python: 3.6
+      env: TEST_TARGET=coding_standards
 
 before_install:
   # Install miniconda
@@ -42,7 +54,15 @@ install:
   - python setup.py sdist && version=$(python setup.py --version) && pushd dist && pip install gutils-${version}.tar.gz && popd
 
 script:
-  - py.test
+  - set -e
+
+  - if [[ $TEST_TARGET == "default" ]]; then
+    py.test ;
+  fi
+
+  - if [[ $TEST_TARGET == "coding_standards" ]]; then
+    py.test --pep8 --flakes ;
+  fi
 
 after_success:
   - if [ "$TRAVIS_PULL_REQUEST" == "false" ] && [ "$TRAVIS_TAG" != "" ]; then
