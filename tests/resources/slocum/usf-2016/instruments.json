@@ -27,7 +27,7 @@
                 "type": "instrument"
             }
         },
-        "instrument_attitude": {
+        "instrument_altitude": {
             "type": "i4",
             "attributes": {
                 "type": "instrument",

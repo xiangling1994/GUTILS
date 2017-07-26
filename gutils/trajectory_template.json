@@ -3,21 +3,29 @@
     "obs": -1
   },
   "variables": {
+    "crs" : {
+      "type": "int",
+      "attributes": {
+            "long_name": "http://www.opengis.net/def/crs/EPSG/0/4326",
+            "grid_mapping_name": "latitude_longitude",
+            "epsg_code": "EPSG:4326",
+            "semi_major_axis": 6378137.0,
+            "inverse_flattening": 298.257223563
+      }
+    },
     "conductivity": {
       "shape": ["obs"],
       "type": "double",
       "attributes": {
         "_FillValue": { "type": "double", "data": -999.0},
-        "accuracy": " ",
-        "ancillary_variables": " ",
-        "instrument": "instrument_ctd",
+        "accuracy": "",
         "long_name": "Conductivity",
         "observation_type": "measured",
         "platform": "platform",
-        "precision": " ",
-        "resolution": " ",
+        "precision": "",
+        "resolution": "",
         "standard_name": "sea_water_electrical_conductivity",
-        "units": "S m-1",
+        "units": "S.m-1",
         "valid_max": { "type": "double", "data": 10.0},
         "valid_min": { "type": "double", "data": 0.0}
       }
@@ -27,16 +35,14 @@
       "type": "double",
       "attributes": {
         "_FillValue": { "type": "double", "data": -999.0},
-        "accuracy": " ",
-        "ancillary_variables": " ",
-        "instrument": "instrument_ctd",
+        "accuracy": "",
         "long_name": "Density",
         "observation_type": "calculated",
         "platform": "platform",
-        "precision": " ",
-        "resolution": " ",
+        "precision": "",
+        "resolution": "",
         "standard_name": "sea_water_density",
-        "units": "kg m-3",
+        "units": "kg.m-3",
         "valid_max": { "type": "double", "data": 1040.0},
         "valid_min": { "type": "double", "data": 1015.0}
       }
@@ -46,36 +52,19 @@
       "type": "double",
       "attributes": {
         "_FillValue": { "type": "double", "data": -999.0},
-        "accuracy": " ",
-        "ancillary_variables": " ",
-        "comment": " ",
-        "instrument": "instrument_ctd",
+        "accuracy": "",
+        "comment": "",
         "long_name": "Depth",
         "observation_type": "calculated",
         "platform": "platform",
         "positive": "down",
-        "precision": " ",
+        "precision": "",
         "reference_datum": "sea-surface",
-        "resolution": " ",
+        "resolution": "",
         "standard_name": "depth",
         "units": "m",
         "valid_max": 2000,
         "valid_min": 0
-      }
-    },
-    "instrument_ctd": {
-      "type": "int",
-      "attributes": {
-        "_FillValue": -999,
-        "calibration_date": " ",
-        "calibration_report": " ",
-        "comment": "pumped CTD",
-        "factory_calibrated": " ",
-        "long_name": "Seabird Glider Payload CTD",
-        "make_model": "Seabird GPCTD",
-        "platform": "platform",
-        "serial_number": " ",
-        "type": "platform"
       }
     },
     "lat": {
@@ -83,7 +72,6 @@
       "type": "double",
       "attributes": {
         "_FillValue": { "type": "double", "data": -999.0},
-        "ancillary_variables": " ",
         "comment": "Interpolated latitude at each point in the time-series",
         "coordinate_reference_frame": "urn:ogc:crs:EPSG::4326",
         "long_name": "Latitude",
@@ -115,7 +103,6 @@
       "type": "double",
       "attributes": {
         "_FillValue": { "type": "double", "data": -999.0},
-        "ancillary_variables": " ",
         "comment": "Interpolated longitude at each point in the time-series.",
         "coordinate_reference_frame": "urn:ogc:crs:EPSG::4326",
         "long_name": "Longitude",
@@ -146,12 +133,11 @@
       "type": "int",
       "attributes": {
         "_FillValue": -999,
-        "comment": " ",
-        "id": " ",
-        "instrument": "instrument_ctd",
-        "long_name": " ",
+        "comment": "",
+        "id": "",
+        "long_name": "",
         "type": "platform",
-        "wmo_id": " "
+        "wmo_id": ""
       }
     },
     "pressure": {
@@ -159,17 +145,15 @@
       "type": "double",
       "attributes": {
         "_FillValue": { "type": "double", "data": -999.0},
-        "accuracy": " ",
-        "ancillary_variables": " ",
-        "comment": " ",
-        "instrument": "instrument_ctd",
+        "accuracy": "",
+        "comment": "",
         "long_name": "Pressure",
         "observation_type": "measured",
         "platform": "platform",
         "positive": "down",
-        "precision": " ",
+        "precision": "",
         "reference_datum": "sea-surface",
-        "resolution": " ",
+        "resolution": "",
         "standard_name": "sea_water_pressure",
         "units": "dbar",
         "valid_max": 2000,
@@ -224,7 +208,7 @@
         "observation_type": "calculated",
         "platform": "platform",
         "standard_name": "time",
-        "units": "seconds since 1970-01-01T00:00:00Z"
+        "units": "seconds since 1990-01-01T00:00:00Z"
       }
     },
     "salinity": {
@@ -232,16 +216,14 @@
       "type": "double",
       "attributes": {
         "_FillValue": { "type": "double", "data": -999.0},
-        "accuracy": " ",
-        "ancillary_variables": " ",
-        "instrument": "instrument_ctd",
+        "accuracy": "",
         "long_name": "Salinity",
         "observation_type": "calculated",
         "platform": "platform",
-        "precision": " ",
-        "resolution": " ",
+        "precision": "",
+        "resolution": "",
         "standard_name": "sea_water_practical_salinity",
-        "units": 1,
+        "units": "1e-3",
         "valid_max": { "type": "double", "data": 40.0},
         "valid_min": { "type": "double", "data": 0.0}
       }
@@ -251,16 +233,14 @@
       "type": "double",
       "attributes": {
         "_FillValue": { "type": "double", "data": -999.0},
-        "accuracy": " ",
-        "ancillary_variables": " ",
-        "instrument": "instrument_ctd",
+        "accuracy": "",
         "long_name": "Temperature",
         "observation_type": "measured",
         "platform": "platform",
-        "precision": " ",
-        "resolution": " ",
+        "precision": "",
+        "resolution": "",
         "standard_name": "sea_water_temperature",
-        "units": "Celsius",
+        "units": "degree_Celsius",
         "valid_max": { "type": "double", "data": 40.0},
         "valid_min": { "type": "double", "data": -5.0}
       }
@@ -269,13 +249,12 @@
       "shape": ["obs"],
       "type": "double",
       "attributes": {
-        "ancillary_variables": " ",
         "calendar": "gregorian",
         "comment": "Measured or calculated time at each point in the time-series",
         "long_name": "Time",
         "observation_type": "measured",
         "standard_name": "time",
-        "units": "seconds since 1970-01-01T00:00:00Z"
+        "units": "seconds since 1990-01-01T00:00:00Z"
       }
     },
     "time_uv": {
@@ -287,7 +266,7 @@
         "long_name": "Depth-Averaged Time",
         "observation_type": "calculated",
         "standard_name": "time",
-        "units": "seconds since 1970-01-01T00:00:00Z"
+        "units": "seconds since 1990-01-01T00:00:00Z"
       }
     },
     "trajectory": {
@@ -307,7 +286,7 @@
         "observation_type": "calculated",
         "platform": "platform",
         "standard_name": "eastward_sea_water_velocity",
-        "units": "m s-1",
+        "units": "m.s-1",
         "valid_max": { "type": "double", "data": 10.0},
         "valid_min": { "type": "double", "data": -10.0}
       }
@@ -321,47 +300,25 @@
         "observation_type": "calculated",
         "platform": "platform",
         "standard_name": "northward_sea_water_velocity",
-        "units": "m s-1",
+        "units": "m.s-1",
         "valid_max": { "type": "double", "data": 10.0},
         "valid_min": { "type": "double", "data": -10.0}
       }
     }
   },
   "attributes": {
+    "cdm_data_type": "trajectory",
     "Conventions": "CF-1.6, Unidata Dataset Discovery v1.0",
-    "Metadata_Conventions": "CF-1.6, Unidata Dataset Discovery v1.0",
-    "acknowledgment": "This deployment supported by ...",
-    "comment": " ",
-    "contributor_name": " ",
-    "contributor_role": " ",
-    "creator_email": " ",
-    "creator_name": " ",
-    "creator_url": " ",
-    "date_created": " ",
-    "date_issued": " ",
-    "date_modified": " ",
     "format_version": "IOOS_Glider_NetCDF_v3.0-noqartod.nc",
-    "history": " ",
-    "id": " ",
-    "institution": " ",
-    "ioos_regional_association": " ",
     "keywords": "AUVS > Autonomous Underwater Vehicles, Oceans > Ocean Pressure > Water Pressure, Oceans > Ocean Temperature > Water Temperature, Oceans > Salinity/Density > Conductivity, Oceans > Salinity/Density > Density, Oceans > Salinity/Density > Salinity",
     "keywords_vocabulary": "GCMD Science Keywords",
     "license": "This data may be redistributed and used without restriction.  Data provided as is with no expressed or implied assurance of quality assurance or quality control",
-    "metadata_link": " ",
-    "naming_authority": "edu.rutgers.marine",
+    "Metadata_Conventions": "CF-1.6, Unidata Dataset Discovery v1.0",
     "platform_type": "Slocum Glider",
-    "processing_level": " ",
-    "project": " ",
-    "publisher_email": " ",
-    "publisher_name": " ",
-    "publisher_url": " ",
-    "references": " ",
-    "sea_name": " ",
+    "processing_level": "Dataset taken from glider native file format and is provided as is with no expressed or implied assurance of quality assurance or quality control.",
     "source": "Observational data from a profiling glider",
     "standard_name_vocabulary": "CF-v25",
-    "summary": " ",
-    "title": " ",
-    "wmo_id": " "
+    "summary": "Gliders are small, free-swimming, unmanned vehicles that use changes in buoyancy to move vertically and horizontally through the water column in a saw-tooth pattern. They are deployed for days to several months and gather detailed information about the physical, chemical and biological processes of the water.",
+    "title": "Glider Dataset"
   }
 }
