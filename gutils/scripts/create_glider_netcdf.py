@@ -12,9 +12,7 @@ import tempfile
 from datetime import datetime
 
 import numpy as np
-import pandas as pd
 
-from gutils import parse_glider_filename
 from gutils.yo import assign_profiles
 from gutils.yo.filters import (
     filter_profile_depth,
@@ -25,11 +23,9 @@ from gutils.yo.filters import (
 
 from gutils.slocum import SlocumReader
 
-from nco import Nco
 import netCDF4 as nc4
 from pocean.utils import dict_update, get_fill_value
 from pocean.meta import MetaInterface
-from pocean.dataset import EnhancedDataset
 from pocean.dsg.trajectory.im import IncompleteMultidimensionalTrajectory
 
 import logging
@@ -136,17 +132,20 @@ def set_profile_data(ncd, profile, method=None):
 
 
 def set_uv_data(ncd, profile):
-    # The uv index is the first row where v (originally m_water_vx) is not null
+    # The uv index should be the second row where v (originally m_water_vx) is not null
     uv_t = ncd.variables['time_uv']
     uv_x = ncd.variables['lon_uv']
     uv_y = ncd.variables['lat_uv']
 
-    uv_index = profile.v.first_valid_index()
-    if uv_index is None:
+    # Find the second row where U and V are not null
+    uvslice = (~profile.u.isnull()) & (~profile.v.isnull())
+    uv_index = profile[uvslice].index[:2]
+    if uv_index.size == 0:
         uv_t[:] = get_fill_value(uv_t)
         uv_y[:] = get_fill_value(uv_y)
         uv_x[:] = get_fill_value(uv_x)
     else:
+        uv_index = uv_index[-1]
         uv_t_first = nc4.date2num(
             profile.t.loc[uv_index].to_pydatetime(),
             units=uv_t.units,
@@ -275,8 +274,7 @@ def create_netcdf(attrs, data, output_path, mode):
                 set_profile_data(ncd, profile, method=PROFILE_MEDIAN)
 
                 # Set *_uv data
-                # LOOK: Skipped for now
-                # set_uv_data(ncd, profile)
+                set_uv_data(ncd, profile)
 
             # Move to final destination
             try:
