@@ -32,8 +32,9 @@ import logging
 L = logging.getLogger('gutils.nc')
 
 
-PROFILE_MEDIAN = 0
-PROFILE_MINIMUM = 1
+PROFILE_MEAN = 0
+PROFILE_MEDIAN = 1
+PROFILE_MINIMUM = 2
 
 
 def create_glider_filepath(attrs, begin_time, mode):
@@ -107,6 +108,28 @@ def set_profile_data(ncd, profile, method=None):
         )
         prof_y[:] = profile.y.iloc[middle_index] or prof_y.fill_value
         prof_x[:] = profile.x.iloc[middle_index] or prof_x.fill_value
+
+    elif method == PROFILE_MEAN:
+        # T,X,Y: AVERAGE
+        prof_t_all = nc4.date2num(
+            profile.t.tolist(),
+            units=prof_t.units,
+            calendar=getattr(prof_t, 'calendar', 'standard')
+        )
+        prof_t_avg = prof_t_all.mean()
+        if math.isnan(prof_t_avg):
+            prof_t_avg = get_fill_value(prof_t)
+        prof_t[:] = prof_t_avg
+
+        prof_y_avg = profile.y.mean()
+        if math.isnan(prof_y_avg):
+            prof_y_avg = get_fill_value(prof_y)
+        prof_y[:] = prof_y_avg
+
+        prof_x_avg = profile.x.mean()
+        if math.isnan(prof_x_avg):
+            prof_x_avg = get_fill_value(prof_x)
+        prof_x[:] = prof_x_avg
 
     elif method == PROFILE_MINIMUM:
         # T: MIN
@@ -271,7 +294,7 @@ def create_netcdf(attrs, data, output_path, mode):
                 # TODO: Calculate bounds variables and attributes?
 
                 # Set profile_* data
-                set_profile_data(ncd, profile, method=PROFILE_MEDIAN)
+                set_profile_data(ncd, profile, method=PROFILE_MEAN)
 
                 # Set *_uv data
                 set_uv_data(ncd, profile)
