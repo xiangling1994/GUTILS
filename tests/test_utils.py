@@ -9,7 +9,7 @@ from gutils.yo import (
     assign_profiles
 )
 
-from gutils.yo.filters import (
+from gutils.filters import (
     default_filter,
     filter_profile_depth,
     filter_profile_distance,

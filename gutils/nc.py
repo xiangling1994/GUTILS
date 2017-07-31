@@ -1,620 +1,396 @@
-#!/usr/bin/env python
-
-# GLIDER_NETCDF_WRITER - Creates a file like object into which
-#   glider binary data readers can insert data.
-#
-# Depends on the glider_binary_data_reader library:
-# https://github.com/USF-COT/glider_binary_data_reader
-#
-# By: Michael Lindemuth
-# University of South Florida
-# College of Marine Science
-# Ocean Technology Group
-#
-# Much of the code below is derived from John Kerfoot's ioos_template_example.py  # NOQA
-# https://github.com/IOOSProfilingGliders/Real-Time-File-Format/blob/master/util/ioos_template_example.py#L136  # NOQA
+#!python
+# coding=utf-8
+from __future__ import division
 
 import os
 import sys
 import json
+import math
+import errno
+import shutil
+import argparse
+import tempfile
 from datetime import datetime
 
-import numpy as np
-from netCDF4 import Dataset, stringtoarr
-from netCDF4 import default_fillvals as NC_FILL_VALUES
+import netCDF4 as nc4
+from compliance_checker.runner import ComplianceChecker, CheckSuite
+from pocean.utils import dict_update, get_fill_value
+from pocean.meta import MetaInterface
+from pocean.dsg.trajectory.im import IncompleteMultidimensionalTrajectory
 
-from gutils.ctd import calculate_practical_salinity, calculate_density
+from gutils import get_uv_data, get_profile_data
+from gutils.filters import process_dataset
+from gutils.slocum import SlocumReader
 
 import logging
-logger = logging.getLogger(__name__)
+L = logging.getLogger(__name__)
 
 
-DEFAULT_GLIDER_BASE = os.path.dirname(__file__)
+def create_glider_filepath(attrs, begin_time, mode):
+    glider_name = attrs['glider']
 
-GLIDER_QC = {
-    "no_qc_performed": 0,
-    "good_data": 1,
-    "probably_good_data": 2,
-    "bad_data_that_are_potentially_correctable": 3,
-    "bad_data": 4,
-    "value_changed": 5,
-    "interpolated_value": 8,
-    "missing_value": 9
-}
+    deployment_name = '{}-{}'.format(
+        glider_name,
+        attrs['trajectory_date']
+    )
 
-GLIDER_UV_DATATYPE_KEYS = (
-    'time_uv',
-    'm_water_vx-m/s',
-    'm_water_vy-m/s',
-    'lon_uv',
-    'lat_uv'
-)
+    filename = "{}_{:%Y%m%dT%H%M%S}Z_{}.nc".format(
+        glider_name,
+        begin_time,
+        mode
+    )
+
+    return os.path.join(
+        deployment_name,
+        filename
+    )
 
 
-def open_glider_netcdf(output_path, mode=None, COMP_LEVEL=None,
-                       config_path=None, DEBUG=False):
+def read_attrs(glider_config_path):
 
-    mode = mode or 'w'
-    COMP_LEVEL = COMP_LEVEL or 1
-    config_path = config_path or DEFAULT_GLIDER_BASE
-    return GliderNetCDFWriter(output_path, mode, COMP_LEVEL, config_path, DEBUG)
-
-
-class GliderNetCDFWriter(object):
-    """Writes a NetCDF file for glider datasets
-
-    """
-
-    def __init__(self, output_path, mode=None, COMP_LEVEL=None,
-                 config_path=None, DEBUG=False):
-        """Initializes a Glider NetCDF Writer
-        NOTE: Does not open the file.
-
-        Input:
-        - output_path: Path to new or existing NetCDF file.
-        - mode: 'w' to create or overwrite a NetCDF file.
-                'a' to append to an existing NetCDF file.
-                Default: 'w'
-        - COMP_LEVEL: NetCDF compression level.
-        """
-
-        self.nc = None
-        self.output_path = output_path
-        self.mode = mode or 'w'
-        self.COMP_LEVEL = COMP_LEVEL or 1
-        self.config_path = config_path or DEFAULT_GLIDER_BASE
-        self.DEBUG = DEBUG
-        self.datatypes = {}
-
-    def __setup_qaqc(self):
-        """ Internal function for qaqc variable setup
-        """
-
-        # Create array of unsigned 8-bit integers to use for _qc flag values
-        self.QC_FLAGS = np.array(range(0, 10), 'int8')
-        # Meanings of QC_FLAGS
-        self.QC_FLAG_MEANINGS = "no_qc_performed good_data probably_good_data bad_data_that_are_potentially_correctable bad_data value_changed not_used not_used interpolated_value missing_value"  # NOQA
-
-        self.qaqc_methods = {}
-
-    def __load_datatypes(self):
-        """ Internal function to setup known datatypes
-
-            Adds variables from base_variables.json
-        """
-
-        datatypes_path = os.path.join(
-            self.config_path,
-            'datatypes.json'
-        )
-        if not os.path.isfile(datatypes_path):
-            # Fall back to the included datatypes.json
-            datatypes_path = os.path.join(
-                DEFAULT_GLIDER_BASE,
-                'datatypes.json'
-            )
-
-        with open(datatypes_path, 'r') as f:
-            contents = f.read()
-        self.datatypes = json.loads(contents)
-
-    def __update_history(self):
-        """ Updates the history, date_created, date_modified
-        and date_issued file attributes
-        """
-
-        # Get timestamp for this access
-        # Cannot use datetime.isoformat()
-        # does not append Z at end of string
-        now_time = datetime.utcnow()
-        time_string = now_time.strftime("%Y-%m-%dT%H:%M:%SZ")
-        history_string = "%s: %s\r\n" % (time_string, sys.argv[0])
-
-        if 'history' not in self.nc.ncattrs():
-            self.nc.setncattr("history", history_string)
-            self.nc.setncattr("date_created", time_string)
-        else:
-            self.nc.history += history_string
-
-        self.nc.setncattr("date_modified", time_string)
-        self.nc.setncattr("date_issued", time_string)
-
-    def __get_time_len(self):
-        if 'time' in self.nc.variables:
-            return len(self.nc.variables['time'])
-        else:
-            return 0
-
-    def __enter__(self):
-        """ Opens the NetCDF file. Sets up QAQC and time variables.
-        Updates global history variables.
-        Called at beginning of Python with block.
-        """
-
-        self.nc = Dataset(
-            self.output_path, self.mode,
-            format='NETCDF4_CLASSIC'
+    def cfg_file(name):
+        return os.path.join(
+            glider_config_path,
+            name
         )
 
-        self.__setup_qaqc()
-        self.__load_datatypes()
+    # Load in configurations
+    default_attrs_path = os.path.join(
+        os.path.dirname(__file__),
+        'templates',
+        'trajectory.json'
+    )
+    defaults = dict(MetaInterface.from_jsonfile(default_attrs_path))
 
-        self.__update_history()
-        self.stream_index = self.__get_time_len()
+    # Load instruments
+    ins = {}
+    ins_attrs_path = cfg_file("instruments.json")
+    if os.path.isfile(ins_attrs_path):
+        ins = dict(MetaInterface.from_jsonfile(ins_attrs_path))
 
-        return self
+    # Load deployment attributes (including some global attributes)
+    deps = {}
+    deps_attrs_path = cfg_file("deployment.json")
+    if os.path.isfile(deps_attrs_path):
+        deps = dict(MetaInterface.from_jsonfile(deps_attrs_path))
 
-    def __exit__(self, type, value, tb):
-        """ Updates bounds and closes file.  Called at end of "with" block
-        """
+    # Update, highest precedence updates last
+    one = dict_update(defaults, ins)
+    two = dict_update(one, deps)
+    return two
 
-        if self.__get_time_len() > 0:
-            self.update_bounds()
 
-        self.nc.close()
-        self.nc = None
+def set_scalar_value(value, ncvar):
+    if value is None or math.isnan(value):
+        ncvar[:] = get_fill_value(ncvar)
+    else:
+        ncvar[:] = value
 
-    def set_global_attributes(self, global_attributes):
-        """ Sets a dictionary of values as global attributes
 
-        Warning!
-        Each file must have different values for the following parameters:
-        date_created, date_issued, date_modified
-        geospatial_
-            lat_max
-            lat_min
-            lat_resolution
-            lat_units
-            lon_max
-            lon_min
-            lon_resolution
-            lon_units
-            vertical_max
-            vertical_min
-            vertical_positive
-            vertical_resolution
-            vertical_units
-        history
-        id
-        time_coverage_end
-        time_coverage_resolution
-        time_coverage_start
-        """
+def set_profile_data(ncd, profile, method=None):
+    prof_t = ncd.variables['profile_time']
+    prof_y = ncd.variables['profile_lat']
+    prof_x = ncd.variables['profile_lon']
 
-        for key, value in sorted(global_attributes.items()):
-            self.nc.setncattr(key, value)
+    txy = get_profile_data(profile, method=method)
 
-    def set_trajectory_id(self, glider, deployment_date):
-        """ Sets the trajectory dimension and variable for the dataset
-
-        Input:
-            - glider: Name of the glider deployed.
-            - deployment_date: String or DateTime of when glider was
-                first deployed.
-        """
-
-        if(type(deployment_date) is datetime):
-            deployment_date = deployment_date.strftime("%Y-%m-%dT%H:%M:%SZ")
-
-        traj_str = "%s-%s" % (glider, deployment_date)
-
-        if 'trajectory' not in self.nc.variables:
-            # Setup Trajectory Dimension
-            self.nc.createDimension('traj_strlen', len(traj_str))
-
-            # Setup Trajectory Variable
-            trajectory_var = self.nc.createVariable(
-                'trajectory',
-                'S1',
-                ('traj_strlen',),
-                zlib=True,
-                complevel=self.COMP_LEVEL
-            )
-
-            attrs = {
-                'cf_role': 'trajectory_id',
-                'long_name': 'Trajectory/Deployment Name',  # NOQA
-                'comment': 'A trajectory is a single deployment of a glider and may span multiple data files.'  # NOQA
-            }
-            for key, value in sorted(attrs.items()):
-                trajectory_var.setncattr(key, value)
-        else:
-            trajectory_var = self.nc.variables['trajectory']
-
-        trajectory_var[:] = stringtoarr(traj_str, len(traj_str))
-        self.nc.id = traj_str  # Global id variable
-
-    def check_datatype_exists(self, key, subset_datatypes=True):
-        if key not in self.datatypes:
-            if subset_datatypes is True:
-                raise KeyError('Unknown datatype {}, cannot be inserted to NetCDF'.format(key))
-            else:
-                # Add the unknown datatype with sane defaults
-                name, units = key.split('-')
-                self.datatypes[key] = {
-                    'name': name,
-                    'type': 'f8',
-                    'dimension': 'time',
-                    'attrs': {
-                        'units': units
-                    }
-                }
-
-        datatype = self.datatypes[key]
-        if datatype['name'] not in self.nc.variables:
-            self.set_datatype(key, datatype)
-
-        return datatype
-
-    def get_status_flag_name(self, name):
-        return name + "_qc"
-
-    def set_datatype(self, key, desc):
-        """ Sets up a datatype description for the dataset
-        """
-
-        if 'is_dimension' in desc and desc['is_dimension']:
-            self.nc.createDimension(desc['name'], desc['dimension_length'])
-
-        if len(desc) == 0:
-            return  # Skip empty configurations
-
-        if desc['name'] in self.nc.variables:
-            return  # This variable already exists
-
-        if desc['dimension'] is None:
-            dimension = ()
-        else:
-            dimension = (desc['dimension'],)
-
-        datatype = self.nc.createVariable(
-            desc['name'],
-            desc['type'],
-            dimensions=dimension,
-            zlib=True,
-            complevel=self.COMP_LEVEL,
-            fill_value=NC_FILL_VALUES[desc['type']]
+    t_value = txy.t
+    if isinstance(t_value, datetime):
+        t_value = nc4.date2num(
+            t_value,
+            units=prof_t.units,
+            calendar=getattr(prof_t, 'calendar', 'standard')
         )
+    set_scalar_value(t_value, prof_t)
+    set_scalar_value(txy.y, prof_y)
+    set_scalar_value(txy.x, prof_x)
 
-        for k, v in sorted(desc['attrs'].items()):
-            datatype.setncattr(k, v)
+    ncd.sync()
 
-        if 'status_flag' in desc:
-            status_flag = desc['status_flag']
-            status_flag_name = self.get_status_flag_name(desc['name'])
-            datatype.setncattr('ancillary_variables', status_flag_name)
-            status_flag_var = self.nc.createVariable(
-                status_flag_name,
-                'i1',
-                dimension,
-                zlib=True,
-                complevel=self.COMP_LEVEL,
-                fill_value=NC_FILL_VALUES['i1']
-            )
-            # Append defaults
-            sf_standard_name = desc['attrs']['standard_name'] + ' status_flag'
-            status_flag['attrs'].update({
-                'standard_name': sf_standard_name,
-                'flag_meanings': self.QC_FLAG_MEANINGS,
-                'valid_min': self.QC_FLAGS[0],
-                'valid_max': self.QC_FLAGS[-1],
-                'flag_values': self.QC_FLAGS
-            })
-            for key, value in sorted(status_flag['attrs'].items()):
-                status_flag_var.setncattr(key, value)
 
-    def perform_qaqc(self, key, value):
-        if key in self.qaqc_methods:
-            flag = self.qaqc_methods[key](value)
-        elif value == NC_FILL_VALUES['f8']:
-            flag = GLIDER_QC["missing_value"]
-        else:
-            flag = GLIDER_QC['no_qc_performed']
+def set_uv_data(ncd, profile):
+    # The uv index should be the second row where v (originally m_water_vx) is not null
+    uv_t = ncd.variables['time_uv']
+    uv_x = ncd.variables['lon_uv']
+    uv_y = ncd.variables['lat_uv']
 
-        return flag
+    txy = get_uv_data(profile)
 
-    def set_scalar(self, key, value=None):
-        datatype = self.check_datatype_exists(key)
+    t_value = txy.t
+    if isinstance(t_value, datetime):
+        t_value = nc4.date2num(
+            t_value,
+            units=uv_t.units,
+            calendar=getattr(uv_t, 'calendar', 'standard')
+        )
+    set_scalar_value(t_value, uv_t)
+    set_scalar_value(txy.y, uv_y)
+    set_scalar_value(txy.x, uv_x)
 
-        if value is None:
-            value = NC_FILL_VALUES[datatype['type']]
+    ncd.sync()
 
-        self.nc.variables[datatype['name']].assignValue(value)
 
-        if "status_flag" in datatype:
-            status_flag_name = self.get_status_flag_name(datatype['name'])
-            flag = self.perform_qaqc(key, value)
-            self.nc.variables[status_flag_name].assignValue(flag)
+def update_geographic_attributes(ncd, profile):
+    miny = profile.y.min().round(5)
+    maxy = profile.y.max().round(5)
+    minx = profile.x.min().round(5)
+    maxx = profile.y.max().round(5)
+    ncd.setncattr('geospatial_lat_min', miny)
+    ncd.setncattr('geospatial_lat_max', maxy)
+    ncd.setncattr('geospatial_lon_min', minx)
+    ncd.setncattr('geospatial_lon_max', maxx)
 
-    def set_array_value(self, key, index, value=None):
-        datatype = self.check_datatype_exists(key)
+    polygon_wkt = 'POLYGON ((' \
+        '{maxy:.6f} {minx:.6f}, '  \
+        '{maxy:.6f} {maxx:.6f}, '  \
+        '{miny:.6f} {maxx:.6f}, '  \
+        '{miny:.6f} {minx:.6f}, '  \
+        '{maxy:.6f} {minx:.6f}'    \
+        '))'.format(
+            miny=miny,
+            maxy=maxy,
+            minx=minx,
+            maxx=maxx
+        )
+    ncd.setncattr('geospatial_bounds', polygon_wkt)
 
-        if value is None:
-            value = NC_FILL_VALUES[datatype['type']]
 
-        self.nc.variables[datatype['name']][index] = value
+def update_vertical_attributes(ncd, profile):
+    ncd.setncattr('geospatial_vertical_min', profile.z.min().round(6))
+    ncd.setncattr('geospatial_vertical_max', profile.z.max().round(6))
+    ncd.setncattr('geospatial_vertical_units', 'm')
 
-        if "status_flag" in datatype:
-            status_flag_name = self.get_status_flag_name(datatype['name'])
-            flag = self.perform_qaqc(key, value)
-            self.nc.variables[status_flag_name][index] = flag
 
-    def set_array(self, key, values):
-        datatype = self.check_datatype_exists(key)
+def update_temporal_attributes(ncd, profile):
+    mint = profile.t.min()
+    maxt = profile.t.max()
+    ncd.setncattr('time_coverage_start', mint.strftime('%Y-%m-%dT%H:%M:%SZ'))
+    ncd.setncattr('time_coverage_end', maxt.strftime('%Y-%m-%dT%H:%M:%SZ'))
+    ncd.setncattr('time_coverage_duration', (maxt - mint).isoformat())
 
-        self.nc.variables[datatype['name']][:] = values
-        if "status_flag" in datatype:
-            status_flag_name = self.get_status_flag_name(datatype['name'])
-            for i, value in enumerate(values):
-                flag = self.perform_qaqc(key, value)
-                self.nc.variables[status_flag_name][i] = flag
 
-    def set_segment_id(self, segment_id):
-        """ Sets the segment ID as a variable
+def update_creation_attributes(ncd, profile):
+    nc_create_ts = datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')
+    ncd.setncattr('date_created', nc_create_ts)
+    ncd.setncattr('date_issued', nc_create_ts)
+    ncd.setncattr('date_modified', nc_create_ts)
 
-        SEGMENT_ID
-        segment_id: 2 byte integer
-        kerfoot@marine.rutgers.edu: explicitly specify fill_value when creating
-        variable so that it shows up as a variable attribute.  Use the default
-        fill_value based on the data type
-        """
+    ncd.history = '{} - {}'.format(
+        nc_create_ts,
+        'Created with the GUTILS package: "{}"'.format(sys.argv[0])
+    )
 
-        self.set_scalar('segment_id', segment_id)
 
-    def set_profile_id(self, profile_id):
-        """ Sets Profile ID in NetCDF File
+def create_netcdf(attrs, data, output_path, mode):
+    # Create NetCDF Files for Each Profile
+    for pi, profile in data.groupby('profile_id'):
+        try:
+            # Path to hold file while we create it
+            tmp_handle, tmp_path = tempfile.mkstemp(suffix='.nc', prefix='gutils_glider_netcdf_')
 
-        """
+            # Create final filename
+            begin_time = profile.t.dropna().iloc[0]
+            relative_file = create_glider_filepath(attrs, begin_time, mode)
+            output_file = os.path.join(output_path, relative_file)
 
-        self.set_scalar('profile_id', profile_id)
+            # Add in the trajectory dimension to make pocean happy
+            traj_name = os.path.basename(os.path.dirname(output_file))
+            profile = profile.assign(trajectory=traj_name)
 
-    def set_platform(self, platform_attrs):
-        """ Creates a variable that describes the glider
-        """
+            # Use pocean to create NetCDF file
+            with IncompleteMultidimensionalTrajectory.from_dataframe(
+                    profile,
+                    tmp_path,
+                    reduce_dims=True,
+                    mode='a') as ncd:
 
-        self.set_scalar('platform')
-        for key, value in sorted(platform_attrs.items()):
-            self.nc.variables['platform'].setncattr(key, value)
+                # BEFORE RENAMING VARIABLES
+                # Calculate some geographic global attributes
+                update_geographic_attributes(ncd, profile)
 
-    def set_instrument(self, name, var_type, attrs):
-        """ Adds a description for a single instrument
-        """
+                # Calculate some vertical global attributes
+                update_vertical_attributes(ncd, profile)
 
-        if name not in self.nc.variables:
-            self.nc.createVariable(
-                name,
-                var_type,
-                fill_value=NC_FILL_VALUES[var_type]
-            )
+                # Calculate some temporal global attributes
+                update_temporal_attributes(ncd, profile)
 
-        for key, value in sorted(attrs.items()):
-            self.nc.variables[name].setncattr(key, value)
+                # Set the creation dates and history
+                update_creation_attributes(ncd, profile)
 
-    def set_instruments(self, instruments_array):
-        """ Adds a list of instrument descriptions to the dataset
-        """
+                # Standardize some variable names before applying the metadata dict
+                ncd.renameVariable('latitude', 'lat')
+                ncd.renameVariable('longitude', 'lon')
+                ncd.renameVariable('z', 'depth')
 
-        for description in instruments_array:
-            self.set_instrument(
-                description['name'],
-                description['type'],
-                description['attrs']
-            )
+                # AFTER RENAMING VARIABLES
+                # Load metadata from config files to create the skeleton
+                # This will create scalar variables but not assign the data
+                ncd.__apply_meta_interface__(attrs)
 
-    def fill_uv_vars(self, line):
-        self.set_scalar('time_uv', line['m_present_time-timestamp'])
-        self.set_scalar('lat_uv', line['m_gps_lat-lat'])
-        self.set_scalar('lon_uv', line['m_gps_lon-lon'])
+                # Set trajectory value
+                ncd.id = traj_name
+                ncd.variables['trajectory'][0] = traj_name
 
-    def stream_dict_insert(self, line, subset_datatypes=True, qaqc_methods=None):
-        """ Adds a data point glider_binary_data_reader library to NetCDF
+                # Set profile_* data
+                set_profile_data(ncd, profile)
 
-        Input:
-        - line: A dictionary of values where the key is a given
-                <value name>-<units> pair that matches a description
-                in the datatypes.json file.
-        """
+                # Set *_uv data
+                set_uv_data(ncd, profile)
 
-        qaqc_methods = qaqc_methods or {}
-
-        if 'timestamp' not in line:
-            raise ValueError('No timestamp found for line')
-
-        self.set_array_value('timestamp', self.stream_index, line['timestamp'])
-
-        for name, value in line.items():
-            if name == 'timestamp':
-                continue  # Skip timestamp, inserted above
-
+            # Move to final destination
             try:
-                datatype = self.check_datatype_exists(name, subset_datatypes)
-            except KeyError:
-                if self.DEBUG:
-                    logger.exception("Datatype {} does not exist".format(name))
-                continue
-            else:
-                datatype = self.datatypes[name]
-                if datatype['dimension'] == 'time':
-                    self.set_array_value(name, self.stream_index, value)
-                else:
-                    self.set_scalar(name, value)
-                    if name == "m_water_vx-m/s":
-                        self.fill_uv_vars(line)
+                os.makedirs(os.path.dirname(output_file))
+            except OSError as e:
+                if e.errno != errno.EEXIST:
+                    raise
+            shutil.move(tmp_path, output_file)
+            L.debug('Created: {}'.format(output_file))
+        finally:
+            os.close(tmp_handle)
+            if os.path.exists(tmp_path):
+                os.remove(tmp_path)
 
-        self.stream_index += 1
 
-    def contains(self, datatype_key):
-        if datatype_key in self.datatypes:
-            field_name = self.datatypes[datatype_key]['name']
-            return field_name in self.nc.variables
-        else:
-            return False
+def create_arg_parser():
+    parser = argparse.ArgumentParser(
+        description='Parses a single combined ASCII file into a set of '
+                    'NetCDFs file according to JSON configurations '
+                    'for institution, deployment, glider, and datatypes.'
+    )
+    parser.add_argument(
+        'glider_config_path',
+        help='Path to configuration files for this specific glider deployment.'
+    )
+    parser.add_argument(
+        'output_path',
+        help='Path to folder to save NetCDF output. A directory named after '
+             'the deployment will be created here'
+    )
+    parser.add_argument(
+        '-f', '--file',
+        help="Combined ASCII file to process into NetCDF",
+        default=None
+    )
+    parser.add_argument(
+        '-fp', '--filter_points',
+        help="Filter out profiles that do not have at least this number of points",
+        default=5
+    )
+    parser.add_argument(
+        '-fd', '--filter_distance',
+        help="Filter out profiles that do not span at least this vertical distance (meters)",
+        default=1
+    )
+    parser.add_argument(
+        '-ft', '--filter_time',
+        help="Filter out profiles that last less than this numer of seconds",
+        default=10
+    )
+    parser.add_argument(
+        '-fz', '--filter_z',
+        help="Filter out profiles that are not completely below this depth (meters)",
+        default=1
+    )
+    parser.add_argument(
+        '--no-subset',
+        dest='subset',
+        action='store_false',
+        help='Process all variables - not just those available in a datatype mapping JSON file'
+    )
+    parser.set_defaults(subset=True)
 
-    def get_scalar(self, datatype_key):
-        if self.contains(datatype_key):
-            field_name = self.datatypes[datatype_key]['name']
-            return self.nc.variables[field_name].getValue()
+    return parser
 
-    def copy_field(self, src_glider_nc, datatype_key):
-        datatype = self.check_datatype_exists(datatype_key)
-        field_name = datatype['name']
 
-        if src_glider_nc.contains(field_name):
-            src_variable = src_glider_nc.nc.variables[field_name]
+def create_dataset(args):
+    try:
+        dict_args = vars(args)  # argparser
+    except TypeError:
+        dict_args = args._asdict()  # namedtuple
 
-            if 'time' in src_variable.dimensions:
-                self.set_array(datatype_key, src_variable[:])
-            else:
-                self.set_scalar(datatype_key, src_variable.getValue())
+    glider_config_path = dict_args.pop('glider_config_path')
+    output_path = dict_args.pop('output_path')
 
-        else:
-            raise KeyError(
-                'Field not found in source glider NetCDF: %s' % field_name
-            )
+    # TODO: Support additional Reader classes if needed
+    dict_args['reader_class'] = SlocumReader
 
-    def copy_glider_datatypes(self, src_glider_nc, datatype_keys):
-        for datatype_key in datatype_keys:
-            try:
-                self.copy_field(src_glider_nc, datatype_key)
-            except KeyError:
-                logger.exception("Copy field failed")
+    processed_df, mode = process_dataset(**dict_args)
 
-    def __netcdf_to_np_op(self, variable_data, operation):
-        array = np.array(variable_data)
-        array[array == NC_FILL_VALUES['f8']] = float('nan')
+    attrs = read_attrs(glider_config_path)
+    return create_netcdf(attrs, processed_df, output_path, mode)
 
-        result = operation(array)
-        if result == np.nan:
-            result = NC_FILL_VALUES['f8']
-        return result
 
-    def update_profile_vars(self):
-        """ Internal function that updates all profile variables
-        before closing a file
-        """
+def main_create():
+    # If running on command line, add a console handler
+    L.addHandler(logging.StreamHandler())
 
-        if 'time' in self.nc.variables:
-            profile_time = self.__netcdf_to_np_op(
-                self.nc.variables['time'][:],
-                np.nanmin
-            )
-            self.set_scalar('profile_time', profile_time)
+    parser = create_arg_parser()
+    args = parser.parse_args()
 
-        if 'lon' in self.nc.variables:
-            profile_lon = self.__netcdf_to_np_op(
-                self.nc.variables['lon'][:],
-                np.average
-            )
-            self.set_scalar('profile_lon', profile_lon)
+    return create_dataset(args)
 
-        if 'lat' in self.nc.variables:
-            profile_lat = self.__netcdf_to_np_op(
-                self.nc.variables['lat'][:],
-                np.average
-            )
-            self.set_scalar('profile_lat', profile_lat)
 
-    def update_bounds(self):
-        """ Internal function that updates all global attribute bounds
-        before closing a file.
-        """
+# CHECKER
 
-        for key, desc in self.datatypes.items():
-            if 'global_bound' in desc:
-                prefix = desc['global_bound']
-                dataset = self.nc.variables[desc['name']][:]
-                self.nc.setncattr(
-                    prefix + '_min',
-                    self.__netcdf_to_np_op(
-                        dataset,
-                        np.nanmin
-                    )
-                )
-                self.nc.setncattr(
-                    prefix + '_max',
-                    self.__netcdf_to_np_op(
-                        dataset,
-                        np.nanmax
-                    )
-                )
-                self.nc.setncattr(
-                    prefix + '_units',
-                    desc['attrs']['units']
-                )
-                self.nc.setncattr(
-                    prefix + '_resolution',
-                    desc['attrs']['resolution']
-                )
-                self.nc.setncattr(
-                    prefix + '_accuracy',
-                    desc['attrs']['accuracy']
-                )
-                self.nc.setncattr(
-                    prefix + '_precision',
-                    desc['attrs']['precision']
-                )
+def check_dataset(args):
+    check_suite = CheckSuite()
+    check_suite.load_all_available_checkers()
 
-    def calculate_salinity(self):
-        if self.__get_time_len() == 0:
-            raise TypeError('Cannot calculate salinity: time array empty')
+    outhandle, outfile = tempfile.mkstemp()
 
-        required_params = ('time', 'conductivity', 'temperature', 'pressure')
-        for param in required_params:
-            if param not in self.nc.variables:
-                raise TypeError('Cannot calculate salinity: '
-                                'missing %s' % param)
-
-        salinity = calculate_practical_salinity(
-            np.array(self.nc.variables["time"][:]),
-            np.array(self.nc.variables["conductivity"][:]),
-            np.array(self.nc.variables["temperature"][:]),
-            np.array(self.nc.variables["pressure"][:])
+    try:
+        return_value, errors = ComplianceChecker.run_checker(
+            ds_loc=args.file,
+            checker_names=['gliderdac'],
+            verbose=True,
+            criteria='normal',
+            output_format='json',
+            output_filename=outfile
         )
+        assert errors is False
+        return 0
+    except AssertionError:
+        with open(outfile, 'rt') as f:
+            ers = json.loads(f.read())
+            for k, v in ers.items():
+                if isinstance(v, list):
+                    for x in v:
+                        if 'msgs' in x and x['msgs']:
+                            L.debug(x['msgs'])
+        return 1
+    except BaseException as e:
+        L.warning(e)
+        return 1
+    finally:
+        os.close(outhandle)
+        if os.path.isfile(outfile):
+            os.remove(outfile)
 
-        salinity[np.isnan(salinity)] = NC_FILL_VALUES['f8']
-        self.set_array('salinity-psu', salinity)
 
-    def calculate_density(self):
-        if self.__get_time_len() == 0:
-            raise TypeError('Cannot calculate salinity: time array empty')
+def check_arg_parser():
+    parser = argparse.ArgumentParser(
+        description='Verifies that a glider NetCDF file from a provider '
+                    'contains all the required global attributes, dimensions,'
+                    'scalar variables and dimensioned variables.'
+    )
 
-        required_params = (
-            'time', 'conductivity', 'temperature', 'pressure',
-            'salinity', 'lat', 'lon'
-        )
-        for param in required_params:
-            if param not in self.nc.variables:
-                raise TypeError('Cannot calculate salinity: '
-                                'missing %s' % param)
+    parser.add_argument(
+        'file',
+        help='Path to Glider NetCDF file.'
+    )
+    return parser
 
-        density = calculate_density(
-            np.array(self.nc.variables["time"][:]),
-            np.array(self.nc.variables["temperature"][:]),
-            np.array(self.nc.variables["pressure"][:]),
-            np.array(self.nc.variables["salinity"][:]),
-            np.array(self.nc.variables["lat"][:]),
-            np.array(self.nc.variables["lon"][:])
-        )
 
-        density[np.isnan(density)] = NC_FILL_VALUES['f8']
-        self.set_array('density-kg/m^3', density)
+def main_check():
+
+    parser = check_arg_parser()
+    args = parser.parse_args()
+
+    # Check filenames
+    if args.file is None:
+        raise ValueError('Must specify path to NetCDF file')
+
+    # If running on command line, add a console handler
+    L.addHandler(logging.StreamHandler())
+
+    return check_dataset(args)

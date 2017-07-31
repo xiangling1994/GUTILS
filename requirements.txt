@@ -5,7 +5,6 @@ netCDF4
 numpy
 pandas
 pocean-core>=1.2.0
-pynco
 scipy
 six
 whichcraft

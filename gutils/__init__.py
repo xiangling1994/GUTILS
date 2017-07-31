@@ -1,14 +1,14 @@
-#!/usr/bin/env python
+#!python
+# coding=utf-8
 from __future__ import division  # always return floats when dividing
 
-import os
-import re
 import math
 import subprocess
-from six import StringIO
+from collections import namedtuple
 
 import numpy as np
 import pandas as pd
+from six import StringIO
 from scipy.signal import boxcar, convolve
 
 import logging
@@ -141,49 +141,6 @@ def interpolate_gps(timestamps, latitude, longitude):
     return est_lat, est_lon
 
 
-def parse_glider_filename(filename):
-    """
-    Parses a glider filename and returns details in a dictionary
-
-    Parameters
-    ----------
-    filename : str
-        A filename to parse
-
-    Returns
-    -------
-    dict
-        Returns dictionary with the following keys:
-
-            * 'glider': glider name
-            * 'year': data file year created
-            * 'day': data file julian date created
-            * 'mission': data file mission id
-            * 'segment': data file segment id
-            * 'type': data file type
-    """
-    head, tail = os.path.split(filename)
-
-    matches = re.search(r"([\w\d\-]+)-(\d+)-(\d+)-(\d+)-(\d+)\.(\w+)$", tail)
-
-    if matches is not None:
-        return {
-            'path': head,
-            'glider': matches.group(1),
-            'year': int(matches.group(2)),
-            'day': int(matches.group(3)),
-            'mission': int(matches.group(4)),
-            'segment': int(matches.group(5)),
-            'type': matches.group(6)
-        }
-    else:
-        raise ValueError(
-            "Filename ({}) not in usual glider format: "
-            "<glider name>-<year>-<julian day>-"
-            "<mission>-<segment>.<extenstion>".format(filename)
-        )
-
-
 def generate_stream(processArgs):
     """ Runs a given process and outputs the resulting text as a StringIO
 
@@ -205,3 +162,61 @@ def generate_stream(processArgs):
     )
     stdout, _ = process.communicate()
     return StringIO(stdout), process.returncode
+
+
+def get_uv_data(profile):
+    # Find and return t, x and y from the second row where U and V are not null
+    t = np.nan
+    x = np.nan
+    y = np.nan
+
+    uvslice = (~profile.u.isnull()) & (~profile.v.isnull())
+    uv_index = profile[uvslice].index[:2]
+    if uv_index.size != 0:
+        uv_index = uv_index[-1]
+        t = profile.t.loc[uv_index].to_datetime()
+        x = profile.x.loc[uv_index]
+        y = profile.y.loc[uv_index]
+
+    tuv = namedtuple('UV_Data', ['t', 'x', 'y'])
+    return tuv(t=t, x=x, y=y)
+
+
+PROFILE_MEAN = 0
+PROFILE_MEDIAN = 1
+PROFILE_MINIMUM = 2
+
+
+def get_profile_data(profile, method=None):
+    # Find and return profile t, x and y from the data based on the method
+    if method is None:
+        method = PROFILE_MEAN
+
+    t = np.nan
+    x = np.nan
+    y = np.nan
+
+    if method == PROFILE_MEDIAN:
+        # T,X,Y: MIDDLE INDEX (median)
+        amedian = np.nanmedian(profile.y.values)
+        middle_index = np.nanargmin(np.abs(profile.y.values - amedian))
+        t = profile.t.iloc[middle_index].to_datetime()
+        x = profile.x.iloc[middle_index]
+        y = profile.y.iloc[middle_index]
+
+    elif method == PROFILE_MEAN:
+        # T,X,Y: AVERAGE
+        all_t = profile.t.view('int64') // pd.Timedelta(1, unit='ms')  # covert to epoch ms
+        t = pd.to_datetime(all_t.mean(), unit='ms').to_datetime()
+        y = profile.y.mean()
+        x = profile.x.mean()
+
+    elif method == PROFILE_MINIMUM:
+        # T: MIN
+        # X,Y: AVERAGE
+        t = profile.t.min().to_datetime()
+        y = profile.y.mean()
+        x = profile.x.mean()
+
+    tuv = namedtuple('Profile_Data', ['t', 'x', 'y'])
+    return tuv(t=t, x=x, y=y)

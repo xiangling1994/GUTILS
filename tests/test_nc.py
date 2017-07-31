@@ -7,8 +7,7 @@ from collections import namedtuple
 
 import netCDF4 as nc4
 
-from gutils.scripts.check_glider_netcdf import check_dataset
-from gutils.scripts.create_glider_netcdf import process_dataset
+from gutils.nc import check_dataset, create_dataset
 
 import logging
 L = logging.getLogger()
@@ -76,7 +75,7 @@ class TestCreateGliderScript(unittest.TestCase):
             filter_z=1
         )
 
-        process_dataset(args)
+        create_dataset(args)
 
         output_folders = os.listdir(output('usf-2016'))
         assert len(output_folders) == 1
@@ -113,7 +112,7 @@ class TestCreateGliderScript(unittest.TestCase):
             filter_z=1
         )
 
-        process_dataset(args)
+        create_dataset(args)
 
         output_folders = os.listdir(output('modena-2015'))
         assert len(output_folders) == 1
