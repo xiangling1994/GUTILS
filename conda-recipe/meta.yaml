@@ -14,10 +14,13 @@ requirements:
         - python
         - setuptools
     run:
+        - cc-plugin-glider >=1.0.4
+        - compliance-checker
         - gsw <3.1.0
         - netcdf4
         - numpy
         - pandas
+        - pocean-core >=1.2.0
         - python
         - scipy
         - six
@@ -27,12 +30,13 @@ test:
         - gutils
         - gutils.ctd
         - gutils.yo
-        - gutils.yo.filters
+        - gutils.filters
         - gutils.nc
         - gutils.slocum
 
     commands:
-        - create_glider_netcdf.py --help
+        - gutils_create_nc --help
+        - gutils_check_nc --help
 
 about:
     home: https://github.com/SECOORA/GUTILS

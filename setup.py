@@ -31,10 +31,12 @@ setup(
             'tests'
         ]
     ),
-    scripts=[
-        'gutils/scripts/check_glider_netcdf.py',
-        'gutils/scripts/create_glider_netcdf.py',
-    ],
+    entry_points={
+        'console_scripts': [
+            'gutils_create_nc = gutils.nc:main_create',
+            'gutils_check_nc = gutils.nc:main_check'
+        ]
+    },
     include_package_data=True,
     classifiers=[
         'Development Status :: 5 - Production/Stable',
