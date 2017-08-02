@@ -26,11 +26,7 @@ setup(
     author_email='kyle@axiomdatascience.com',
     install_requires=reqs,
     url='https://github.com/SECOORA/GUTILS',
-    packages=find_packages(
-        exclude=[
-            'tests'
-        ]
-    ),
+    packages=find_packages(),
     entry_points={
         'console_scripts': [
             'gutils_create_nc = gutils.nc:main_create',
