@@ -30,7 +30,10 @@ setup(
     entry_points={
         'console_scripts': [
             'gutils_create_nc = gutils.nc:main_create',
-            'gutils_check_nc = gutils.nc:main_check'
+            'gutils_check_nc = gutils.nc:main_check',
+            'gutils_binary_watch = gutils.watch.binary:main',
+            'gutils_ascii_watch = gutils.watch.ascii:main',
+            'gutils_netcdf_watch = gutils.watch.netcdf:main',
         ]
     },
     include_package_data=True,

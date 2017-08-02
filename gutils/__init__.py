@@ -2,7 +2,9 @@
 # coding=utf-8
 from __future__ import division  # always return floats when dividing
 
+import os
 import math
+import errno
 import subprocess
 from collections import namedtuple
 
@@ -174,7 +176,7 @@ def get_uv_data(profile):
     uv_index = profile[uvslice].index[:2]
     if uv_index.size != 0:
         uv_index = uv_index[-1]
-        t = profile.t.loc[uv_index].to_datetime()
+        t = profile.t.loc[uv_index].to_pydatetime()
         x = profile.x.loc[uv_index]
         y = profile.y.loc[uv_index]
 
@@ -207,16 +209,24 @@ def get_profile_data(profile, method=None):
     elif method == PROFILE_MEAN:
         # T,X,Y: AVERAGE
         all_t = profile.t.view('int64') // pd.Timedelta(1, unit='ms')  # covert to epoch ms
-        t = pd.to_datetime(all_t.mean(), unit='ms').to_datetime()
+        t = pd.to_datetime(all_t.mean(), unit='ms').to_pydatetime()
         y = profile.y.mean()
         x = profile.x.mean()
 
     elif method == PROFILE_MINIMUM:
         # T: MIN
         # X,Y: AVERAGE
-        t = profile.t.min().to_datetime()
+        t = profile.t.min().to_pydatetime()
         y = profile.y.mean()
         x = profile.x.mean()
 
     tuv = namedtuple('Profile_Data', ['t', 'x', 'y'])
     return tuv(t=t, x=x, y=y)
+
+
+def safe_makedirs(folder):
+    try:
+        os.makedirs(folder)
+    except OSError as e:
+        if e.errno != errno.EEXIST:
+            raise

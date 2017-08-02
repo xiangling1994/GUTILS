@@ -9,7 +9,13 @@ import numpy as np
 import pandas as pd
 from gsw import z_from_p
 
-from gutils import generate_stream, get_decimal_degrees, interpolate_gps, masked_epoch
+from gutils import (
+    generate_stream,
+    get_decimal_degrees,
+    interpolate_gps,
+    masked_epoch,
+    safe_makedirs
+)
 from gutils.ctd import calculate_practical_salinity, calculate_density
 
 import logging
@@ -189,7 +195,7 @@ class SlocumMerger(object):
 
     def __init__(self, source_directory, destination_directory, cache_directory=None, globs=None):
 
-        globs = globs or []
+        globs = globs or ['*']
 
         self.tmpdir = mkdtemp(prefix='gutils_convert_')
         self.matched_files = []
@@ -216,8 +222,7 @@ class SlocumMerger(object):
             tmpf = os.path.join(self.tmpdir, fname)
             shutil.copy2(f, tmpf)
 
-        if not os.path.isdir(self.destination_directory):
-            os.makedirs(self.destination_directory)
+        safe_makedirs(self.destination_directory)
 
         # Run conversion script
         convert_binary_path = os.path.join(

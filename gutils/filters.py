@@ -96,28 +96,22 @@ def filter_profile_number_of_points(dataset, points_condition=None, reindex=True
     return filter_profiles(dataset, conditional, reindex)
 
 
-def process_dataset(file=None, reader_class=None, subset=True, filter_z=None, filter_points=None, filter_time=None, filter_distance=None):
+def process_dataset(file, reader_class, filter_z=None, filter_points=None, filter_time=None, filter_distance=None):
 
     # Check filename
     if file is None:
         raise ValueError('Must specify path to combined ASCII file')
 
-    reader_class = reader_class or SlocumReader
-
     try:
         reader = reader_class(file)
         data = reader.standardize()
 
-        # Optionally, remove any variables from the dataframe that do not have metadata assigned
-        if subset is True:
-            orphans = set(data.columns) - set(attrs.get('variables', {}).keys())
-            L.info(
-                "Excluded from output because there was no metadata: {}".format(orphans)
-            )
-            data = data.drop(orphans, axis=1)
-
         # Find profile breaks
         profiles = assign_profiles(data)
+
+        # Shortcut for empty dataframes
+        if profiles is None:
+            return None, None
 
         # Filter data
         filtered = filter_profile_depth(profiles, below=filter_z)

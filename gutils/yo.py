@@ -50,8 +50,7 @@ def assign_profiles(df, tsint=None):
     tmp_df = tmp_df.dropna(subset=['t', 'z'], how='any')
 
     if len(tmp_df) < 2:
-        L.debug('Skipping yo that contains < 2 rows')
-        return np.empty((0, 2))
+        return None
 
     # Create the fixed timestamp array from the min timestamp to the max timestamp
     # spaced by tsint intervals

@@ -8,6 +8,12 @@ source:
 build:
     number: 0
     script: python setup.py install --single-version-externally-managed --record=record.txt
+    entry_points:
+        - gutils_create_nc = gutils.nc:main_create
+        - gutils_check_nc = gutils.nc:main_check
+        - gutils_binary_watch = gutils.watch.binary:main
+        - gutils_ascii_watch = gutils.watch.ascii:main
+        - gutils_netcdf_watch = gutils.watch.netcdf:main
 
 requirements:
     build:
@@ -20,7 +26,8 @@ requirements:
         - netcdf4
         - numpy
         - pandas
-        - pocean-core >=1.2.0
+        - pocean-core >=1.2.1
+        - pyinotify
         - python
         - scipy
         - six
@@ -37,6 +44,9 @@ test:
     commands:
         - gutils_create_nc --help
         - gutils_check_nc --help
+        - gutils_binary_watch --help
+        - gutils_ascii_watch --help
+        - gutils_netcdf_watch --help
 
 about:
     home: https://github.com/SECOORA/GUTILS

@@ -6,7 +6,6 @@ import os
 import sys
 import json
 import math
-import errno
 import shutil
 import argparse
 import tempfile
@@ -18,39 +17,19 @@ from pocean.utils import dict_update, get_fill_value
 from pocean.meta import MetaInterface
 from pocean.dsg.trajectory.im import IncompleteMultidimensionalTrajectory
 
-from gutils import get_uv_data, get_profile_data
+from gutils import get_uv_data, get_profile_data, safe_makedirs
 from gutils.filters import process_dataset
 from gutils.slocum import SlocumReader
 
 import logging
-L = logging.getLogger(__name__)
+L = logging.getLogger('gutils')
 
 
-def create_glider_filepath(attrs, begin_time, mode):
-    glider_name = attrs['glider']
-
-    deployment_name = '{}-{}'.format(
-        glider_name,
-        attrs['trajectory_date']
-    )
-
-    filename = "{}_{:%Y%m%dT%H%M%S}Z_{}.nc".format(
-        glider_name,
-        begin_time,
-        mode
-    )
-
-    return os.path.join(
-        deployment_name,
-        filename
-    )
-
-
-def read_attrs(glider_config_path):
+def read_attrs(config_path):
 
     def cfg_file(name):
         return os.path.join(
-            glider_config_path,
+            config_path,
             name
         )
 
@@ -189,12 +168,18 @@ def create_netcdf(attrs, data, output_path, mode):
             tmp_handle, tmp_path = tempfile.mkstemp(suffix='.nc', prefix='gutils_glider_netcdf_')
 
             # Create final filename
-            begin_time = profile.t.dropna().iloc[0]
-            relative_file = create_glider_filepath(attrs, begin_time, mode)
-            output_file = os.path.join(output_path, relative_file)
+            filename = "{}_{:%Y%m%dT%H%M%S}Z_{}.nc".format(
+                attrs['glider'],
+                profile.t.dropna().iloc[0],
+                mode
+            )
+            output_file = os.path.join(output_path, filename)
 
             # Add in the trajectory dimension to make pocean happy
-            traj_name = os.path.basename(os.path.dirname(output_file))
+            traj_name = '{}-{}'.format(
+                attrs['glider'],
+                attrs['trajectory_date']
+            )
             profile = profile.assign(trajectory=traj_name)
 
             # Use pocean to create NetCDF file
@@ -238,13 +223,12 @@ def create_netcdf(attrs, data, output_path, mode):
                 set_uv_data(ncd, profile)
 
             # Move to final destination
-            try:
-                os.makedirs(os.path.dirname(output_file))
-            except OSError as e:
-                if e.errno != errno.EEXIST:
-                    raise
+            safe_makedirs(os.path.dirname(output_file))
             shutil.move(tmp_path, output_file)
-            L.debug('Created: {}'.format(output_file))
+            L.info('Created: {}'.format(output_file))
+        except BaseException as e:
+            L.exception('Error: {}'.format(e))
+            continue
         finally:
             os.close(tmp_handle)
             if os.path.exists(tmp_path):
@@ -258,7 +242,11 @@ def create_arg_parser():
                     'for institution, deployment, glider, and datatypes.'
     )
     parser.add_argument(
-        'glider_config_path',
+        'file',
+        help="Combined ASCII file to process into NetCDF"
+    )
+    parser.add_argument(
+        'config_path',
         help='Path to configuration files for this specific glider deployment.'
     )
     parser.add_argument(
@@ -267,9 +255,10 @@ def create_arg_parser():
              'the deployment will be created here'
     )
     parser.add_argument(
-        '-f', '--file',
-        help="Combined ASCII file to process into NetCDF",
-        default=None
+        "-r",
+        "--reader_class",
+        help="Glider reader to interpret the data",
+        default='slocum'
     )
     parser.add_argument(
         '-fp', '--filter_points',
@@ -302,21 +291,33 @@ def create_arg_parser():
     return parser
 
 
-def create_dataset(args):
-    try:
-        dict_args = vars(args)  # argparser
-    except TypeError:
-        dict_args = args._asdict()  # namedtuple
+def create_dataset(file, reader_class, config_path, output_path, subset, **filters):
 
-    glider_config_path = dict_args.pop('glider_config_path')
-    output_path = dict_args.pop('output_path')
+    processed_df, mode = process_dataset(file, reader_class, **filters)
 
-    # TODO: Support additional Reader classes if needed
-    dict_args['reader_class'] = SlocumReader
+    if processed_df is None:
+        return 1
 
-    processed_df, mode = process_dataset(**dict_args)
+    attrs = read_attrs(config_path)
 
-    attrs = read_attrs(glider_config_path)
+    # Optionally, remove any variables from the dataframe that do not have metadata assigned
+    if subset is True:
+        all_columns = set(processed_df.columns)
+        reserved_columns = [
+            'trajectory',
+            'profile',
+            't',
+            'x',
+            'y',
+            'z',
+        ]
+        removable_columns = all_columns - set(reserved_columns)
+        orphans = removable_columns - set(attrs.get('variables', {}).keys())
+        L.info(
+            "Excluded from output (absent from JSON config):\n  * {}".format('\n  * '.join(orphans))
+        )
+        processed_df = processed_df.drop(orphans, axis=1)
+
     return create_netcdf(attrs, processed_df, output_path, mode)
 
 
@@ -327,7 +328,26 @@ def main_create():
     parser = create_arg_parser()
     args = parser.parse_args()
 
-    return create_dataset(args)
+    filter_args = vars(args)
+    # Remove non-filter args into positional arguments
+    file = filter_args.pop('file')
+    config_path = filter_args.pop('config_path')
+    output_path = filter_args.pop('output_path')
+    subset = filter_args.pop('subset')
+
+    # Move reader_class to a class
+    reader_class = filter_args.pop('reader_class')
+    if reader_class == 'slocum':
+        reader_class = SlocumReader
+
+    return create_dataset(
+        file=file,
+        reader_class=reader_class,
+        config_path=config_path,
+        output_path=output_path,
+        subset=subset,
+        **filter_args
+    )
 
 
 # CHECKER
@@ -356,7 +376,7 @@ def check_dataset(args):
                 if isinstance(v, list):
                     for x in v:
                         if 'msgs' in x and x['msgs']:
-                            L.debug(x['msgs'])
+                            L.warning(x['msgs'])
         return 1
     except BaseException as e:
         L.warning(e)
