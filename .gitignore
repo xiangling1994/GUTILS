@@ -39,3 +39,6 @@ nosetests.xml
 *.nc
 .cache
 .anaconda
+
+example/**/*.nc
+example/**/*.dat

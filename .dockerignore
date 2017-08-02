@@ -1,0 +1,7 @@
+*.py[cod]
+.anaconda
+.git
+.gitignore
+.travis.yml
+example/
+gutils/tests/

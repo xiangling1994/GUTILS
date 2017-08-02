@@ -1,0 +1,50 @@
+version: '2'
+
+services:
+
+  ftp:
+    image: webdevops/vsftp
+    environment:
+      FTP_USER: thisisme
+      FTP_PASSWORD: thisismypass
+    volumes:
+      - "./ftp:/data/ftp"
+
+  binary_watch:
+    image: gutils
+    environment:
+      GUTILS_BINARY_DIRECTORY: /binary
+      GUTILS_ASCII_DIRECTORY: /ascii
+    volumes:
+      - "./binary:/binary"
+      - "./ascii:/ascii"
+    depends_on:
+      - ascii_watch
+    command: gutils_binary_watch
+
+  ascii_watch:
+    image: gutils
+    environment:
+      GUTILS_ASCII_DIRECTORY: /ascii
+      GUTILS_NETCDF_DIRECTORY: /netcdf
+      GUTILS_CONFIG_DIRECTORY: /config
+    volumes:
+      - "./ascii:/ascii"
+      - "./netcdf:/netcdf"
+      - "./config:/config:ro"
+    depends_on:
+      - netcdf_watch
+    command: gutils_ascii_watch
+
+  netcdf_watch:
+    image: gutils
+    environment:
+      GUTILS_NETCDF_DIRECTORY: /netcdf
+      GUTILS_FTP_URL: ftp
+      GUTILS_FTP_USER: thisisme
+      GUTILS_FTP_PASS: thisismypass
+    volumes:
+      - "./netcdf:/netcdf"
+    depends_on:
+      - ftp
+    command: gutils_netcdf_watch
