@@ -36,10 +36,10 @@ nosetests.xml
 # VIM Swap Files
 *.swp
 
-*.nc
 .cache
 .anaconda
 
+gutils/tests/output/
 example/**/*.nc
 example/**/*.dat
 docs/_site
