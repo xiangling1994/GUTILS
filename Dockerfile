@@ -1,8 +1,8 @@
-FROM phusion/baseimage:0.9.21
+FROM phusion/baseimage:0.9.22
 # Use baseimage-docker's init system
 CMD ["/sbin/my_init"]
-ENV KILL_PROCESS_TIMEOUT 300
-ENV KILL_ALL_PROCESSES_TIMEOUT 300
+ENV KILL_PROCESS_TIMEOUT 30
+ENV KILL_ALL_PROCESSES_TIMEOUT 30
 
 MAINTAINER Kyle Wilcox <kyle@axiomdatascience.com>
 ENV DEBIAN_FRONTEND noninteractive
