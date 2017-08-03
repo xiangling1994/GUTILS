@@ -3,7 +3,6 @@
 import pandas as pd
 
 from gutils.yo import assign_profiles
-from gutils.slocum import SlocumReader
 
 import logging
 L = logging.getLogger(__name__)
