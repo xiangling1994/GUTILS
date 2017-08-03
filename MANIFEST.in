@@ -5,4 +5,4 @@ include README.md
 include gutils/tests *.txt
 recursive-include gutils/slocum/bin *
 recursive-include gutils/templates *.json
-recursive-include gutils/tests/resources *.tbd *.sbd *.ebd *.dbd *.json *.dat *.cac
+recursive-include gutils/tests/resources *.tbd *.sbd *.ebd *.dbd *.json *.dat *.cac *.nc
