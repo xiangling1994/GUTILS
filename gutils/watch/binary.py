@@ -45,7 +45,7 @@ class Slocum2AsciiProcessor(Binary2AsciiProcessor):
     VALID_EXTENSIONS = [('.dbd', '.ebd'), ('.sbd', '.tbd'), ('.mbd', '.nbd')]
 
     def my_init(self, *args, **kwargs):
-        super().my_init(*args, **kwargs)
+        super(Slocum2AsciiProcessor, self).my_init(*args, **kwargs)
 
     def check_for_pair(self, event):
 

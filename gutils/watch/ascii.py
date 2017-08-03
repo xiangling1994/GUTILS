@@ -48,7 +48,7 @@ class Slocum2NetcdfProcessor(Ascii2NetcdfProcessor):
     VALID_EXTENSIONS = ['.dat']
 
     def my_init(self, *args, **kwargs):
-        super().my_init(*args, **kwargs)
+        super(Slocum2NetcdfProcessor, self).my_init(*args, **kwargs)
 
     def convert_to_netcdf(self, event):
         glider_folder_name = os.path.basename(event.path)
