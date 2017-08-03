@@ -42,3 +42,4 @@ nosetests.xml
 
 example/**/*.nc
 example/**/*.dat
+docs/_site
