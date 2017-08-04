@@ -1,0 +1,5 @@
+#!/bin/sh
+echo "---------------------------------------"
+echo "GUTILS - $GUTILS_VERSION - Binary Watch"
+echo "---------------------------------------"
+exec gutils_binary_watch
