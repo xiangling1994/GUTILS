@@ -54,9 +54,8 @@ class Slocum2NetcdfProcessor(Ascii2NetcdfProcessor):
         glider_folder_name = os.path.basename(event.path)
         glider_config_folder = os.path.join(self.configs_path, glider_folder_name)
         if not os.path.isdir(glider_config_folder):
-            raise OSError(
-                "Config folder {} not found!".format(glider_config_folder)
-            )
+            L.error("Config folder {} not found!".format(glider_config_folder))
+            return
 
         glider_output_folder = os.path.join(self.outputs_path, glider_folder_name)
 
