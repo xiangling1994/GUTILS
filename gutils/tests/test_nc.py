@@ -11,12 +11,11 @@ import netCDF4 as nc4
 from gutils import safe_makedirs
 from gutils.nc import check_dataset, create_dataset
 from gutils.slocum import SlocumReader
-from gutils.tests import resource, output
+from gutils.tests import resource, output, setup_testing_logger
 
 import logging
-L = logging.getLogger()
-L.handlers = [logging.StreamHandler()]
-L.setLevel(logging.DEBUG)
+L = logging.getLogger(__name__)  # noqa
+setup_testing_logger()
 
 
 def decoder(x):
@@ -73,7 +72,6 @@ class TestCreateGliderScript(unittest.TestCase):
         safe_makedirs(out_base)
 
         for f in glob(resource('slocum', 'usf-2016', '*.dat')):
-            L.info(f)
             args = dict(
                 file=f,
                 reader_class=SlocumReader,

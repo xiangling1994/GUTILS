@@ -12,14 +12,15 @@ from pyinotify import (
     IN_MOVED_TO,
     Notifier,
     NotifierError,
+    ProcessEvent,
     WatchManager
 )
-from pyinotify import ProcessEvent
 
+from gutils import setup_cli_logger
 from gutils.nc import check_dataset
 
 import logging
-L = logging.getLogger('gutils')
+L = logging.getLogger(__name__)
 
 
 class Netcdf2FtpProcessor(ProcessEvent):
@@ -119,8 +120,7 @@ def create_arg_parser():
 
 
 def main():
-    L.setLevel(logging.INFO)
-    L.addHandler(logging.StreamHandler())
+    setup_cli_logger(logging.INFO)
 
     parser = create_arg_parser()
     args = parser.parse_args()
@@ -155,7 +155,7 @@ def main():
     notifier.coalesce_events()
 
     try:
-        L.info("Watching {}\nUploading to {}".format(
+        L.info("Watching {} and Uploading to {}".format(
             args.data_path,
             args.ftp_url)
         )
@@ -163,10 +163,9 @@ def main():
     except NotifierError:
         L.exception('Unable to start notifier loop')
         return 1
+    except BaseException as e:
+        L.exception(e)
+        return 1
 
     L.info("GUTILS netcdf_to_ftp Exited Successfully")
     return 0
-
-
-if __name__ == '__main__':
-    sys.exit(main())

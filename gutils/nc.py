@@ -17,12 +17,12 @@ from pocean.utils import dict_update, get_fill_value
 from pocean.meta import MetaInterface
 from pocean.dsg.trajectory.im import IncompleteMultidimensionalTrajectory
 
-from gutils import get_uv_data, get_profile_data, safe_makedirs
+from gutils import get_uv_data, get_profile_data, safe_makedirs, setup_cli_logger
 from gutils.filters import process_dataset
 from gutils.slocum import SlocumReader
 
 import logging
-L = logging.getLogger('gutils')
+L = logging.getLogger(__name__)
 
 
 def read_attrs(config_path):
@@ -322,8 +322,7 @@ def create_dataset(file, reader_class, config_path, output_path, subset, **filte
 
 
 def main_create():
-    # If running on command line, add a console handler
-    L.addHandler(logging.StreamHandler())
+    setup_cli_logger(logging.INFO)
 
     parser = create_arg_parser()
     args = parser.parse_args()
@@ -402,6 +401,7 @@ def check_arg_parser():
 
 
 def main_check():
+    setup_cli_logger(logging.INFO)
 
     parser = check_arg_parser()
     args = parser.parse_args()
@@ -409,8 +409,5 @@ def main_check():
     # Check filenames
     if args.file is None:
         raise ValueError('Must specify path to NetCDF file')
-
-    # If running on command line, add a console handler
-    L.addHandler(logging.StreamHandler())
 
     return check_dataset(args)

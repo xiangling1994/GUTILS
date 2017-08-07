@@ -7,11 +7,11 @@ import unittest
 from glob import glob
 
 from gutils.slocum import SlocumMerger, SlocumReader
+from gutils.tests import setup_testing_logger
 
 import logging
-L = logging.getLogger()
-L.handlers = [logging.StreamHandler()]
-L.setLevel(logging.DEBUG)
+L = logging.getLogger(__name__)  # noqa
+setup_testing_logger()
 
 
 class TestSlocumMerger(unittest.TestCase):

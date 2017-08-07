@@ -14,16 +14,14 @@ from pyinotify import (
 )
 
 from gutils import safe_makedirs
-from gutils.tests import resource, output
+from gutils.tests import resource, output, setup_testing_logger
 from gutils.slocum import SlocumMerger
 from gutils.watch.binary import Slocum2AsciiProcessor
 from gutils.watch.ascii import Slocum2NetcdfProcessor
 
 import logging
-L = logging.getLogger()
-L.handlers = [logging.StreamHandler()]
-L.setLevel(logging.DEBUG)
-
+L = logging.getLogger(__name__)  # noqa
+setup_testing_logger()
 
 config_path = resource('slocum', 'usf-2016')
 original_binary = resource('slocum', 'usf-2016')

@@ -13,11 +13,12 @@ from pyinotify import (
     WatchManager
 )
 
-from gutils.slocum import SlocumReader
+from gutils import setup_cli_logger
 from gutils.nc import create_dataset
+from gutils.slocum import SlocumReader
 
 import logging
-L = logging.getLogger('gutils')
+L = logging.getLogger(__name__)
 
 
 class Ascii2NetcdfProcessor(ProcessEvent):
@@ -137,8 +138,7 @@ def create_arg_parser():
 
 
 def main():
-    L.setLevel(logging.INFO)
-    L.addHandler(logging.StreamHandler())
+    setup_cli_logger(logging.INFO)
 
     parser = create_arg_parser()
     args = parser.parse_args()
@@ -185,7 +185,7 @@ def main():
     notifier.coalesce_events()
 
     try:
-        L.info("Watching {}\nOutputting NetCDF into {}".format(
+        L.info("Watching {} and Outputting NetCDF to {}".format(
             data_path,
             outputs)
         )
@@ -196,7 +196,3 @@ def main():
 
     L.info("GUTILS ascii_to_netcdf Exited Successfully")
     return 0
-
-
-if __name__ == '__main__':
-    sys.exit(main())

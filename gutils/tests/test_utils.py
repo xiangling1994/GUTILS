@@ -23,11 +23,11 @@ from gutils.ctd import (
 )
 
 from gutils.slocum import SlocumReader
+from gutils.tests import setup_testing_logger
 
 import logging
-L = logging.getLogger()
-L.handlers = [logging.StreamHandler()]
-L.setLevel(logging.DEBUG)
+L = logging.getLogger(__name__)  # noqa
+setup_testing_logger
 
 
 def is_continuous(profiled_dataset):

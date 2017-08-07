@@ -255,6 +255,10 @@ class SlocumMerger(object):
                     'ascii': os.path.join(self.destination_directory, fname),
                     'binary': sorted(binary_files)
                 })
+                L.info("Converted {} to {}".format(
+                    ','.join([ os.path.basename(x) for x in sorted(binary_files) ]),
+                    fname
+                ))
                 binary_files = []
             else:
                 binary_files.append(os.path.join(self.source_directory, fname))

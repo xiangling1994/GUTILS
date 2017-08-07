@@ -232,3 +232,15 @@ def safe_makedirs(folder):
     except OSError as e:
         if e.errno != errno.EEXIST:
             raise
+
+
+def setup_cli_logger(level=None):
+    if level is None:
+        level = logging.INFO
+
+    sh = logging.StreamHandler()
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    sh.setFormatter(formatter)
+    root_logger = logging.getLogger()
+    root_logger.setLevel(logging.INFO)
+    root_logger.addHandler(sh)
