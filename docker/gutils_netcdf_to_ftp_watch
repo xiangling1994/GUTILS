@@ -1,0 +1,5 @@
+#!/bin/sh
+echo "----------------------------------------------"
+echo "GUTILS - $GUTILS_VERSION - NetCDF to FTP Watch"
+echo "----------------------------------------------"
+exec gutils_netcdf_to_ftp_watch

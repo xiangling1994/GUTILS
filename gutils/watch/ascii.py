@@ -31,7 +31,7 @@ class Ascii2NetcdfProcessor(ProcessEvent):
 
     def valid_file(self, name):
         _, extension = os.path.splitext(name)
-        if extension in self.VALID_EXTENSIONS:
+        if extension.lower() in self.VALID_EXTENSIONS:
             return True
         return False
 
@@ -70,7 +70,7 @@ class Slocum2NetcdfProcessor(Ascii2NetcdfProcessor):
         )
 
 
-def create_arg_parser():
+def create_netcdf_arg_parser():
 
     parser = argparse.ArgumentParser(
         description="Monitor a directory for new ASCII glider data and outputs NetCDF."
@@ -137,10 +137,10 @@ def create_arg_parser():
     return parser
 
 
-def main():
+def main_to_netcdf():
     setup_cli_logger(logging.INFO)
 
-    parser = create_arg_parser()
+    parser = create_netcdf_arg_parser()
     args = parser.parse_args()
 
     filter_args = vars(args)

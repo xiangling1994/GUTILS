@@ -27,7 +27,7 @@ from gutils.tests import setup_testing_logger
 
 import logging
 L = logging.getLogger(__name__)  # noqa
-setup_testing_logger
+setup_testing_logger()
 
 
 def is_continuous(profiled_dataset):

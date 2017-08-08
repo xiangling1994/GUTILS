@@ -1,5 +1,0 @@
-#!/bin/sh
-echo "---------------------------------------"
-echo "GUTILS - $GUTILS_VERSION - NetCDF Watch"
-echo "---------------------------------------"
-exec gutils_netcdf_watch

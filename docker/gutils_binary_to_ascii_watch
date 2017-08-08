@@ -2,4 +2,4 @@
 echo "---------------------------------------"
 echo "GUTILS - $GUTILS_VERSION - Binary Watch"
 echo "---------------------------------------"
-exec gutils_binary_watch
+exec gutils_binary_to_ascii_watch

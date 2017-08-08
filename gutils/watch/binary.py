@@ -27,9 +27,8 @@ class Binary2AsciiProcessor(ProcessEvent):
 
     def valid_file(self, name):
         _, extension = os.path.splitext(name)
-        for pair in self.VALID_EXTENSIONS:
-            if extension in pair:
-                return True
+        if extension.lower() in self.VALID_EXTENSIONS:
+            return True
         return False
 
     def process_IN_CLOSE(self, event):
@@ -43,7 +42,19 @@ class Binary2AsciiProcessor(ProcessEvent):
 
 class Slocum2AsciiProcessor(Binary2AsciiProcessor):
 
-    VALID_EXTENSIONS = [('.dbd', '.ebd'), ('.sbd', '.tbd'), ('.mbd', '.nbd')]
+    # (flight, science) file pairs
+    PAIRS = {
+        '.dbd': '.ebd',
+        '.sbd': '.tbd',
+        '.mbd': '.nbd'
+    }
+
+    @property
+    def VALID_EXTENSIONS(self):
+        # Only fire events for the FLIGHT files. The science file will be searched for but we don't
+        # want to fire events for both flight AND science files to due race conditions down
+        # the chain
+        return self.PAIRS.keys()
 
     def my_init(self, *args, **kwargs):
         super(Slocum2AsciiProcessor, self).my_init(*args, **kwargs)
@@ -52,19 +63,17 @@ class Slocum2AsciiProcessor(Binary2AsciiProcessor):
 
         base_name, extension = os.path.splitext(event.name)
 
-        # Check for matching pair
-        for pair in self.VALID_EXTENSIONS:
-            if extension.lower() in pair:
-                # Look for the other file and append to the final_pair if it exists
-                for oext in set(pair) - set([extension.lower()]):
-                    possible_files = [
-                        os.path.join(event.path, base_name + oext),
-                        os.path.join(event.path, base_name + oext.upper())
-                    ]
-                    for p in possible_files:
-                        if os.path.isfile(p):
-                            _, file_ext = os.path.splitext(p)
-                            return [event.name, base_name + file_ext]
+        # Look for the other file and append to the final_pair if it exists
+        # If we got this far we already know the extension is in self.PAIRS.keys()
+        oext = self.PAIRS[extension.lower()]
+        possible_files = [
+            os.path.join(event.path, base_name + oext),
+            os.path.join(event.path, base_name + oext.upper())
+        ]
+        for p in possible_files:
+            if os.path.isfile(p):
+                _, file_ext = os.path.splitext(p)
+                return [event.name, base_name + file_ext]
 
     def convert_to_ascii(self, event):
         file_pairs = self.check_for_pair(event)
@@ -82,7 +91,7 @@ class Slocum2AsciiProcessor(Binary2AsciiProcessor):
         merger.convert()
 
 
-def create_arg_parser():
+def create_ascii_arg_parser():
 
     parser = argparse.ArgumentParser(
         description="Monitor a directory for new binary glider data and outputs ASCII."
@@ -115,10 +124,10 @@ def create_arg_parser():
     return parser
 
 
-def main():
+def main_to_ascii():
     setup_cli_logger(logging.INFO)
 
-    parser = create_arg_parser()
+    parser = create_ascii_arg_parser()
     args = parser.parse_args()
 
     if not args.data_path:

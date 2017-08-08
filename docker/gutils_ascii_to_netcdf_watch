@@ -2,4 +2,4 @@
 echo "--------------------------------------"
 echo "GUTILS - $GUTILS_VERSION - ASCII Watch"
 echo "--------------------------------------"
-exec gutils_ascii_watch
+exec gutils_ascii_to_netcdf_watch

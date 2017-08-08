@@ -243,4 +243,4 @@ def setup_cli_logger(level=None):
     sh.setFormatter(formatter)
     root_logger = logging.getLogger()
     root_logger.setLevel(logging.INFO)
-    root_logger.addHandler(sh)
+    root_logger.handlers = [sh]

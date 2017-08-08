@@ -26,4 +26,4 @@ def setup_testing_logger():
     sh.setFormatter(formatter)
     root_logger = logging.getLogger()
     root_logger.setLevel(logging.DEBUG)
-    root_logger.addHandler(sh)
+    root_logger.handlers = [sh]

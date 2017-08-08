@@ -13,20 +13,43 @@ services:
   gutils:
     image: gutils
     environment:
-      GUTILS_ASCII_DIRECTORY: /ascii
-      GUTILS_BINARY_DIRECTORY: /binary
-      GUTILS_CONFIG_DIRECTORY: /config
-      GUTILS_NETCDF_DIRECTORY: /netcdf
+      GUTILS_ASCII_DIRECTORY: /gutils/ascii
+      GUTILS_BINARY_DIRECTORY: /gutils/binary
+      GUTILS_CONFIG_DIRECTORY: /gutils/config
+      GUTILS_NETCDF_DIRECTORY: /gutils/netcdf
       GUTILS_FTP_URL: ftp
       GUTILS_FTP_USER: thisisme
       GUTILS_FTP_PASS: thisismypass
-      RUN_BINARY_WATCH: "yes"
-      RUN_ASCII_WATCH: "yes"
-      RUN_NETCDF_WATCH: "yes"
+      RUN_BINARY_TO_ASCII_WATCH: "yes"
+      RUN_ASCII_TO_NETCDF_WATCH: "yes"
+      RUN_NETCDF_TO_FTP_WATCH: "yes"
+      RUN_NETCDF_TO_ERDDAP_WATCH: "yes"
     volumes:
-      - "./binary:/binary"
-      - "./ascii:/ascii"
-      - "./netcdf:/netcdf"
-      - "./config:/config:ro"
+      - "./binary:/gutils/binary"
+      - "./ascii:/gutils/ascii"
+      - "./netcdf:/gutils/netcdf"
+      - "./config:/gutils/config:ro"
+      - "./erddap/content:/gutils/erddap/content"
     depends_on:
       - ftp
+
+  browse:
+    image: nginx:stable
+    volumes:
+      - "./nginx.conf:/etc/nginx/nginx.conf:ro"
+      - "./binary:/gutils/binary:ro"
+      - "./ascii:/gutils/ascii:ro"
+      - "./netcdf:/gutils/netcdf:ro"
+      - "./config:/gutils/config:ro"
+    ports:
+      - "20000:80"
+
+  erddap:
+    image: axiom/docker-erddap
+    volumes:
+      - "./erddap/content/datasets.xml:/usr/local/tomcat/content/erddap/datasets.xml"
+      - "./netcdf:/gutils/netcdf:ro"
+    ports:
+      - "8080:8080"
+    depends_on:
+      - gutils

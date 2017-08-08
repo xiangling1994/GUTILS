@@ -31,9 +31,10 @@ setup(
         'console_scripts': [
             'gutils_create_nc = gutils.nc:main_create',
             'gutils_check_nc = gutils.nc:main_check',
-            'gutils_binary_watch = gutils.watch.binary:main',
-            'gutils_ascii_watch = gutils.watch.ascii:main',
-            'gutils_netcdf_watch = gutils.watch.netcdf:main',
+            'gutils_binary_to_ascii_watch = gutils.watch.binary:main_to_ascii',
+            'gutils_ascii_to_netcdf_watch = gutils.watch.ascii:main_to_netcdf',
+            'gutils_netcdf_to_ftp_watch = gutils.watch.netcdf:main_to_ftp',
+            'gutils_netcdf_to_erddap_watch = gutils.watch.netcdf:main_to_erddap',
         ]
     },
     include_package_data=True,
