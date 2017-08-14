@@ -6,6 +6,7 @@ import os
 import sys
 import json
 import math
+import time
 import shutil
 import argparse
 import tempfile
@@ -66,10 +67,11 @@ def set_scalar_value(value, ncvar):
         ncvar[:] = value
 
 
-def set_profile_data(ncd, profile, method=None):
+def set_profile_data(ncd, profile, profile_index, method=None):
     prof_t = ncd.variables['profile_time']
     prof_y = ncd.variables['profile_lat']
     prof_x = ncd.variables['profile_lon']
+    prof_id = ncd.variables['profile_id']
 
     txy = get_profile_data(profile, method=method)
 
@@ -83,6 +85,7 @@ def set_profile_data(ncd, profile, method=None):
     set_scalar_value(t_value, prof_t)
     set_scalar_value(txy.y, prof_y)
     set_scalar_value(txy.x, prof_x)
+    prof_id[:] = profile_index
 
     ncd.sync()
 
@@ -167,13 +170,30 @@ def create_netcdf(attrs, data, output_path, mode):
             # Path to hold file while we create it
             tmp_handle, tmp_path = tempfile.mkstemp(suffix='.nc', prefix='gutils_glider_netcdf_')
 
+            profile_time = profile.t.dropna().iloc[0]
+            profile_index = int(time.mktime(profile_time.timetuple()))
             # Create final filename
-            filename = "{}_{:%Y%m%dT%H%M%S}Z_{}.nc".format(
+            filename = "{0}_{1:%Y%m%dT%H%M%S}Z_{2}_{3}.nc".format(
                 attrs['glider'],
-                profile.t.dropna().iloc[0],
+                profile_time,
+                profile_index,
                 mode
             )
             output_file = os.path.join(output_path, filename)
+
+            # We are using the epoch as the profile_index!
+            # # Get all existing netCDF outputs and find out the index of this netCDF file. That
+            # # will be the profile_id of this file. This is effectively keeping a tally of netCDF
+            # # files that have been created and only works if NETCDF FILES ARE WRITTEN IN
+            # # ASCENDING ORDER
+            # netcdf_files_same_mode = list(glob(
+            #     os.path.join(
+            #         output_path,
+            #         '*_{}.nc'.format(mode)
+            #     )
+            # ))
+            # netcdf_files_same_mode = np.asarray(netcdf_files_same_mode)
+            # profile_index = np.searchsorted(netcdf_files_same_mode, filename)
 
             # Add in the trajectory dimension to make pocean happy
             traj_name = '{}-{}'.format(
@@ -217,7 +237,7 @@ def create_netcdf(attrs, data, output_path, mode):
                 ncd.variables['trajectory'][0] = traj_name
 
                 # Set profile_* data
-                set_profile_data(ncd, profile)
+                set_profile_data(ncd, profile, profile_index)
 
                 # Set *_uv data
                 set_uv_data(ncd, profile)
