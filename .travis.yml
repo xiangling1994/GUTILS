@@ -63,7 +63,7 @@ script:
   - set -e
 
   - if [[ $TEST_TARGET == "default" ]]; then
-      py.test --disable-warnings ;
+      py.test --disable-warnings -m "not long";
     fi
 
   - if [[ $TEST_TARGET == "coding_standards" ]]; then

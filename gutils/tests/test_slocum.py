@@ -7,7 +7,7 @@ import unittest
 from glob import glob
 
 from gutils.slocum import SlocumMerger, SlocumReader
-from gutils.tests import setup_testing_logger
+from gutils.tests import setup_testing_logger, resource
 
 import logging
 L = logging.getLogger(__name__)  # noqa
@@ -17,12 +17,11 @@ setup_testing_logger()
 class TestSlocumMerger(unittest.TestCase):
 
     def setUp(self):
-        self.binary_path = os.path.join(os.path.dirname(__file__), 'resources', 'slocum', 'usf-bass')
-        self.ascii_path = os.path.join(self.binary_path, 'ascii')
+        self.binary_path = resource('slocum', 'real', 'binary', 'bass-20150407T1300')
+        self.ascii_path = resource('slocum', 'real', 'ascii', 'bass-20150407T1300')
 
     def tearDown(self):
         shutil.rmtree(self.ascii_path)  # Remove generated ASCII
-
         # Remove any cached .cac files
         for cac in glob(os.path.join(self.binary_path, '*.cac')):
             os.remove(cac)
@@ -68,8 +67,8 @@ class TestSlocumMerger(unittest.TestCase):
 class TestSlocumReaderNoGPS(unittest.TestCase):
 
     def setUp(self):
-        self.binary_path = os.path.join(os.path.dirname(__file__), 'resources', 'slocum', 'usf-bass')
-        self.ascii_path = os.path.join(self.binary_path, 'ascii')
+        self.binary_path = resource('slocum', 'real', 'binary', 'bass-20150407T1300')
+        self.ascii_path = resource('slocum', 'real', 'ascii', 'bass-20150407T1300')
 
     def tearDown(self):
         shutil.rmtree(self.ascii_path)  # Remove generated ASCII
@@ -108,12 +107,11 @@ class TestSlocumReaderNoGPS(unittest.TestCase):
 class TestSlocumReaderWithGPS(unittest.TestCase):
 
     def setUp(self):
-        self.binary_path = os.path.join(os.path.dirname(__file__), 'resources', 'slocum', 'usf-2016')
-        self.ascii_path = os.path.join(self.binary_path, 'ascii')
+        self.binary_path = resource('slocum', 'real', 'binary', 'bass-20160909T1733')
+        self.ascii_path = resource('slocum', 'real', 'ascii', 'bass-20160909T1733')
 
     def tearDown(self):
         shutil.rmtree(self.ascii_path)  # Remove generated ASCII
-
         # Remove any cached .cac files
         for cac in glob(os.path.join(self.binary_path, '*.cac')):
             os.remove(cac)
@@ -148,8 +146,8 @@ class TestSlocumReaderWithGPS(unittest.TestCase):
 class TestSlocumExportDelayed(unittest.TestCase):
 
     def setUp(self):
-        self.binary_path = os.path.join(os.path.dirname(__file__), 'resources', 'slocum', 'modena-2015')
-        self.ascii_path = os.path.join(self.binary_path, 'ascii')
+        self.binary_path = resource('slocum', 'real', 'binary', 'modena-2015')
+        self.ascii_path = resource('slocum', 'real', 'ascii', 'modena-2015')
         self.cache_path = os.path.join(self.binary_path, 'cac')
 
     def tearDown(self):

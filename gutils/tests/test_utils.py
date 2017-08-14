@@ -51,7 +51,6 @@ ctd_filepath = os.path.join(
     os.path.dirname(__file__),
     'resources',
     'slocum',
-    'usf-2016',
     'usf_bass_2016_253_0_6_sbd.dat'
 )
 

@@ -27,16 +27,14 @@ import logging
 L = logging.getLogger(__name__)  # noqa
 setup_testing_logger()
 
-config_path = resource('slocum', 'usf-2016')
-original_binary = resource('slocum', 'usf-2016')
-binary_path = output('binary', 'usf-2016')
-ascii_path = output('ascii', 'usf-2016')
-netcdf_path = output('netcdf', 'usf-2016')
+config_path = resource('slocum', 'real', 'config', 'bass-20160909T1733')
+original_binary = resource('slocum', 'real', 'binary', 'bass-20160909T1733')
+binary_path = output('binary', 'bass-20160909T1733')
+ascii_path = output('ascii', 'bass-20160909T1733')
+netcdf_path = output('netcdf', 'bass-20160909T1733')
 erddap_content_path = output('erddap', 'content')
 erddap_flag_path = output('erddap', 'flag')
 ftp_path = output('ftp')
-
-watch_dir = os.path.join(os.path.dirname(__file__), '..', 'watch')
 
 
 class TestWatchClasses(unittest.TestCase):
@@ -85,8 +83,8 @@ class TestWatchClasses(unittest.TestCase):
         wm.rm_watch(wdd.values(), rec=True)
         notifier.stop()
 
-        # Should output 6 ASCII files
-        assert len(os.listdir(ascii_path)) == 7
+        # Should output 32 ASCII files
+        assert len(os.listdir(ascii_path)) == 32
 
     def test_gutils_ascii_to_netcdf_watch(self):
 
@@ -130,8 +128,8 @@ class TestWatchClasses(unittest.TestCase):
         wm.rm_watch(wdd.values(), rec=True)
         notifier.stop()
 
-        # Should outout 32 NetCDF files
-        assert len(os.listdir(netcdf_path)) == 98
+        # Should outout 230 NetCDF files
+        assert len(os.listdir(netcdf_path)) == 230
 
     def test_gutils_netcdf_to_erddap_watch(self):
 

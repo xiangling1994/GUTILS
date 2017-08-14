@@ -26,7 +26,7 @@ class TestCreateGliderScript(unittest.TestCase):
 
     def tearDown(self):
         outputs = [
-            output('netcdf')
+            resource('slocum', 'real', 'netcdf')
         ]
         for d in outputs:
             try:
@@ -35,11 +35,11 @@ class TestCreateGliderScript(unittest.TestCase):
                 pass
 
     def test_defaults(self):
-        out_base = output('netcdf', 'usf-2016')
+        out_base = resource('slocum', 'real', 'netcdf', 'bass-20160909T1733')
         args = dict(
-            file=resource('slocum', 'usf-2016', 'usf_bass_2016_253_0_6_sbd.dat'),
+            file=resource('slocum', 'usf_bass_2016_253_0_6_sbd.dat'),
             reader_class=SlocumReader,
-            config_path=resource('slocum', 'usf-2016'),
+            config_path=resource('slocum', 'real', 'config', 'bass-20160909T1733'),
             output_path=out_base,
             subset=False,
             filter_distance=1,
@@ -55,11 +55,11 @@ class TestCreateGliderScript(unittest.TestCase):
 
         # First profile
         with nc4.Dataset(output_files[0]) as ncd:
-            assert ncd.variables['profile_id'][0] == 1
+            assert ncd.variables['profile_id'][0] == 1473513907
 
         # Last profile
         with nc4.Dataset(output_files[-1]) as ncd:
-            assert ncd.variables['profile_id'][0] == 32
+            assert ncd.variables['profile_id'][0] == 1473523518
 
         # Check netCDF file for compliance
         ds = namedtuple('Arguments', ['file'])
@@ -67,15 +67,14 @@ class TestCreateGliderScript(unittest.TestCase):
             assert check_dataset(ds(file=o)) == 0
 
     def test_all_ascii(self):
-
-        out_base = output('netcdf', 'usf-2016')
+        out_base = resource('slocum', 'real', 'netcdf', 'bass-20160909T1733')
         safe_makedirs(out_base)
 
-        for f in glob(resource('slocum', 'usf-2016', '*.dat')):
+        for f in glob(resource('slocum', 'usf_bass*.dat')):
             args = dict(
                 file=f,
                 reader_class=SlocumReader,
-                config_path=resource('slocum', 'usf-2016'),
+                config_path=resource('slocum', 'real', 'config', 'bass-20160909T1733'),
                 output_path=out_base,
                 subset=False,
                 filter_distance=1,
@@ -90,7 +89,11 @@ class TestCreateGliderScript(unittest.TestCase):
 
         # First profile
         with nc4.Dataset(output_files[0]) as ncd:
-            assert ncd.variables['profile_id'][0] == 1
+            assert ncd.variables['profile_id'][0] == 1473442894
+
+        # Last profile
+        with nc4.Dataset(output_files[-1]) as ncd:
+            assert ncd.variables['profile_id'][0] == 1473523518
 
         # Check netCDF file for compliance
         ds = namedtuple('Arguments', ['file'])
@@ -98,12 +101,12 @@ class TestCreateGliderScript(unittest.TestCase):
             assert check_dataset(ds(file=o)) == 0
 
     def test_delayed(self):
-        out_base = output('netcdf', 'modena-2015')
+        out_base = resource('slocum', 'real', 'netcdf', 'modena-2015')
 
         args = dict(
-            file=resource('slocum', 'modena-2015', 'modena_2015_175_0_9_dbd.dat'),
+            file=resource('slocum', 'modena_2015_175_0_9_dbd.dat'),
             reader_class=SlocumReader,
-            config_path=resource('slocum', 'modena-2015'),
+            config_path=resource('slocum', 'real', 'config', 'modena-2015'),
             output_path=out_base,
             subset=False,
             filter_distance=1,
@@ -119,11 +122,11 @@ class TestCreateGliderScript(unittest.TestCase):
 
         # First profile
         with nc4.Dataset(output_files[0]) as ncd:
-            assert ncd.variables['profile_id'][0] == 1
+            assert ncd.variables['profile_id'][0] == 1435271835
 
         # Last profile
         with nc4.Dataset(output_files[-1]) as ncd:
-            assert ncd.variables['profile_id'][0] == 6
+            assert ncd.variables['profile_id'][0] == 1435278545
 
         # Check netCDF file for compliance
         ds = namedtuple('Arguments', ['file'])
