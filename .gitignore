@@ -42,5 +42,6 @@ nosetests.xml
 gutils/tests/output/
 example/**/*.nc
 example/**/*.dat
+example/ftp/*
 example/erddap/content/*.xml
 docs/_site

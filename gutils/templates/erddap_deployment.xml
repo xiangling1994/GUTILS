@@ -1,5 +1,6 @@
 <dataset type="EDDTableFromNcFiles" datasetID="{{ deployment_name }}" active="true">
-    <reloadEveryNMinutes>1</reloadEveryNMinutes>
+    <reloadEveryNMinutes>10000000</reloadEveryNMinutes>
+    <updateEveryNMillis>-1</updateEveryNMillis>
     <fileDir>{{ deployment_directory }}</fileDir>
     <recursive>false</recursive>
     <fileNameRegex>.*\.nc</fileNameRegex>
