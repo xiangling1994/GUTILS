@@ -108,7 +108,7 @@ class SlocumReader(object):
                     df.drv_m_gps_lat,
                     df.drv_m_gps_lon
                 )
-            except ValueError:
+            except (ValueError, IndexError):
                 L.warning("Raw GPS values not found!")
                 y_interp = np.empty(df.drv_m_gps_lat.size) * np.nan
                 x_interp = np.empty(df.drv_m_gps_lon.size) * np.nan

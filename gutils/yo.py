@@ -64,6 +64,9 @@ def assign_profiles(df, tsint=None):
         right=tmp_df.z.iloc[-1]
     )
 
+    if len(interp_z) < 2:
+        return None
+
     filtered_z = boxcar_smooth_dataset(interp_z, tsint // 2)
     delta_depth = calculate_delta_depth(filtered_z)
 
@@ -93,7 +96,12 @@ def assign_profiles(df, tsint=None):
         ixs = profile_df.loc[time_between].index.tolist()
 
         # Set the rows profile column to the profile id
-        profile_df.loc[ixs[0]:ixs[-1], 'profile'] = profile_index
+        if len(ixs) > 1:
+            profile_df.loc[ixs[0]:ixs[-1], 'profile'] = profile_index
+        elif len(ixs) == 1:
+            profile_df.loc[ixs[0], 'profile'] = profile_index
+        else:
+            L.debug('No data rows matched the time range of this profile, Skipping.')
 
         # Increment the profile index
         profile_index += 1
