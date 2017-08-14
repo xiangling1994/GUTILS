@@ -6,6 +6,7 @@ import shutil
 import argparse
 import tempfile
 from ftplib import FTP
+from datetime import datetime
 from collections import namedtuple
 
 import netCDF4 as nc4
@@ -175,11 +176,21 @@ def main_to_ftp():
     return 0
 
 
+def lxml_elements_equal(e1, e2):
+    if e1.tag != e2.tag: return False
+    if e1.text != e2.text: return False
+    if e1.tail != e2.tail: return False
+    if e1.attrib != e2.attrib: return False
+    if len(e1) != len(e2): return False
+    return all(lxml_elements_equal(c1, c2) for c1, c2 in zip(e1, e2))
+
+
 class Netcdf2ErddapProcessor(ProcessEvent):
 
-    def my_init(self, outputs_path, erddap_content_path):
+    def my_init(self, outputs_path, erddap_content_path, erddap_flag_path):
         self.outputs_path = os.path.realpath(outputs_path)
         self.erddap_content_path = os.path.realpath(erddap_content_path)
+        self.erddap_flag_path = os.path.realpath(erddap_flag_path)
 
     def process_IN_CLOSE(self, event):
         if self.valid_extension(event.name):
@@ -198,67 +209,80 @@ class Netcdf2ErddapProcessor(ProcessEvent):
     def create_and_update_content(self, event):
         tmp_handle, tmp_path = tempfile.mkstemp(prefix='gutils_errdap_', suffix='.xml')
 
-        loader = PackageLoader('gutils', 'templates')
-        jenv = Environment(loader=loader, autoescape=select_autoescape(['html', 'xml']))
+        try:
+            loader = PackageLoader('gutils', 'templates')
+            jenv = Environment(loader=loader, autoescape=select_autoescape(['html', 'xml']))
 
-        # Copy datasets.xml to a tmpfile
-        datasets_path = os.path.join(self.erddap_content_path, 'datasets.xml')
-        if os.path.isfile(datasets_path):
-            shutil.copy(datasets_path, tmp_path)
-        else:
-            # Render the base template to the tmpfile
-            datasets_template_string = jenv.get_template('erddap_datasets.xml').render()
-            with open(tmp_path, 'wt') as f:
-                f.write(
-                    etree.tostring(
-                        etree.fromstring(datasets_template_string),
-                        encoding='ISO-8859-1',
-                        pretty_print=True,
-                        xml_declaration=True
-                    ).decode('iso-8859-1')
-                )
+            # Copy datasets.xml to a tmpfile
+            datasets_path = os.path.join(self.erddap_content_path, 'datasets.xml')
+            if os.path.isfile(datasets_path):
+                shutil.copy(datasets_path, tmp_path)
+            else:
+                # Render the base template to the tmpfile
+                datasets_template_string = jenv.get_template('erddap_datasets.xml').render()
+                with open(tmp_path, 'wt') as f:
+                    f.write(
+                        etree.tostring(
+                            etree.fromstring(datasets_template_string),
+                            encoding='ISO-8859-1',
+                            pretty_print=True,
+                            xml_declaration=True
+                        ).decode('iso-8859-1')
+                    )
+                    f.write('\n')
+
+            deployment_name = os.path.basename(event.path)
+            xmlstring = jenv.get_template('erddap_deployment.xml').render(
+                deployment_name=deployment_name,
+                deployment_directory=event.path
+            )
+            deployment_xml_node = etree.fromstring(xmlstring)
+
+            # Create
+            xmltree = etree.parse(tmp_path).getroot()
+            find_dataset = etree.XPath("//erddapDatasets/dataset[@datasetID=$name]")
+
+            # Find an existing datasetID within the datasets.xml file
+            dnode = find_dataset(xmltree, name=deployment_name)
+            if not dnode:
+                # No datasetID found, create a new one
+                xmltree.append(deployment_xml_node)
+                L.info("Added Deployment: {}".format(deployment_name))
+            else:
+                if lxml_elements_equal(dnode[0], deployment_xml_node):
+                    L.info("Not replacing identical deployment XML node")
+                    return
+                else:
+                    # Update the existing datasetID with a new XML block
+                    xmltree.replace(dnode[0], deployment_xml_node)
+                    L.info("Replaced Deployment: {}".format(deployment_name))
+
+            # Create tempfile for the new modified file
+            new_datasets_handle, new_datasets_path = tempfile.mkstemp(prefix='gutils_erddap_', suffix='.xml')
+            with open(new_datasets_path, 'wt') as f:
+                f.write(etree.tostring(
+                    xmltree,
+                    encoding='ISO-8859-1',
+                    pretty_print=True,
+                    xml_declaration=True
+                ).decode('iso-8859-1'))
                 f.write('\n')
 
-        deployment_name = os.path.basename(event.path)
-        xmlstring = jenv.get_template('erddap_deployment.xml').render(
-            deployment_name=deployment_name,
-            deployment_directory=event.path
-        )
-        deployment_xml_node = etree.fromstring(xmlstring)
+            # Replace old datasets.xml
+            os.close(new_datasets_handle)
+            shutil.move(new_datasets_path, datasets_path)
 
-        # Create
-        xmltree = etree.parse(tmp_path).getroot()
-        find_dataset = etree.XPath("//erddapDatasets/dataset[@datasetID=$name]")
+        finally:
+            # Write dataset update flag if it doesn't exist
+            if self.erddap_flag_path is not None:
+                flagfile = os.path.join(self.erddap_flag_path, deployment_name)
+                if not os.path.isfile(flagfile):
+                    with open(flagfile, 'w') as ff:
+                        ff.write(datetime.utcnow().isoformat())
 
-        # Find an existing datasetID within the datasets.xml file
-        dnode = find_dataset(xmltree, name=deployment_name)
-        if not dnode:
-            # No datasetID found, create a new one
-            xmltree.append(deployment_xml_node)
-            L.info("Added Deployment: {}".format(deployment_name))
-        else:
-            # Update the existing datasetID with a new XML block
-            xmltree.replace(dnode[0], deployment_xml_node)
-            L.info("Replaced Deployment: {}".format(deployment_name))
-
-        # Create tempfile for the new modified file
-        new_datasets_handle, new_datasets_path = tempfile.mkstemp(prefix='gutils_erddap_', suffix='.xml')
-        with open(new_datasets_path, 'wt') as f:
-            f.write(etree.tostring(
-                xmltree,
-                encoding='ISO-8859-1',
-                pretty_print=True,
-                xml_declaration=True
-            ).decode('iso-8859-1'))
-            f.write('\n')
-
-        # Replace old datasets.xml
-        os.close(new_datasets_handle)
-        shutil.move(new_datasets_path, datasets_path)
-
-        os.close(tmp_handle)
-        if os.path.exists(tmp_path):
-            os.remove(tmp_path)
+            os.close(tmp_handle)
+            if os.path.exists(tmp_path):
+                os.remove(tmp_path)
 
 
 def create_erddap_arg_parser():
@@ -277,6 +301,11 @@ def create_erddap_arg_parser():
         "--erddap_content_path",
         help="Path to the ERDDAP content directory",
         default=os.environ.get('GUTILS_ERDDAP_CONTENT_PATH')
+    )
+    parser.add_argument(
+        "--erddap_flag_path",
+        help="Path to the ERDDAP flag directory",
+        default=os.environ.get('GUTILS_ERDDAP_FLAG_PATH')
     )
     parser.add_argument(
         "--daemonize",
@@ -315,7 +344,8 @@ def main_to_erddap():
 
     processor = Netcdf2ErddapProcessor(
         outputs_path=args.data_path,
-        erddap_content_path=args.erddap_content_path
+        erddap_content_path=args.erddap_content_path,
+        erddap_flag_path=args.erddap_flag_path
     )
     notifier = Notifier(wm, processor, read_freq=30)  # Read every 30 seconds
     # Enable coalescing of events. This merges event types of the same type on the same file
@@ -323,10 +353,11 @@ def main_to_erddap():
     notifier.coalesce_events()
 
     try:
-        L.info("Watching {} and Updating ERDDAP content at {}".format(
+        L.info("Watching {}, updating content at {} and flags at {}".format(
             args.data_path,
-            args.erddap_content_path)
-        )
+            args.erddap_content_path,
+            args.erddap_flag_path
+        ))
         notifier.loop(daemonize=args.daemonize)
     except NotifierError:
         L.exception('Unable to start notifier loop')

@@ -17,6 +17,8 @@ services:
       GUTILS_BINARY_DIRECTORY: /gutils/binary
       GUTILS_CONFIG_DIRECTORY: /gutils/config
       GUTILS_NETCDF_DIRECTORY: /gutils/netcdf
+      GUTILS_ERDDAP_CONTENT_PATH: /gutils/erddap/content
+      GUTILS_ERDDAP_FLAG_PATH: /gutils/erddap/flag
       GUTILS_FTP_URL: ftp
       GUTILS_FTP_USER: thisisme
       GUTILS_FTP_PASS: thisismypass
@@ -30,6 +32,7 @@ services:
       - "./netcdf:/gutils/netcdf"
       - "./config:/gutils/config:ro"
       - "./erddap/content:/gutils/erddap/content"
+      - "./erddap/flag:/gutils/erddap/flag"
     depends_on:
       - ftp
 
@@ -48,6 +51,7 @@ services:
     image: axiom/docker-erddap
     volumes:
       - "./erddap/content/datasets.xml:/usr/local/tomcat/content/erddap/datasets.xml"
+      - "./erddap/flag:/erddapData/flag"
       - "./netcdf:/gutils/netcdf:ro"
     ports:
       - "8080:8080"

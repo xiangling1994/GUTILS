@@ -65,6 +65,9 @@ VOLUME $GUTILS_CONFIG_DIRECTORY
 ENV GUTILS_ERDDAP_CONTENT_PATH /gutils/erddap/content
 VOLUME $GUTILS_ERDDAP_CONTENT_PATH
 
+ENV GUTILS_ERDDAP_FLAG_PATH /gutils/erddap/flag
+VOLUME $GUTILS_ERDDAP_FLAG_PATH
+
 RUN mkdir -p /etc/my_init.d && \
     mkdir -p /gutils
 COPY docker/init/* /etc/my_init.d/
