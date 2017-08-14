@@ -270,15 +270,24 @@ class Netcdf2ErddapProcessor(ProcessEvent):
 
             # Replace old datasets.xml
             os.close(new_datasets_handle)
+            os.chmod(new_datasets_path, 0o664)
             shutil.move(new_datasets_path, datasets_path)
 
         finally:
             # Write dataset update flag if it doesn't exist
             if self.erddap_flag_path is not None:
-                flagfile = os.path.join(self.erddap_flag_path, deployment_name)
-                if not os.path.isfile(flagfile):
-                    with open(flagfile, 'w') as ff:
+                flag_tmp_handle, flag_tmp_path = tempfile.mkstemp(prefix='gutils_errdap_', suffix='.flag')
+                final_flagfile = os.path.join(self.erddap_flag_path, deployment_name)
+
+                if not os.path.isfile(final_flagfile):
+                    with open(flag_tmp_path, 'w') as ff:
                         ff.write(datetime.utcnow().isoformat())
+                    os.chmod(flag_tmp_path, 0o666)
+                    shutil.move(flag_tmp_path, final_flagfile)
+
+                os.close(flag_tmp_handle)
+                if os.path.exists(flag_tmp_path):
+                    os.remove(flag_tmp_path)
 
             os.close(tmp_handle)
             if os.path.exists(tmp_path):

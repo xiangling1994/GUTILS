@@ -224,6 +224,7 @@ def create_netcdf(attrs, data, output_path, mode):
 
             # Move to final destination
             safe_makedirs(os.path.dirname(output_file))
+            os.chmod(tmp_path, 0o664)
             shutil.move(tmp_path, output_file)
             L.info('Created: {}'.format(output_file))
         except BaseException as e:
