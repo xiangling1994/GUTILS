@@ -8,7 +8,7 @@ services:
       FTP_USER: thisisme
       FTP_PASSWORD: thisismypass
     volumes:
-      - "./ftp:/data/ftp"
+      - "./ftp:/home"
 
   gutils:
     image: gutils
