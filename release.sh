@@ -19,7 +19,7 @@ git add gutils/__init__.py
 git add conda-recipe/meta.yaml
 git add VERSION
 git add docs/conf.py
-git Dockerfile
+git add Dockerfile
 git commit -m "Release $1"
 
 # Tag
