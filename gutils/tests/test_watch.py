@@ -33,6 +33,7 @@ binary_path = output('binary', 'usf-2016')
 ascii_path = output('ascii', 'usf-2016')
 netcdf_path = output('netcdf', 'usf-2016')
 erddap_content_path = output('erddap', 'content')
+erddap_flag_path = output('erddap', 'flag')
 ftp_path = output('ftp')
 
 watch_dir = os.path.join(os.path.dirname(__file__), '..', 'watch')
@@ -46,6 +47,7 @@ class TestWatchClasses(unittest.TestCase):
         safe_makedirs(netcdf_path)
         safe_makedirs(ftp_path)
         safe_makedirs(erddap_content_path)
+        safe_makedirs(erddap_flag_path)
 
     def tearDown(self):
         shutil.rmtree(output())
@@ -139,7 +141,8 @@ class TestWatchClasses(unittest.TestCase):
         # Convert ASCII data to NetCDF
         processor = Netcdf2ErddapProcessor(
             outputs_path=os.path.dirname(netcdf_path),
-            erddap_content_path=erddap_content_path
+            erddap_content_path=erddap_content_path,
+            erddap_flag_path=erddap_flag_path
         )
         notifier = ThreadedNotifier(wm, processor, read_freq=5)
         notifier.coalesce_events()
@@ -166,5 +169,8 @@ class TestWatchClasses(unittest.TestCase):
         wm.rm_watch(wdd.values(), rec=True)
         notifier.stop()
 
-        # Should outout 1 ERDDAP datasets.xml file
+        # Should output 1 ERDDAP datasets.xml file
         assert len(os.listdir(erddap_content_path)) == 1
+
+        # Should try to flag the dataset
+        assert len(os.listdir(erddap_flag_path)) == 1
