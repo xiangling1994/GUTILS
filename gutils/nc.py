@@ -171,7 +171,7 @@ def create_netcdf(attrs, data, output_path, mode):
             tmp_handle, tmp_path = tempfile.mkstemp(suffix='.nc', prefix='gutils_glider_netcdf_')
 
             profile_time = profile.t.dropna().iloc[0]
-            profile_index = int(time.mktime(profile_time.timetuple()))
+            profile_index = int(time.mktime(profile_time.utctimetuple()))
             # Create final filename
             filename = "{0}_{1:%Y%m%dT%H%M%S}Z_{2}_{3}.nc".format(
                 attrs['glider'],
