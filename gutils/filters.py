@@ -106,10 +106,12 @@ def process_dataset(file, reader_class, filter_z=None, filter_points=None, filte
         data = reader.standardize()
 
         if 'z' not in data.columns:
-            raise ValueError("No Z axis found")
+            L.warning("No Z axis found - Skipping {}".format(file))
+            return None, None
 
         if 't' not in data.columns:
-            raise ValueError("No T axis found")
+            L.warning("No T axis found - Skipping {}".format(file))
+            return None, None
 
         # Find profile breaks
         profiles = assign_profiles(data)
