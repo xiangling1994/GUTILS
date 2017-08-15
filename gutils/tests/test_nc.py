@@ -55,11 +55,11 @@ class TestCreateGliderScript(unittest.TestCase):
 
         # First profile
         with nc4.Dataset(output_files[0]) as ncd:
-            assert ncd.variables['profile_id'][0] == 1473517507
+            assert ncd.variables['profile_id'][0] == 1473499507
 
         # Last profile
         with nc4.Dataset(output_files[-1]) as ncd:
-            assert ncd.variables['profile_id'][0] == 1473527118
+            assert ncd.variables['profile_id'][0] == 1473509118
 
         # Check netCDF file for compliance
         ds = namedtuple('Arguments', ['file'])
@@ -89,11 +89,11 @@ class TestCreateGliderScript(unittest.TestCase):
 
         # First profile
         with nc4.Dataset(output_files[0]) as ncd:
-            assert ncd.variables['profile_id'][0] == 1473446494
+            assert ncd.variables['profile_id'][0] == 1473428494
 
         # Last profile
         with nc4.Dataset(output_files[-1]) as ncd:
-            assert ncd.variables['profile_id'][0] == 1473527118
+            assert ncd.variables['profile_id'][0] == 1473509118
 
         # Check netCDF file for compliance
         ds = namedtuple('Arguments', ['file'])
@@ -122,11 +122,11 @@ class TestCreateGliderScript(unittest.TestCase):
 
         # First profile
         with nc4.Dataset(output_files[0]) as ncd:
-            assert ncd.variables['profile_id'][0] == 1435275435
+            assert ncd.variables['profile_id'][0] == 1435257435
 
         # Last profile
         with nc4.Dataset(output_files[-1]) as ncd:
-            assert ncd.variables['profile_id'][0] == 1435282145
+            assert ncd.variables['profile_id'][0] == 1435264145
 
         # Check netCDF file for compliance
         ds = namedtuple('Arguments', ['file'])
