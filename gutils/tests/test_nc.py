@@ -11,7 +11,7 @@ import netCDF4 as nc4
 from gutils import safe_makedirs
 from gutils.nc import check_dataset, create_dataset
 from gutils.slocum import SlocumReader
-from gutils.tests import resource, output, setup_testing_logger
+from gutils.tests import resource, setup_testing_logger
 
 import logging
 L = logging.getLogger(__name__)  # noqa

@@ -7,10 +7,7 @@ import unittest
 from glob import glob
 
 from pyinotify import (
-    ALL_EVENTS,
-    IN_CLOSE_NOWRITE,
     IN_CLOSE_WRITE,
-    IN_ISDIR,
     IN_MOVED_TO,
     ThreadedNotifier,
     WatchManager
