@@ -34,6 +34,22 @@ erddap_flag_path = output('erddap', 'flag')
 ftp_path = output('ftp')
 
 
+def wait_for_files(path, number):
+        # Wait for NetCDF to be created
+        count = 0
+        loops = 20
+        while True:
+            try:
+                num_files = len(os.listdir(path))
+                assert num_files == number
+                break
+            except AssertionError:
+                if count >= loops:
+                    raise AssertionError("Not enough files in {}: Expected: {} Got: {}.".format(path, number, num_files))
+                count += 1
+                time.sleep(6)
+
+
 class TestWatchClasses(unittest.TestCase):
 
     def setUp(self):
@@ -75,13 +91,10 @@ class TestWatchClasses(unittest.TestCase):
         for g in sorted(glob(gpath)):
             shutil.copy2(g, binary_path)
 
-        # Wait for ASCII to be processed
-        time.sleep(30)
+        wait_for_files(ascii_path, 32)
+
         wm.rm_watch(wdd.values(), rec=True)
         notifier.stop()
-
-        # Should output 32 ASCII files
-        assert len(os.listdir(ascii_path)) == 32
 
     def test_gutils_ascii_to_netcdf_watch(self):
 
@@ -120,13 +133,10 @@ class TestWatchClasses(unittest.TestCase):
         )
         merger.convert()
 
-        # Wait for NetCDF to be created
-        time.sleep(30)
+        wait_for_files(netcdf_path, 230)
+
         wm.rm_watch(wdd.values(), rec=True)
         notifier.stop()
-
-        # Should outout 230 NetCDF files
-        assert len(os.listdir(netcdf_path)) == 230
 
     def test_gutils_netcdf_to_erddap_watch(self):
 
@@ -159,13 +169,8 @@ class TestWatchClasses(unittest.TestCase):
             f.write('\n')
         L.debug("Wrote dummy file")
 
-        # Wait for NetCDF to be created
-        time.sleep(10)
+        wait_for_files(erddap_content_path, 1)
+        wait_for_files(erddap_flag_path, 1)
+
         wm.rm_watch(wdd.values(), rec=True)
         notifier.stop()
-
-        # Should output 1 ERDDAP datasets.xml file
-        assert len(os.listdir(erddap_content_path)) == 1
-
-        # Should try to flag the dataset
-        assert len(os.listdir(erddap_flag_path)) == 1
