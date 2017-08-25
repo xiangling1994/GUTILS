@@ -49,3 +49,4 @@ example/config/*
 example/binary/*
 example/erddap/content/*.xml
 docs/_site
+docs/api
