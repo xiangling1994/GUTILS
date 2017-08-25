@@ -45,5 +45,7 @@ gutils/tests/resources/slocum/real/netcdf/*.nc
 example/**/*.nc
 example/**/*.dat
 example/ftp/*
+example/config/*
+example/binary/*
 example/erddap/content/*.xml
 docs/_site

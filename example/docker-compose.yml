@@ -13,12 +13,6 @@ services:
   gutils:
     image: gutils
     environment:
-      GUTILS_ASCII_DIRECTORY: /gutils/ascii
-      GUTILS_BINARY_DIRECTORY: /gutils/binary
-      GUTILS_CONFIG_DIRECTORY: /gutils/config
-      GUTILS_NETCDF_DIRECTORY: /gutils/netcdf
-      GUTILS_ERDDAP_CONTENT_PATH: /gutils/erddap/content
-      GUTILS_ERDDAP_FLAG_PATH: /gutils/erddap/flag
       GUTILS_FTP_URL: ftp
       GUTILS_FTP_USER: thisisme
       GUTILS_FTP_PASS: thisismypass
@@ -57,3 +51,12 @@ services:
       - "8080:8080"
     depends_on:
       - gutils
+
+  download:
+    image: sgs-content
+    volumes:
+      - ./binary:/data/secoora/dev/binary
+      - ./config:/data/secoora/dev/config
+    command: /bin/bash -c "sleep 30; secoora_download.sh"
+    depends_on:
+      - erddap
