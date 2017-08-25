@@ -248,19 +248,35 @@ class SlocumMerger(object):
         # iterate and every time we hit a .dat file we return the cache
         binary_files = []
         for x in output_files:
+
+            if x.startswith('Error'):
+                L.error(x)
+                continue
+
+            if x.startswith('Skipping'):
+                continue
+
             fname = os.path.basename(x)
             _, suff = os.path.splitext(fname)
+
             if suff == '.dat':
-                processed.append({
-                    'ascii': os.path.join(self.destination_directory, fname),
-                    'binary': sorted(binary_files)
-                })
-                L.info("Converted {} to {}".format(
-                    ','.join([ os.path.basename(x) for x in sorted(binary_files) ]),
-                    fname
-                ))
+                ascii_file = os.path.join(self.destination_directory, fname)
+                if os.path.isfile(ascii_file):
+                    processed.append({
+                        'ascii': ascii_file,
+                        'binary': sorted(binary_files)
+                    })
+                    L.info("Converted {} to {}".format(
+                        ','.join([ os.path.basename(x) for x in sorted(binary_files) ]),
+                        fname
+                    ))
+                else:
+                    L.warning("{} not an output file".format(x))
+
                 binary_files = []
             else:
-                binary_files.append(os.path.join(self.source_directory, fname))
+                bf = os.path.join(self.source_directory, fname)
+                if os.path.isfile(x):
+                    binary_files.append(bf)
 
         return processed
