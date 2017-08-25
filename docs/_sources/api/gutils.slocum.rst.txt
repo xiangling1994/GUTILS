@@ -1,0 +1,8 @@
+gutils\.slocum package
+======================
+
+.. automodule:: gutils.slocum
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
