@@ -32,7 +32,7 @@ class SlocumReader(object):
 
     TIMESTAMP_SENSORS = ['m_present_time', 'sci_m_present_time']
     PRESSURE_SENSORS = ['sci_water_pressure', 'm_water_pressure', 'm_pressure']
-    DEPTH_SENSORS = ['m_depth']
+    DEPTH_SENSORS = ['m_depth', 'm_water_depth']
 
     def __init__(self, ascii_file):
         self.ascii_file = ascii_file
@@ -132,19 +132,12 @@ class SlocumReader(object):
                     break
 
         standard_columns = {
-            'm_altitude': 'altitude',
-            'm_pitch': 'pitch',
-            'm_roll': 'roll',
-            'm_water_vy': 'v',
-            'm_water_vx': 'u',
-            'm_heading': 'heading',
+            'm_water_vx': 'u_orig',
+            'm_water_vy': 'v_orig',
             'sci_water_temp': 'temperature',
-            'sci_bbfl2s_chlor_scaled': 'chlorophyll',
             'sci_water_cond': 'conductivity',
             'sci_water_pressure': 'pressure',
-            'sci_bbfl2s_bb_scaled': 'backscatter',
-            'sci_oxy3835_oxygen': 'dissolved_oxygen',
-            'sci_bbfl2s_cdom_scaled': 'cdom',
+            'sci_bbfl2s_bb_scaled': 'backscatter'
         }
 
         # Standardize columns

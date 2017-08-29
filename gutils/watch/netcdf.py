@@ -9,6 +9,7 @@ from ftplib import FTP
 from datetime import datetime
 from collections import namedtuple
 
+import numpy as np
 import netCDF4 as nc4
 from lxml import etree
 from jinja2 import Environment, PackageLoader, select_autoescape
@@ -191,6 +192,28 @@ def lxml_elements_equal(e1, e2):
     return all(lxml_elements_equal(c1, c2) for c1, c2 in zip(e1, e2))
 
 
+datatype_mapping = {
+    str: 'String',
+    np.dtype('U'): 'String',
+    np.dtype('int8'): 'byte',
+    np.dtype('int32'): 'int',
+    np.dtype('float32'): 'float',
+    np.dtype('float64'): 'double',
+}
+
+
+destination_mapping = {
+    'profile_lat': 'latitude',
+    'profile_lon': 'longitude',
+    'profile_time': 'time',
+    'time': 'precise_time',
+    'lat': 'precise_lat',
+    'lon': 'precise_lon',
+    'platform': 'meta_platform',
+    'crs': 'meta_crs',
+}
+
+
 class Netcdf2ErddapProcessor(ProcessEvent):
 
     def my_init(self, outputs_path, erddap_content_path, erddap_flag_path):
@@ -238,10 +261,14 @@ class Netcdf2ErddapProcessor(ProcessEvent):
                     f.write('\n')
 
             deployment_name = os.path.basename(event.path)
-            xmlstring = jenv.get_template('erddap_deployment.xml').render(
-                deployment_name=deployment_name,
-                deployment_directory=event.path
-            )
+            with nc4.Dataset(event.pathname) as ncd:
+                xmlstring = jenv.get_template('erddap_deployment.xml').render(
+                    deployment_name=deployment_name,
+                    deployment_directory=event.path,
+                    deployment_variables=ncd.variables,
+                    datatype_mapping=datatype_mapping,
+                    destination_mapping=destination_mapping
+                )
             deployment_xml_node = etree.fromstring(xmlstring)
 
             # Create

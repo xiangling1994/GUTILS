@@ -11,6 +11,7 @@ import argparse
 import calendar
 import tempfile
 from datetime import datetime
+from collections import OrderedDict
 
 import netCDF4 as nc4
 from compliance_checker.runner import ComplianceChecker, CheckSuite
@@ -95,6 +96,8 @@ def set_uv_data(ncd, profile):
     uv_t = ncd.variables['time_uv']
     uv_x = ncd.variables['lon_uv']
     uv_y = ncd.variables['lat_uv']
+    uv_u = ncd.variables['u']
+    uv_v = ncd.variables['v']
 
     txy = get_uv_data(profile)
 
@@ -108,6 +111,8 @@ def set_uv_data(ncd, profile):
     set_scalar_value(t_value, uv_t)
     set_scalar_value(txy.y, uv_y)
     set_scalar_value(txy.x, uv_x)
+    set_scalar_value(txy.u, uv_u)
+    set_scalar_value(txy.v, uv_v)
 
     ncd.sync()
 
@@ -230,7 +235,24 @@ def create_netcdf(attrs, data, output_path, mode):
                 # AFTER RENAMING VARIABLES
                 # Load metadata from config files to create the skeleton
                 # This will create scalar variables but not assign the data
-                ncd.__apply_meta_interface__(attrs)
+
+                # We only want to apply metadata from the `attrs` map if the variable is already in
+                # the netCDF file or it is a scalar variable (no shape defined). This avoids
+                # creating measured variables that were not measured in this profile.
+                prof_attrs = attrs.copy()
+                vars_to_update = OrderedDict()
+                for vname, vobj in prof_attrs['variables'].items():
+                    if vname in ncd.variables or ('shape' not in vobj and 'type' in vobj):
+                        if 'shape' in vobj:
+                            # Assign coordinates
+                            vobj['attributes']['coordinates'] = 'lon lat depth time'
+                        vars_to_update[vname] = vobj
+                    else:
+                        #L.debug("Skipping missing variable: {}".format(vname))
+                        pass
+
+                prof_attrs['variables'] = vars_to_update
+                ncd.__apply_meta_interface__(prof_attrs)
 
                 # Set trajectory value
                 ncd.id = traj_name
@@ -396,10 +418,10 @@ def check_dataset(args):
                 if isinstance(v, list):
                     for x in v:
                         if 'msgs' in x and x['msgs']:
-                            L.warning(x['msgs'])
+                            L.warning('{} - {}'.format(args.file, x['msgs']))
         return 1
     except BaseException as e:
-        L.warning(e)
+        L.warning('{} - {}'.format(args.file, e))
         return 1
     finally:
         os.close(outhandle)

@@ -163,11 +163,9 @@ class TestWatchClasses(unittest.TestCase):
         # Wait 5 seconds for the watch to start
         time.sleep(5)
 
-        dummy_netcdf = os.path.join(netcdf_path, 'hello.dummy.nc')
-        with open(dummy_netcdf, 'wt') as f:
-            f.write('nothing to see here')
-            f.write('\n')
-        L.debug("Wrote dummy file")
+        orig_netcdf = resource('profile.nc')
+        dummy_netcdf = os.path.join(netcdf_path, 'profile.nc')
+        shutil.copy(orig_netcdf, dummy_netcdf)
 
         wait_for_files(erddap_content_path, 1)
         wait_for_files(erddap_flag_path, 1)

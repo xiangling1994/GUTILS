@@ -173,17 +173,21 @@ def get_uv_data(profile):
     t = np.nan
     x = np.nan
     y = np.nan
+    u = np.nan
+    v = np.nan
 
-    uvslice = (~profile.u.isnull()) & (~profile.v.isnull())
+    uvslice = (~profile.u_orig.isnull()) & (~profile.v_orig.isnull())
     uv_index = profile[uvslice].index[:2]
     if uv_index.size != 0:
         uv_index = uv_index[-1]
         t = profile.t.loc[uv_index].to_pydatetime()
         x = profile.x.loc[uv_index]
         y = profile.y.loc[uv_index]
+        u = profile.u_orig.loc[uv_index]
+        v = profile.v_orig.loc[uv_index]
 
-    tuv = namedtuple('UV_Data', ['t', 'x', 'y'])
-    return tuv(t=t, x=x, y=y)
+    tuv = namedtuple('UV_Data', ['t', 'x', 'y', 'u', 'v'])
+    return tuv(t=t, x=x, y=y, u=u, v=v)
 
 
 PROFILE_MEAN = 0

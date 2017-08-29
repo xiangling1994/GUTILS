@@ -15,10 +15,10 @@ Supports:
 
 ## Resources
 
-+  **Documentation:** https://secoora.github.io/gutils/docs/
-+  **API:** https://secoora.github.io/gutils/docs/api/gutils.html
-+  **Source Code:** https://github.com/secoora/gutils/
-+  **Git clone URL:** https://github.com/secoora/gutils.git
++  **Documentation:** https://secoora.github.io/GUTILS/docs/
++  **API:** https://secoora.github.io/GUTILS/docs/api/gutils.html
++  **Source Code:** https://github.com/secoora/GUTILS/
++  **Git clone URL:** https://github.com/secoora/GUTILS.git
 
 
 ## Installation

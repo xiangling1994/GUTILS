@@ -6,88 +6,106 @@
     "crs" : {
       "type": "int",
       "attributes": {
-            "long_name": "http://www.opengis.net/def/crs/EPSG/0/4326",
-            "grid_mapping_name": "latitude_longitude",
-            "epsg_code": "EPSG:4326",
-            "semi_major_axis": 6378137.0,
-            "inverse_flattening": 298.257223563
+        "long_name": "http://www.opengis.net/def/crs/EPSG/0/4326",
+        "grid_mapping_name": "latitude_longitude",
+        "epsg_code": "EPSG:4326",
+        "semi_major_axis": 6378137.0,
+        "inverse_flattening": 298.257223563,
+        "ioos_category": "Other"
       }
     },
     "conductivity": {
       "shape": ["obs"],
       "type": "double",
       "attributes": {
-        "_FillValue": { "type": "double", "data": -999.0},
-        "accuracy": "",
-        "long_name": "Conductivity",
+        "_FillValue": { "type": "double", "data": -9999.9},
+        "long_name": "Sea Water Electrical Conductivity",
         "observation_type": "measured",
         "platform": "platform",
-        "precision": "",
-        "resolution": "",
         "standard_name": "sea_water_electrical_conductivity",
         "units": "S.m-1",
         "valid_max": { "type": "double", "data": 10.0},
-        "valid_min": { "type": "double", "data": 0.0}
+        "valid_min": { "type": "double", "data": 0.0},
+        "ioos_category": "Salinity",
+        "colorBarMaximum": { "type": "double", "data": 9.0},
+        "colorBarMinimum": { "type": "double", "data": 0.0}
       }
     },
     "density": {
       "shape": ["obs"],
       "type": "double",
       "attributes": {
-        "_FillValue": { "type": "double", "data": -999.0},
-        "accuracy": "",
-        "long_name": "Density",
+        "_FillValue": { "type": "double", "data": -9999.9},
+        "long_name": "Sea Water Density",
         "observation_type": "calculated",
         "platform": "platform",
-        "precision": "",
-        "resolution": "",
         "standard_name": "sea_water_density",
         "units": "kg.m-3",
         "valid_max": { "type": "double", "data": 1040.0},
-        "valid_min": { "type": "double", "data": 1015.0}
+        "valid_min": { "type": "double", "data": 1015.0},
+        "ioos_category": "Other",
+        "colorBarMaximum": { "type": "double", "data": 1032.0},
+        "colorBarMinimum": { "type": "double", "data": 1020.0}
       }
     },
     "depth": {
       "shape": ["obs"],
       "type": "double",
       "attributes": {
-        "_FillValue": { "type": "double", "data": -999.0},
-        "accuracy": "",
-        "comment": "",
+        "_FillValue": { "type": "double", "data": -9999.9},
         "long_name": "Depth",
         "observation_type": "calculated",
         "platform": "platform",
         "positive": "down",
-        "precision": "",
         "reference_datum": "sea-surface",
-        "resolution": "",
         "standard_name": "depth",
         "units": "m",
-        "valid_max": 2000,
-        "valid_min": 0
+        "valid_max": { "type": "double", "data": 2000.0},
+        "valid_min": { "type": "double", "data": 0.0},
+        "ioos_category": "Location",
+        "colorBarMaximum": { "type": "double", "data": 2000.0},
+        "colorBarMinimum": { "type": "double", "data": 0.0},
+        "colorBarPalette": "OceanDepth"
+      }
+    },
+    "m_altitude": {
+      "shape": ["obs"],
+      "type": "double",
+      "attributes": {
+        "_FillValue": { "type": "double", "data": -9999.9},
+        "long_name": "Altitude",
+        "observation_type": "measured",
+        "platform": "platform",
+        "positive": "down",
+        "standard_name": "altitude",
+        "units": "m",
+        "ioos_category": "Location"
       }
     },
     "lat": {
       "shape": ["obs"],
       "type": "double",
       "attributes": {
-        "_FillValue": { "type": "double", "data": -999.0},
+        "_FillValue": { "type": "double", "data": -9999.9},
         "comment": "Interpolated latitude at each point in the time-series",
         "coordinate_reference_frame": "urn:ogc:crs:EPSG::4326",
-        "long_name": "Latitude",
+        "long_name": "Precise Latitude",
         "observation_type": "measured",
         "platform": "platform",
         "reference": "WGS84",
         "standard_name": "latitude",
         "units": "degrees_north",
         "valid_max": { "type": "double", "data": 90.0},
-        "valid_min": { "type": "double", "data": -90.0}
+        "valid_min": { "type": "double", "data": -90.0},
+        "ioos_category": "Location",
+        "colorBarMaximum": { "type": "double", "data": 90.0},
+        "colorBarMinimum": { "type": "double", "data": -90.0}
       }
     },
     "lat_uv": {
       "type": "double",
       "attributes": {
-        "_FillValue": { "type": "double", "data": -999.0},
+        "_FillValue": { "type": "double", "data": -9999.9},
         "comment": "The depth-averaged current is an estimate of the net current measured while the glider is underwater.  The value is calculated over the entire underwater segment, which may consist of 1 or more dives.",
         "long_name": "Depth-Averaged Latitude",
         "observation_type": "calculated",
@@ -95,30 +113,36 @@
         "standard_name": "latitude",
         "units": "degrees_north",
         "valid_max": { "type": "double", "data": 90.0},
-        "valid_min": { "type": "double", "data": -90.0}
+        "valid_min": { "type": "double", "data": -90.0},
+        "ioos_category": "Location",
+        "colorBarMaximum": { "type": "double", "data": 90.0},
+        "colorBarMinimum": { "type": "double", "data": -90.0}
       }
     },
     "lon": {
       "shape": ["obs"],
       "type": "double",
       "attributes": {
-        "_FillValue": { "type": "double", "data": -999.0},
+        "_FillValue": { "type": "double", "data": -9999.9},
         "comment": "Interpolated longitude at each point in the time-series.",
         "coordinate_reference_frame": "urn:ogc:crs:EPSG::4326",
-        "long_name": "Longitude",
+        "long_name": "Precise Longitude",
         "observation_type": "measured",
         "platform": "platform",
         "reference": "WGS84",
         "standard_name": "longitude",
         "units": "degrees_east",
         "valid_max": { "type": "double", "data": 180.0},
-        "valid_min": { "type": "double", "data": -180.0}
+        "valid_min": { "type": "double", "data": -180.0},
+        "ioos_category": "Location",
+        "colorBarMaximum": { "type": "double", "data": 180.0},
+        "colorBarMinimum": { "type": "double", "data": -180.0}
       }
     },
     "lon_uv": {
       "type": "double",
       "attributes": {
-        "_FillValue": { "type": "double", "data": -999.0},
+        "_FillValue": { "type": "double", "data": -9999.9},
         "comment": "The depth-averaged current is an estimate of the net current measured while the glider is underwater.  The value is calculated over the entire underwater segment, which may consist of 1 or more dives.",
         "long_name": "Depth-Averaged Longitude",
         "observation_type": "calculated",
@@ -126,17 +150,19 @@
         "standard_name": "longitude",
         "units": "degrees_east",
         "valid_max": { "type": "double", "data": 180.0},
-        "valid_min": { "type": "double", "data": -180.0}
+        "valid_min": { "type": "double", "data": -180.0},
+        "ioos_category": "Location",
+        "colorBarMaximum": { "type": "double", "data": 180.0},
+        "colorBarMinimum": { "type": "double", "data": -180.0}
       }
     },
     "platform": {
       "type": "int",
       "attributes": {
-        "_FillValue": -999,
-        "comment": "",
-        "id": "",
-        "long_name": "",
+        "_FillValue": { "type": "int", "data": -999},
         "type": "platform",
+        "long_name": "Platform Metadata",
+        "ioos_category": "Identifier",
         "wmo_id": ""
       }
     },
@@ -144,97 +170,105 @@
       "shape": ["obs"],
       "type": "double",
       "attributes": {
-        "_FillValue": { "type": "double", "data": -999.0},
-        "accuracy": "",
-        "comment": "",
-        "long_name": "Pressure",
+        "_FillValue": { "type": "double", "data": -9999.9},
+        "long_name": "Sea Water Pressure",
         "observation_type": "measured",
         "platform": "platform",
         "positive": "down",
-        "precision": "",
         "reference_datum": "sea-surface",
-        "resolution": "",
         "standard_name": "sea_water_pressure",
         "units": "dbar",
-        "valid_max": 2000,
-        "valid_min": 0
+        "valid_max": { "type": "double", "data": 2000.0},
+        "valid_min": { "type": "double", "data": 0.0},
+        "ioos_category": "Pressure",
+        "colorBarMaximum": { "type": "double", "data": 2000.0},
+        "colorBarMinimum": { "type": "double", "data": 0.0}
       }
     },
     "profile_id": {
       "type": "int",
       "attributes": {
-        "_FillValue": -999,
+        "_FillValue": { "type": "int", "data": -999},
         "comment": "Sequential profile number within the trajectory.  This value is unique in each file that is part of a single trajectory/deployment.",
         "long_name": "Profile ID",
         "valid_max": 2147483647,
-        "valid_min": 1
+        "valid_min": 1,
+        "cf_role": "profile_id",
+        "ioos_category": "Identifier"
       }
     },
     "profile_lat": {
       "type": "double",
       "attributes": {
-        "_FillValue": { "type": "double", "data": -999.0},
+        "_FillValue": { "type": "double", "data": -9999.9},
         "comment": "Value is interpolated to provide an estimate of the latitude at the mid-point of the profile",
-        "long_name": "Profile Center Latitude",
+        "long_name": "Profile Latitude",
         "observation_type": "calculated",
         "platform": "platform",
         "standard_name": "latitude",
         "units": "degrees_north",
         "valid_max": { "type": "double", "data": 90.0},
-        "valid_min": { "type": "double", "data": -90.0}
+        "valid_min": { "type": "double", "data": -90.0},
+        "ioos_category": "Location",
+        "colorBarMaximum": { "type": "double", "data": 90.0},
+        "colorBarMinimum": { "type": "double", "data": -90.0}
       }
     },
     "profile_lon": {
       "type": "double",
       "attributes": {
-        "_FillValue": { "type": "double", "data": -999.0},
+        "_FillValue": { "type": "double", "data": -9999.9},
         "comment": "Value is interpolated to provide an estimate of the longitude at the mid-point of the profile",
-        "long_name": "Profile Center Longitude",
+        "long_name": "Profile Longitude",
         "observation_type": "calculated",
         "platform": "platform",
         "standard_name": "longitude",
         "units": "degrees_east",
         "valid_max": { "type": "double", "data": 180.0},
-        "valid_min": { "type": "double", "data": -180.0}
+        "valid_min": { "type": "double", "data": -180.0},
+        "ioos_category": "Location",
+        "colorBarMaximum": { "type": "double", "data": 180.0},
+        "colorBarMinimum": { "type": "double", "data": -180.0}
       }
     },
     "profile_time": {
       "type": "double",
       "attributes": {
-        "_FillValue": { "type": "double", "data": -999.0},
+        "_FillValue": { "type": "double", "data": -9999.9},
         "calendar": "gregorian",
         "comment": "Timestamp corresponding to the mid-point of the profile",
-        "long_name": "Profile Center Time",
+        "long_name": "Profile Time",
         "observation_type": "calculated",
         "platform": "platform",
         "standard_name": "time",
-        "units": "seconds since 1990-01-01T00:00:00Z"
+        "units": "seconds since 1990-01-01T00:00:00Z",
+        "ioos_category": "Time"
       }
     },
     "salinity": {
       "shape": ["obs"],
       "type": "double",
       "attributes": {
-        "_FillValue": { "type": "double", "data": -999.0},
-        "accuracy": "",
-        "long_name": "Salinity",
+        "_FillValue": { "type": "double", "data": -9999.9},
+        "long_name": "Sea Water Practical Salinity",
         "observation_type": "calculated",
         "platform": "platform",
-        "precision": "",
-        "resolution": "",
         "standard_name": "sea_water_practical_salinity",
         "units": "1e-3",
         "valid_max": { "type": "double", "data": 40.0},
-        "valid_min": { "type": "double", "data": 0.0}
+        "valid_min": { "type": "double", "data": 0.0},
+        "ioos_category": "Salinity",
+        "colorBarMaximum": { "type": "double", "data": 37.0},
+        "colorBarMinimum": { "type": "double", "data": 30.0}
       }
     },
     "temperature": {
       "shape": ["obs"],
       "type": "double",
       "attributes": {
-        "_FillValue": { "type": "double", "data": -999.0},
+        "_FillValue": { "type": "double", "data": -9999.9},
         "accuracy": "",
-        "long_name": "Temperature",
+        "long_name": "Sea Water Temperature",
         "observation_type": "measured",
         "platform": "platform",
         "precision": "",
@@ -242,7 +276,10 @@
         "standard_name": "sea_water_temperature",
         "units": "degree_Celsius",
         "valid_max": { "type": "double", "data": 40.0},
-        "valid_min": { "type": "double", "data": -5.0}
+        "valid_min": { "type": "double", "data": -5.0},
+        "ioos_category": "Temperature",
+        "colorBarMaximum": { "type": "double", "data": 32},
+        "colorBarMinimum": { "type": "double", "data": 0}
       }
     },
     "time": {
@@ -254,19 +291,21 @@
         "long_name": "Time",
         "observation_type": "measured",
         "standard_name": "time",
-        "units": "seconds since 1990-01-01T00:00:00Z"
+        "units": "seconds since 1990-01-01T00:00:00Z",
+        "ioos_category": "Time"
       }
     },
     "time_uv": {
       "type": "double",
       "attributes": {
-        "_FillValue": { "type": "double", "data": -999.0},
+        "_FillValue": { "type": "double", "data": -9999.9},
         "calendar": "gregorian",
         "comment": "The depth-averaged current is an estimate of the net current measured while the glider is underwater.  The value is calculated over the entire underwater segment, which may consist of 1 or more dives.",
         "long_name": "Depth-Averaged Time",
         "observation_type": "calculated",
         "standard_name": "time",
-        "units": "seconds since 1990-01-01T00:00:00Z"
+        "units": "seconds since 1990-01-01T00:00:00Z",
+        "ioos_category": "Time"
       }
     },
     "trajectory": {
@@ -274,13 +313,14 @@
       "attributes": {
         "cf_role": "trajectory_id",
         "comment": "A trajectory is a single deployment of a glider and may span multiple data files.",
-        "long_name": "Trajectory/Deployment Name"
+        "long_name": "Trajectory/Deployment Name",
+        "ioos_category": "Identifier"
       }
     },
     "u": {
       "type": "double",
       "attributes": {
-        "_FillValue": { "type": "double", "data": -999.0},
+        "_FillValue": { "type": "double", "data": -9999.9},
         "comment": "The depth-averaged current is an estimate of the net current measured while the glider is underwater.  The value is calculated over the entire underwater segment, which may consist of 1 or more dives.",
         "long_name": "Depth-Averaged Eastward Sea Water Velocity",
         "observation_type": "calculated",
@@ -288,13 +328,17 @@
         "standard_name": "eastward_sea_water_velocity",
         "units": "m.s-1",
         "valid_max": { "type": "double", "data": 10.0},
-        "valid_min": { "type": "double", "data": -10.0}
+        "valid_min": { "type": "double", "data": -10.0},
+        "ioos_category": "Currents",
+        "coordinates": "lon_uv lat_uv time_uv",
+        "colorBarMaximum": { "type": "double", "data": 0.5},
+        "colorBarMinimum": { "type": "double", "data": -0.5}
       }
     },
     "v": {
       "type": "double",
       "attributes": {
-        "_FillValue": { "type": "double", "data": -999.0},
+        "_FillValue": { "type": "double", "data": -9999.9},
         "comment": "The depth-averaged current is an estimate of the net current measured while the glider is underwater.  The value is calculated over the entire underwater segment, which may consist of 1 or more dives.",
         "long_name": "Depth-Averaged Northward Sea Water Velocity",
         "observation_type": "calculated",
@@ -302,7 +346,162 @@
         "standard_name": "northward_sea_water_velocity",
         "units": "m.s-1",
         "valid_max": { "type": "double", "data": 10.0},
-        "valid_min": { "type": "double", "data": -10.0}
+        "valid_min": { "type": "double", "data": -10.0},
+        "ioos_category": "Currents",
+        "coordinates": "lon_uv lat_uv time_uv",
+        "colorBarMaximum": { "type": "double", "data": 0.5},
+        "colorBarMinimum": { "type": "double", "data": -0.5}
+      }
+    },
+    "u_orig": {
+      "shape": ["obs"],
+      "type": "double",
+      "attributes": {
+        "_FillValue": { "type": "double", "data": -9999.9},
+        "long_name": "Eastward Sea Water Velocity",
+        "observation_type": "measured",
+        "platform": "platform",
+        "standard_name": "eastward_sea_water_velocity",
+        "units": "m.s-1",
+        "valid_max": { "type": "double", "data": 10.0},
+        "valid_min": { "type": "double", "data": -10.0},
+        "ioos_category": "Currents",
+        "colorBarMaximum": { "type": "double", "data": 0.5},
+        "colorBarMinimum": { "type": "double", "data": -0.5}
+      }
+    },
+    "v_orig": {
+      "shape": ["obs"],
+      "type": "double",
+      "attributes": {
+        "_FillValue": { "type": "double", "data": -9999.9},
+        "long_name": "Northward Sea Water Velocity",
+        "observation_type": "measured",
+        "platform": "platform",
+        "standard_name": "northward_sea_water_velocity",
+        "units": "m.s-1",
+        "valid_max": { "type": "double", "data": 10.0},
+        "valid_min": { "type": "double", "data": -10.0},
+        "ioos_category": "Currents",
+        "colorBarMaximum": { "type": "double", "data": 0.5},
+        "colorBarMinimum": { "type": "double", "data": -0.5}
+      }
+    },
+    "sci_oxy3835_oxygen": {
+      "shape": ["obs"],
+      "type": "double",
+      "attributes": {
+        "_FillValue": { "type": "double", "data": -9999.9},
+        "long_name": "Dissolved Oxygen Concentration",
+        "observation_type": "measured",
+        "platform": "platform",
+        "standard_name": "mole_concentration_of_dissolved_molecular_oxygen_in_sea_water",
+        "units": "umol.L-1",
+        "ioos_category": "Other"
+      }
+    },
+    "sci_oxy3835_wphase_oxygen": {
+      "shape": ["obs"],
+      "type": "double",
+      "attributes": {
+        "_FillValue": { "type": "double", "data": -9999.9},
+        "long_name": "Dissolved Oxygen Concentration",
+        "observation_type": "measured",
+        "platform": "platform",
+        "standard_name": "mole_concentration_of_dissolved_molecular_oxygen_in_sea_water",
+        "units": "umol.L-1",
+        "ioos_category": "Other"
+      }
+    },
+    "sci_oxy3835_wphase_saturation": {
+      "shape": ["obs"],
+      "type": "double",
+      "attributes": {
+        "_FillValue": { "type": "double", "data": -9999.9},
+        "long_name": "Dissolved Oxygen Saturation",
+        "observation_type": "measured",
+        "platform": "platform",
+        "standard_name": "fractional_saturation_of_oxygen_in_sea_water",
+        "units": "1",
+        "ioos_category": "Other"
+      }
+    },
+    "sci_bbfl2s_chlor_scaled": {
+      "shape": ["obs"],
+      "type": "double",
+      "attributes": {
+        "_FillValue": { "type": "double", "data": -9999.9},
+        "long_name": "Chlorophyll",
+        "observation_type": "measured",
+        "platform": "platform",
+        "standard_name": "concentration_of_chlorophyll_in_sea_water",
+        "units": "mg.m-3",
+        "ioos_category": "Other"
+      }
+    },
+    "sci_flbbcd_chlor_units": {
+      "shape": ["obs"],
+      "type": "double",
+      "attributes": {
+        "_FillValue": { "type": "double", "data": -9999.9},
+        "long_name": "Chlorophyll",
+        "observation_type": "measured",
+        "platform": "platform",
+        "standard_name": "concentration_of_chlorophyll_in_sea_water",
+        "units": "mg.m-3",
+        "ioos_category": "Other"
+      }
+    },
+    "sci_flntu_chlor_units": {
+      "shape": ["obs"],
+      "type": "double",
+      "attributes": {
+        "_FillValue": { "type": "double", "data": -9999.9},
+        "long_name": "Chlorophyll",
+        "observation_type": "measured",
+        "platform": "platform",
+        "standard_name": "concentration_of_chlorophyll_in_sea_water",
+        "units": "mg.m-3",
+        "ioos_category": "Other"
+      }
+    },
+    "sci_flntu_turb_units": {
+      "shape": ["obs"],
+      "type": "double",
+      "attributes": {
+        "_FillValue": { "type": "double", "data": -9999.9},
+        "long_name": "Turbidity",
+        "observation_type": "measured",
+        "platform": "platform",
+        "standard_name": "turbidity",
+        "units": "NTU",
+        "ioos_category": "Other"
+      }
+    },
+    "sci_bbfl2s_cdom_scaled": {
+      "shape": ["obs"],
+      "type": "double",
+      "attributes": {
+        "_FillValue": { "type": "double", "data": -9999.9},
+        "long_name": "CDOM",
+        "observation_type": "measured",
+        "platform": "platform",
+        "standard_name": "concentration_of_coloured_dissolved_organic_matter",
+        "units": "ppb",
+        "ioos_category": "Other"
+      }
+    },
+    "sci_flbbcd_cdom_units": {
+      "shape": ["obs"],
+      "type": "double",
+      "attributes": {
+        "_FillValue": { "type": "double", "data": -9999.9},
+        "long_name": "CDOM",
+        "observation_type": "measured",
+        "platform": "platform",
+        "standard_name": "concentration_of_coloured_dissolved_organic_matter",
+        "units": "ppb",
+        "ioos_category": "Other"
       }
     }
   },
