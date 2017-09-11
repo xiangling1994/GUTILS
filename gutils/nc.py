@@ -121,7 +121,7 @@ def update_geographic_attributes(ncd, profile):
     miny = profile.y.min().round(5)
     maxy = profile.y.max().round(5)
     minx = profile.x.min().round(5)
-    maxx = profile.y.max().round(5)
+    maxx = profile.x.max().round(5)
     ncd.setncattr('geospatial_lat_min', miny)
     ncd.setncattr('geospatial_lat_max', maxy)
     ncd.setncattr('geospatial_lon_min', minx)
