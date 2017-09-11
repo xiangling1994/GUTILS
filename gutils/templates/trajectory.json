@@ -191,8 +191,8 @@
         "_FillValue": { "type": "int", "data": -999},
         "comment": "Sequential profile number within the trajectory.  This value is unique in each file that is part of a single trajectory/deployment.",
         "long_name": "Profile ID",
-        "valid_max": 2147483647,
-        "valid_min": 1,
+        "valid_max": { "type": "int", "data": 2147483647},
+        "valid_min": { "type": "int", "data": 0},
         "cf_role": "profile_id",
         "ioos_category": "Identifier"
       }
