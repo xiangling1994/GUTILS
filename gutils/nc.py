@@ -210,10 +210,18 @@ def create_netcdf(attrs, data, output_path, mode):
             # We add this back in later as seconds since epoch
             profile.drop('profile_id', axis=1, inplace=True)
 
+            axis_names = {
+                't': 'time',
+                'z': 'depth',
+                'x': 'lon',
+                'y': 'lat'
+            }
+
             # Use pocean to create NetCDF file
             with IncompleteMultidimensionalTrajectory.from_dataframe(
                     profile,
                     tmp_path,
+                    axis_names=axis_names,
                     reduce_dims=True,
                     mode='a') as ncd:
 
@@ -230,11 +238,6 @@ def create_netcdf(attrs, data, output_path, mode):
                 # Set the creation dates and history
                 update_creation_attributes(ncd, profile)
 
-                # Standardize some variable names before applying the metadata dict
-                ncd.renameVariable('latitude', 'lat')
-                ncd.renameVariable('longitude', 'lon')
-                ncd.renameVariable('z', 'depth')
-
                 # AFTER RENAMING VARIABLES
                 # Load metadata from config files to create the skeleton
                 # This will create scalar variables but not assign the data
@@ -248,10 +251,15 @@ def create_netcdf(attrs, data, output_path, mode):
                     if vname in ncd.variables or ('shape' not in vobj and 'type' in vobj):
                         if 'shape' in vobj:
                             # Assign coordinates
-                            vobj['attributes']['coordinates'] = 'lon lat depth time'
+                            vobj['attributes']['coordinates'] = '{} {} {} {}'.format(
+                                axis_names.get('t'),
+                                axis_names.get('z'),
+                                axis_names.get('x'),
+                                axis_names.get('y'),
+                            )
                         vars_to_update[vname] = vobj
                     else:
-                        #L.debug("Skipping missing variable: {}".format(vname))
+                        # L.debug("Skipping missing variable: {}".format(vname))
                         pass
 
                 prof_attrs['variables'] = vars_to_update
