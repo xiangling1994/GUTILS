@@ -86,7 +86,7 @@ def set_profile_data(ncd, profile, profile_index, method=None):
     set_scalar_value(t_value, prof_t)
     set_scalar_value(txy.y, prof_y)
     set_scalar_value(txy.x, prof_x)
-    prof_id[:] = profile_index
+    set_scalar_value(profile_index, prof_id)
 
     ncd.sync()
 
@@ -206,6 +206,9 @@ def create_netcdf(attrs, data, output_path, mode):
                 attrs['trajectory_date']
             )
             profile = profile.assign(trajectory=traj_name)
+
+            # We add this back in later as seconds since epoch
+            profile.drop('profile_id', axis=1, inplace=True)
 
             # Use pocean to create NetCDF file
             with IncompleteMultidimensionalTrajectory.from_dataframe(
