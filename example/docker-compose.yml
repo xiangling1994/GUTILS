@@ -8,7 +8,7 @@ services:
       FTP_USER: thisisme
       FTP_PASSWORD: thisismypass
     volumes:
-      - "./ftp:/data/ftp"
+      - "./run/ftp:/data/ftp"
 
   gutils:
     image: gutils
@@ -18,16 +18,16 @@ services:
       GUTILS_FTP_PASS: thisismypass
       RUN_BINARY_TO_ASCII_WATCH: "yes"
       RUN_ASCII_TO_NETCDF_WATCH: "yes"
-      RUN_NETCDF_TO_FTP_WATCH: "yes"
+      #RUN_NETCDF_TO_FTP_WATCH: "yes"
       RUN_NETCDF_TO_ERDDAP_WATCH: "yes"
       GUTILS_NETCDF_TEMPLATE: ioos_ngdac
     volumes:
-      - "./binary:/gutils/binary"
-      - "./ascii:/gutils/ascii"
-      - "./netcdf:/gutils/netcdf"
-      - "./config:/gutils/config:ro"
-      - "./erddap/content:/gutils/erddap/content"
-      - "./erddap/flag:/gutils/erddap/flag"
+      - "./run/binary:/gutils/binary"
+      - "./run/ascii:/gutils/ascii"
+      - "./run/netcdf:/gutils/netcdf"
+      - "./run/config:/gutils/config:ro"
+      - "./run/erddap/content:/gutils/erddap/content"
+      - "./run/erddap/flag:/gutils/erddap/flag"
     depends_on:
       - ftp
 
@@ -35,29 +35,27 @@ services:
     image: nginx:stable
     volumes:
       - "./nginx.conf:/etc/nginx/nginx.conf:ro"
-      - "./binary:/gutils/binary:ro"
-      - "./ascii:/gutils/ascii:ro"
-      - "./netcdf:/gutils/netcdf:ro"
-      - "./config:/gutils/config:ro"
+      - "./run/binary:/gutils/binary:ro"
+      - "./run/ascii:/gutils/ascii:ro"
+      - "./run/netcdf:/gutils/netcdf:ro"
+      - "./run/config:/gutils/config:ro"
     ports:
       - "20000:80"
 
   erddap:
     image: axiom/docker-erddap
     volumes:
-      - "./erddap/content/datasets.xml:/usr/local/tomcat/content/erddap/datasets.xml"
-      - "./erddap/flag:/erddapData/flag"
-      - "./netcdf:/gutils/netcdf:ro"
+      - "./run/erddap/content/datasets.xml:/usr/local/tomcat/content/erddap/datasets.xml"
+      - "./run/erddap/flag:/erddapData/flag"
+      - "./run/netcdf:/gutils/netcdf:ro"
     ports:
       - "8080:8080"
-    depends_on:
-      - gutils
 
-  download:
-    image: sgs-content
-    volumes:
-      - ./binary:/data/secoora/dev/binary
-      - ./config:/data/secoora/dev/config
-    command: /bin/bash -c "sleep 30; secoora_download.sh"
-    depends_on:
-      - erddap
+  # download:
+  #   image: sgs-content
+  #   volumes:
+  #     - ./run/binary:/data/secoora/dev/binary
+  #     - ./run/config:/data/secoora/dev/config
+  #   command: /bin/bash -c "sleep 30; secoora_download.sh"
+  #   depends_on:
+  #     - erddap

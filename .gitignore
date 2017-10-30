@@ -42,11 +42,11 @@ nosetests.xml
 gutils/tests/output/
 gutils/tests/resources/slocum/real/ascii/*.dat
 gutils/tests/resources/slocum/real/netcdf/**/*.nc
-example/**/*.nc
-example/**/*.dat
-example/ftp/*
-example/config/*
-example/binary/*
-example/erddap/content/*.xml
+example/run/**/*.nc
+example/run/**/*.dat
+example/run/ftp/*
+example/run/config/*
+example/run/binary/*
+example/run/erddap/content/*.xml
 docs/_site
 docs/api

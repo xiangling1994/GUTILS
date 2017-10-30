@@ -24,7 +24,7 @@ import logging
 L = logging.getLogger(__name__)  # noqa
 setup_testing_logger()
 
-config_path = resource('slocum', 'real', 'config', 'bass-20160909T1733')
+config_path = resource('slocum', 'config', 'bass-20160909T1733')
 original_binary = resource('slocum', 'real', 'binary', 'bass-20160909T1733')
 binary_path = output('binary', 'bass-20160909T1733')
 ascii_path = output('ascii', 'bass-20160909T1733')

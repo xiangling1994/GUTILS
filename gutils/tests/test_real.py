@@ -28,7 +28,11 @@ def test_real_deployments(deployment):
     binary_path = resource('slocum', 'real', 'binary', deployment)
     ascii_path = resource('slocum', 'real', 'ascii', deployment)
     netcdf_path = resource('slocum', 'real', 'netcdf', deployment)
-    config_path = resource('slocum', 'real', 'config', deployment)
+    default_configs = resource('slocum', 'real', 'config', deployment)
+
+    # Config path is usually an env variable pointing to a configuration setup
+    all_config_path = os.environ.get('GUTILS_TEST_CONFIG_DIRECTORY', default_configs)
+    config_path = os.path.join(all_config_path, deployment)
 
     # Static args
     args = dict(
@@ -48,7 +52,7 @@ def test_real_deployments(deployment):
             binary_path,
             ascii_path
         )
-        for p in merger.convert(): 
+        for p in merger.convert():
             args['file'] = p['ascii']
             create_dataset(**args)
     finally:

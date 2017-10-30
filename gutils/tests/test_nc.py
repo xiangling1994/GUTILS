@@ -39,7 +39,7 @@ class TestCreateGliderScript(unittest.TestCase):
         args = dict(
             file=resource('slocum', 'usf_bass_2016_253_0_6_sbd.dat'),
             reader_class=SlocumReader,
-            config_path=resource('slocum', 'real', 'config', 'bass-20160909T1733'),
+            config_path=resource('slocum', 'config', 'bass-20160909T1733'),
             output_path=out_base,
             subset=False,
             template='trajectory',
@@ -77,7 +77,7 @@ class TestCreateGliderScript(unittest.TestCase):
             args = dict(
                 file=f,
                 reader_class=SlocumReader,
-                config_path=resource('slocum', 'real', 'config', 'bass-20160909T1733'),
+                config_path=resource('slocum', 'config', 'bass-20160909T1733'),
                 output_path=out_base,
                 subset=False,
                 template='ioos_ngdac',
@@ -112,7 +112,7 @@ class TestCreateGliderScript(unittest.TestCase):
         args = dict(
             file=resource('slocum', 'modena_2015_175_0_9_dbd.dat'),
             reader_class=SlocumReader,
-            config_path=resource('slocum', 'real', 'config', 'modena-2015'),
+            config_path=resource('slocum', 'config', 'modena-2015'),
             output_path=out_base,
             subset=False,
             template='trajectory',
