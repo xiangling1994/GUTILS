@@ -275,7 +275,7 @@ def create_netcdf(attrs, data, output_path, mode):
                         pass
 
                 prof_attrs['variables'] = vars_to_update
-                ncd.__apply_meta_interface__(prof_attrs)
+                ncd.apply_meta(prof_attrs)
 
                 # Set trajectory value
                 ncd.id = traj_name
