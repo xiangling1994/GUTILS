@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import warnings
 
 from gutils import (
     validate_glider_args,
@@ -28,11 +29,13 @@ def calculate_practical_salinity(time, conductivity, temperature, pressure):
     # Convert bar to dbar
     dBar_pressure = pressure * 10
 
-    return SP_from_C(
-        mS_conductivity,
-        temperature,
-        dBar_pressure
-    )
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        return SP_from_C(
+            mS_conductivity,
+            temperature,
+            dBar_pressure
+        )
 
 
 def calculate_density(time, temperature, pressure, salinity, latitude, longitude):
@@ -52,23 +55,26 @@ def calculate_density(time, temperature, pressure, salinity, latitude, longitude
 
     dBar_pressure = pressure * 10
 
-    absolute_salinity = SA_from_SP(
-        salinity,
-        dBar_pressure,
-        longitude,
-        latitude
-    )
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
 
-    conservative_temperature = CT_from_t(
-        absolute_salinity,
-        temperature,
-        dBar_pressure
-    )
+        absolute_salinity = SA_from_SP(
+            salinity,
+            dBar_pressure,
+            longitude,
+            latitude
+        )
 
-    density = rho(
-        absolute_salinity,
-        conservative_temperature,
-        dBar_pressure
-    )
+        conservative_temperature = CT_from_t(
+            absolute_salinity,
+            temperature,
+            dBar_pressure
+        )
 
-    return density
+        density = rho(
+            absolute_salinity,
+            conservative_temperature,
+            dBar_pressure
+        )
+
+        return density
