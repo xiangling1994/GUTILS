@@ -76,15 +76,13 @@ def set_scalar_value(value, ncvar):
         ncvar[:] = value
 
 
-def set_profile_data(ncd, profile, profile_index, method=None):
+def set_profile_data(ncd, profile_txy, profile_index):
     prof_t = ncd.variables['profile_time']
     prof_y = ncd.variables['profile_lat']
     prof_x = ncd.variables['profile_lon']
     prof_id = ncd.variables['profile_id']
 
-    txy = get_profile_data(profile, method=method)
-
-    t_value = txy.t
+    t_value = profile_txy.t
     if isinstance(t_value, datetime):
         t_value = nc4.date2num(
             t_value,
@@ -92,14 +90,14 @@ def set_profile_data(ncd, profile, profile_index, method=None):
             calendar=getattr(prof_t, 'calendar', 'standard')
         )
     set_scalar_value(t_value, prof_t)
-    set_scalar_value(txy.y, prof_y)
-    set_scalar_value(txy.x, prof_x)
+    set_scalar_value(profile_txy.y, prof_y)
+    set_scalar_value(profile_txy.x, prof_x)
     set_scalar_value(profile_index, prof_id)
 
     ncd.sync()
 
 
-def set_uv_data(ncd, profile):
+def set_uv_data(ncd, uv_txy):
     # The uv index should be the second row where v (originally m_water_vx) is not null
     uv_t = ncd.variables['time_uv']
     uv_x = ncd.variables['lon_uv']
@@ -107,9 +105,7 @@ def set_uv_data(ncd, profile):
     uv_u = ncd.variables['u']
     uv_v = ncd.variables['v']
 
-    txy = get_uv_data(profile)
-
-    t_value = txy.t
+    t_value = uv_txy.t
     if isinstance(t_value, datetime):
         t_value = nc4.date2num(
             t_value,
@@ -117,10 +113,10 @@ def set_uv_data(ncd, profile):
             calendar=getattr(uv_t, 'calendar', 'standard')
         )
     set_scalar_value(t_value, uv_t)
-    set_scalar_value(txy.y, uv_y)
-    set_scalar_value(txy.x, uv_x)
-    set_scalar_value(txy.u, uv_u)
-    set_scalar_value(txy.v, uv_v)
+    set_scalar_value(uv_txy.y, uv_y)
+    set_scalar_value(uv_txy.x, uv_x)
+    set_scalar_value(uv_txy.u, uv_u)
+    set_scalar_value(uv_txy.v, uv_v)
 
     ncd.sync()
 
@@ -225,6 +221,14 @@ def create_netcdf(attrs, data, output_path, mode):
                 'y': 'lat'
             }
 
+            # Compute U/V scalar values
+            uv_txy = get_uv_data(profile)
+            if 'u_orig' in profile.columns and 'v_orig' in profile.columns:
+                profile.drop(['u_orig', 'v_orig'], axis=1, inplace=True)
+
+            # Compute profile scalar values
+            profile_txy = get_profile_data(profile, method=None)
+
             # Use pocean to create NetCDF file
             with IncompleteMultidimensionalTrajectory.from_dataframe(
                     profile,
@@ -278,10 +282,10 @@ def create_netcdf(attrs, data, output_path, mode):
                 ncd.variables['trajectory'][0] = traj_name
 
                 # Set profile_* data
-                set_profile_data(ncd, profile, profile_index)
+                set_profile_data(ncd, profile_txy, profile_index)
 
                 # Set *_uv data
-                set_uv_data(ncd, profile)
+                set_uv_data(ncd, uv_txy)
 
             # Move to final destination
             safe_makedirs(os.path.dirname(output_file))
