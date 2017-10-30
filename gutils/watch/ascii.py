@@ -23,10 +23,11 @@ L = logging.getLogger(__name__)
 
 class Ascii2NetcdfProcessor(ProcessEvent):
 
-    def my_init(self, outputs_path, configs_path, subset, **filters):
+    def my_init(self, outputs_path, configs_path, subset, template, **filters):
         self.outputs_path = outputs_path
         self.configs_path = configs_path
         self.subset = subset
+        self.template = template
         self.filters = filters
 
     def valid_file(self, name):
@@ -66,6 +67,7 @@ class Slocum2NetcdfProcessor(Ascii2NetcdfProcessor):
             config_path=glider_config_folder,
             output_path=glider_output_folder,
             subset=self.subset,
+            template=self.template,
             **self.filters
         )
 
@@ -127,6 +129,12 @@ def create_netcdf_arg_parser():
         help='Process all variables - not just those available in a datatype mapping JSON file'
     )
     parser.add_argument(
+        "-t",
+        "--template",
+        help="The template to use when writing netCDF files. Options: [filepath], trajectory, ioos_ngdac",
+        default=os.environ.get('GUTILS_NETCDF_TEMPLATE', 'trajectory')
+    )
+    parser.add_argument(
         "--daemonize",
         help="To daemonize or not to daemonize",
         type=bool,
@@ -150,6 +158,7 @@ def main_to_netcdf():
     outputs = filter_args.pop('outputs')
     subset = filter_args.pop('subset')
     daemonize = filter_args.pop('daemonize')
+    template = filter_args.pop('template')
 
     # Move reader_class to a class
     reader_class = filter_args.pop('reader_class')
@@ -177,6 +186,7 @@ def main_to_netcdf():
             outputs_path=outputs,
             configs_path=configs,
             subset=subset,
+            template=template,
             **filter_args
         )
     notifier = Notifier(wm, processor, read_freq=10)

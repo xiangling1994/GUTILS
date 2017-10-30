@@ -27,7 +27,7 @@ import logging
 L = logging.getLogger(__name__)
 
 
-def read_attrs(config_path):
+def read_attrs(config_path, template=None):
 
     def cfg_file(name):
         return os.path.join(
@@ -35,25 +35,33 @@ def read_attrs(config_path):
             name
         )
 
-    # Load in configurations
-    default_attrs_path = os.path.join(
-        os.path.dirname(__file__),
-        'templates',
-        'trajectory.json'
-    )
+    template = template or 'trajectory'
+
+    if os.path.isfile(template):
+        default_attrs_path = template
+    else:
+        template_dir = os.path.join(os.path.dirname(__file__), 'templates')
+        default_attrs_path = os.path.join(template_dir, '{}.json'.format(template))
+        if not os.path.isfile(default_attrs_path):
+            L.error("Template path {} not found, using defaults.".format(default_attrs_path))
+            default_attrs_path = os.path.join(template_dir, 'trajectory.json')
+
+    # Load in template defaults
     defaults = dict(MetaInterface.from_jsonfile(default_attrs_path))
 
     # Load instruments
     ins = {}
-    ins_attrs_path = cfg_file("instruments.json")
-    if os.path.isfile(ins_attrs_path):
-        ins = dict(MetaInterface.from_jsonfile(ins_attrs_path))
+    if config_path:
+        ins_attrs_path = cfg_file("instruments.json")
+        if os.path.isfile(ins_attrs_path):
+            ins = dict(MetaInterface.from_jsonfile(ins_attrs_path))
 
     # Load deployment attributes (including some global attributes)
     deps = {}
-    deps_attrs_path = cfg_file("deployment.json")
-    if os.path.isfile(deps_attrs_path):
-        deps = dict(MetaInterface.from_jsonfile(deps_attrs_path))
+    if config_path:
+        deps_attrs_path = cfg_file("deployment.json")
+        if os.path.isfile(deps_attrs_path):
+            deps = dict(MetaInterface.from_jsonfile(deps_attrs_path))
 
     # Update, highest precedence updates last
     one = dict_update(defaults, ins)
@@ -340,19 +348,25 @@ def create_arg_parser():
         action='store_false',
         help='Process all variables - not just those available in a datatype mapping JSON file'
     )
+    parser.add_argument(
+        "-t",
+        "--template",
+        help="The template to use when writing netCDF files. Options: None, [filepath], trajectory, ioos_ngdac",
+        default='trajectory'
+    )
     parser.set_defaults(subset=True)
 
     return parser
 
 
-def create_dataset(file, reader_class, config_path, output_path, subset, **filters):
+def create_dataset(file, reader_class, config_path, output_path, subset, template, **filters):
 
     processed_df, mode = process_dataset(file, reader_class, **filters)
 
     if processed_df is None:
         return 1
 
-    attrs = read_attrs(config_path)
+    attrs = read_attrs(config_path, template=template)
 
     # Optionally, remove any variables from the dataframe that do not have metadata assigned
     if subset is True:
@@ -364,6 +378,8 @@ def create_dataset(file, reader_class, config_path, output_path, subset, **filte
             'x',
             'y',
             'z',
+            'u_orig',
+            'v_orig'
         ]
         removable_columns = all_columns - set(reserved_columns)
         orphans = removable_columns - set(attrs.get('variables', {}).keys())
@@ -387,6 +403,7 @@ def main_create():
     config_path = filter_args.pop('config_path')
     output_path = filter_args.pop('output_path')
     subset = filter_args.pop('subset')
+    template = filter_args.pop('template')
 
     # Move reader_class to a class
     reader_class = filter_args.pop('reader_class')
@@ -399,6 +416,7 @@ def main_create():
         config_path=config_path,
         output_path=output_path,
         subset=subset,
+        template=template,
         **filter_args
     )
 

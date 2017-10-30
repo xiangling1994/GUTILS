@@ -1,0 +1,358 @@
+{
+  "dimensions": {
+    "obs": -1
+  },
+  "variables": {
+    "crs" : {
+      "type": "int",
+      "attributes": {
+        "long_name": "http://www.opengis.net/def/crs/EPSG/0/4326",
+        "grid_mapping_name": "latitude_longitude",
+        "epsg_code": "EPSG:4326",
+        "semi_major_axis": 6378137.0,
+        "inverse_flattening": 298.257223563,
+        "ioos_category": "Other"
+      }
+    },
+    "conductivity": {
+      "shape": ["obs"],
+      "type": "double",
+      "attributes": {
+        "_FillValue": { "type": "double", "data": -9999.9},
+        "long_name": "Sea Water Electrical Conductivity",
+        "observation_type": "measured",
+        "platform": "platform",
+        "standard_name": "sea_water_electrical_conductivity",
+        "units": "S.m-1",
+        "valid_max": { "type": "double", "data": 10.0},
+        "valid_min": { "type": "double", "data": 0.0},
+        "ioos_category": "Salinity",
+        "colorBarMaximum": { "type": "double", "data": 9.0},
+        "colorBarMinimum": { "type": "double", "data": 0.0}
+      }
+    },
+    "density": {
+      "shape": ["obs"],
+      "type": "double",
+      "attributes": {
+        "_FillValue": { "type": "double", "data": -9999.9},
+        "long_name": "Sea Water Density",
+        "observation_type": "calculated",
+        "platform": "platform",
+        "standard_name": "sea_water_density",
+        "units": "kg.m-3",
+        "valid_max": { "type": "double", "data": 1040.0},
+        "valid_min": { "type": "double", "data": 1015.0},
+        "ioos_category": "Other",
+        "colorBarMaximum": { "type": "double", "data": 1032.0},
+        "colorBarMinimum": { "type": "double", "data": 1020.0}
+      }
+    },
+    "depth": {
+      "shape": ["obs"],
+      "type": "double",
+      "attributes": {
+        "_FillValue": { "type": "double", "data": -9999.9},
+        "long_name": "Depth",
+        "observation_type": "calculated",
+        "platform": "platform",
+        "positive": "down",
+        "reference_datum": "sea-surface",
+        "standard_name": "depth",
+        "units": "m",
+        "valid_max": { "type": "double", "data": 2000.0},
+        "valid_min": { "type": "double", "data": 0.0},
+        "ioos_category": "Location",
+        "colorBarMaximum": { "type": "double", "data": 2000.0},
+        "colorBarMinimum": { "type": "double", "data": 0.0},
+        "colorBarPalette": "OceanDepth"
+      }
+    },
+    "lat": {
+      "shape": ["obs"],
+      "type": "double",
+      "attributes": {
+        "_FillValue": { "type": "double", "data": -9999.9},
+        "comment": "Interpolated latitude at each point in the time-series",
+        "coordinate_reference_frame": "urn:ogc:crs:EPSG::4326",
+        "long_name": "Precise Latitude",
+        "observation_type": "measured",
+        "platform": "platform",
+        "reference": "WGS84",
+        "standard_name": "latitude",
+        "units": "degrees_north",
+        "valid_max": { "type": "double", "data": 90.0},
+        "valid_min": { "type": "double", "data": -90.0},
+        "ioos_category": "Location",
+        "colorBarMaximum": { "type": "double", "data": 90.0},
+        "colorBarMinimum": { "type": "double", "data": -90.0}
+      }
+    },
+    "lat_uv": {
+      "type": "double",
+      "attributes": {
+        "_FillValue": { "type": "double", "data": -9999.9},
+        "comment": "The depth-averaged current is an estimate of the net current measured while the glider is underwater.  The value is calculated over the entire underwater segment, which may consist of 1 or more dives.",
+        "long_name": "Depth-Averaged Latitude",
+        "observation_type": "calculated",
+        "platform": "platform",
+        "standard_name": "latitude",
+        "units": "degrees_north",
+        "valid_max": { "type": "double", "data": 90.0},
+        "valid_min": { "type": "double", "data": -90.0},
+        "ioos_category": "Location",
+        "colorBarMaximum": { "type": "double", "data": 90.0},
+        "colorBarMinimum": { "type": "double", "data": -90.0}
+      }
+    },
+    "lon": {
+      "shape": ["obs"],
+      "type": "double",
+      "attributes": {
+        "_FillValue": { "type": "double", "data": -9999.9},
+        "comment": "Interpolated longitude at each point in the time-series.",
+        "coordinate_reference_frame": "urn:ogc:crs:EPSG::4326",
+        "long_name": "Precise Longitude",
+        "observation_type": "measured",
+        "platform": "platform",
+        "reference": "WGS84",
+        "standard_name": "longitude",
+        "units": "degrees_east",
+        "valid_max": { "type": "double", "data": 180.0},
+        "valid_min": { "type": "double", "data": -180.0},
+        "ioos_category": "Location",
+        "colorBarMaximum": { "type": "double", "data": 180.0},
+        "colorBarMinimum": { "type": "double", "data": -180.0}
+      }
+    },
+    "lon_uv": {
+      "type": "double",
+      "attributes": {
+        "_FillValue": { "type": "double", "data": -9999.9},
+        "comment": "The depth-averaged current is an estimate of the net current measured while the glider is underwater.  The value is calculated over the entire underwater segment, which may consist of 1 or more dives.",
+        "long_name": "Depth-Averaged Longitude",
+        "observation_type": "calculated",
+        "platform": "platform",
+        "standard_name": "longitude",
+        "units": "degrees_east",
+        "valid_max": { "type": "double", "data": 180.0},
+        "valid_min": { "type": "double", "data": -180.0},
+        "ioos_category": "Location",
+        "colorBarMaximum": { "type": "double", "data": 180.0},
+        "colorBarMinimum": { "type": "double", "data": -180.0}
+      }
+    },
+    "platform": {
+      "type": "int",
+      "attributes": {
+        "_FillValue": { "type": "int", "data": -999},
+        "type": "platform",
+        "long_name": "Platform Metadata",
+        "ioos_category": "Identifier",
+        "wmo_id": ""
+      }
+    },
+    "pressure": {
+      "shape": ["obs"],
+      "type": "double",
+      "attributes": {
+        "_FillValue": { "type": "double", "data": -9999.9},
+        "long_name": "Sea Water Pressure",
+        "observation_type": "measured",
+        "platform": "platform",
+        "positive": "down",
+        "reference_datum": "sea-surface",
+        "standard_name": "sea_water_pressure",
+        "units": "dbar",
+        "valid_max": { "type": "double", "data": 2000.0},
+        "valid_min": { "type": "double", "data": 0.0},
+        "ioos_category": "Pressure",
+        "colorBarMaximum": { "type": "double", "data": 2000.0},
+        "colorBarMinimum": { "type": "double", "data": 0.0}
+      }
+    },
+    "profile_id": {
+      "type": "int",
+      "attributes": {
+        "_FillValue": { "type": "int", "data": -999},
+        "comment": "Sequential profile number within the trajectory.  This value is unique in each file that is part of a single trajectory/deployment.",
+        "long_name": "Profile ID",
+        "valid_max": { "type": "int", "data": 2147483647},
+        "valid_min": { "type": "int", "data": 0},
+        "cf_role": "profile_id",
+        "ioos_category": "Identifier"
+      }
+    },
+    "profile_lat": {
+      "type": "double",
+      "attributes": {
+        "_FillValue": { "type": "double", "data": -9999.9},
+        "comment": "Value is interpolated to provide an estimate of the latitude at the mid-point of the profile",
+        "long_name": "Profile Latitude",
+        "observation_type": "calculated",
+        "platform": "platform",
+        "standard_name": "latitude",
+        "units": "degrees_north",
+        "valid_max": { "type": "double", "data": 90.0},
+        "valid_min": { "type": "double", "data": -90.0},
+        "ioos_category": "Location",
+        "colorBarMaximum": { "type": "double", "data": 90.0},
+        "colorBarMinimum": { "type": "double", "data": -90.0}
+      }
+    },
+    "profile_lon": {
+      "type": "double",
+      "attributes": {
+        "_FillValue": { "type": "double", "data": -9999.9},
+        "comment": "Value is interpolated to provide an estimate of the longitude at the mid-point of the profile",
+        "long_name": "Profile Longitude",
+        "observation_type": "calculated",
+        "platform": "platform",
+        "standard_name": "longitude",
+        "units": "degrees_east",
+        "valid_max": { "type": "double", "data": 180.0},
+        "valid_min": { "type": "double", "data": -180.0},
+        "ioos_category": "Location",
+        "colorBarMaximum": { "type": "double", "data": 180.0},
+        "colorBarMinimum": { "type": "double", "data": -180.0}
+      }
+    },
+    "profile_time": {
+      "type": "double",
+      "attributes": {
+        "_FillValue": { "type": "double", "data": -9999.9},
+        "calendar": "gregorian",
+        "comment": "Timestamp corresponding to the mid-point of the profile",
+        "long_name": "Profile Time",
+        "observation_type": "calculated",
+        "platform": "platform",
+        "standard_name": "time",
+        "units": "seconds since 1990-01-01T00:00:00Z",
+        "ioos_category": "Time"
+      }
+    },
+    "salinity": {
+      "shape": ["obs"],
+      "type": "double",
+      "attributes": {
+        "_FillValue": { "type": "double", "data": -9999.9},
+        "long_name": "Sea Water Practical Salinity",
+        "observation_type": "calculated",
+        "platform": "platform",
+        "standard_name": "sea_water_practical_salinity",
+        "units": "1e-3",
+        "valid_max": { "type": "double", "data": 40.0},
+        "valid_min": { "type": "double", "data": 0.0},
+        "ioos_category": "Salinity",
+        "colorBarMaximum": { "type": "double", "data": 37.0},
+        "colorBarMinimum": { "type": "double", "data": 30.0}
+      }
+    },
+    "temperature": {
+      "shape": ["obs"],
+      "type": "double",
+      "attributes": {
+        "_FillValue": { "type": "double", "data": -9999.9},
+        "accuracy": "",
+        "long_name": "Sea Water Temperature",
+        "observation_type": "measured",
+        "platform": "platform",
+        "precision": "",
+        "resolution": "",
+        "standard_name": "sea_water_temperature",
+        "units": "degree_Celsius",
+        "valid_max": { "type": "double", "data": 40.0},
+        "valid_min": { "type": "double", "data": -5.0},
+        "ioos_category": "Temperature",
+        "colorBarMaximum": { "type": "double", "data": 32},
+        "colorBarMinimum": { "type": "double", "data": 0}
+      }
+    },
+    "time": {
+      "shape": ["obs"],
+      "type": "double",
+      "attributes": {
+        "calendar": "gregorian",
+        "comment": "Measured or calculated time at each point in the time-series",
+        "long_name": "Time",
+        "observation_type": "measured",
+        "standard_name": "time",
+        "units": "seconds since 1990-01-01T00:00:00Z",
+        "ioos_category": "Time"
+      }
+    },
+    "time_uv": {
+      "type": "double",
+      "attributes": {
+        "_FillValue": { "type": "double", "data": -9999.9},
+        "calendar": "gregorian",
+        "comment": "The depth-averaged current is an estimate of the net current measured while the glider is underwater.  The value is calculated over the entire underwater segment, which may consist of 1 or more dives.",
+        "long_name": "Depth-Averaged Time",
+        "observation_type": "calculated",
+        "standard_name": "time",
+        "units": "seconds since 1990-01-01T00:00:00Z",
+        "ioos_category": "Time"
+      }
+    },
+    "trajectory": {
+      "type": "char",
+      "attributes": {
+        "cf_role": "trajectory_id",
+        "comment": "A trajectory is a single deployment of a glider and may span multiple data files.",
+        "long_name": "Trajectory/Deployment Name",
+        "ioos_category": "Identifier"
+      }
+    },
+    "u": {
+      "type": "double",
+      "attributes": {
+        "_FillValue": { "type": "double", "data": -9999.9},
+        "comment": "The depth-averaged current is an estimate of the net current measured while the glider is underwater.  The value is calculated over the entire underwater segment, which may consist of 1 or more dives.",
+        "long_name": "Depth-Averaged Eastward Sea Water Velocity",
+        "observation_type": "calculated",
+        "platform": "platform",
+        "standard_name": "eastward_sea_water_velocity",
+        "units": "m.s-1",
+        "valid_max": { "type": "double", "data": 10.0},
+        "valid_min": { "type": "double", "data": -10.0},
+        "ioos_category": "Currents",
+        "coordinates": "lon_uv lat_uv time_uv",
+        "colorBarMaximum": { "type": "double", "data": 0.5},
+        "colorBarMinimum": { "type": "double", "data": -0.5}
+      }
+    },
+    "v": {
+      "type": "double",
+      "attributes": {
+        "_FillValue": { "type": "double", "data": -9999.9},
+        "comment": "The depth-averaged current is an estimate of the net current measured while the glider is underwater.  The value is calculated over the entire underwater segment, which may consist of 1 or more dives.",
+        "long_name": "Depth-Averaged Northward Sea Water Velocity",
+        "observation_type": "calculated",
+        "platform": "platform",
+        "standard_name": "northward_sea_water_velocity",
+        "units": "m.s-1",
+        "valid_max": { "type": "double", "data": 10.0},
+        "valid_min": { "type": "double", "data": -10.0},
+        "ioos_category": "Currents",
+        "coordinates": "lon_uv lat_uv time_uv",
+        "colorBarMaximum": { "type": "double", "data": 0.5},
+        "colorBarMinimum": { "type": "double", "data": -0.5}
+      }
+    }
+  },
+  "attributes": {
+    "cdm_data_type": "trajectory",
+    "Conventions": "CF-1.6, Unidata Dataset Discovery v1.0",
+    "format_version": "IOOS_Glider_NetCDF_v3.0-noqartod.nc",
+    "keywords": "AUVS > Autonomous Underwater Vehicles, Oceans > Ocean Pressure > Water Pressure, Oceans > Ocean Temperature > Water Temperature, Oceans > Salinity/Density > Conductivity, Oceans > Salinity/Density > Density, Oceans > Salinity/Density > Salinity",
+    "keywords_vocabulary": "GCMD Science Keywords",
+    "license": "This data may be redistributed and used without restriction.  Data provided as is with no expressed or implied assurance of quality assurance or quality control",
+    "Metadata_Conventions": "CF-1.6, Unidata Dataset Discovery v1.0",
+    "platform_type": "Slocum Glider",
+    "processing_level": "Dataset taken from glider native file format and is provided as is with no expressed or implied assurance of quality assurance or quality control.",
+    "source": "Observational data from a profiling glider",
+    "standard_name_vocabulary": "CF-v25",
+    "summary": "Gliders are small, free-swimming, unmanned vehicles that use changes in buoyancy to move vertically and horizontally through the water column in a saw-tooth pattern. They are deployed for days to several months and gather detailed information about the physical, chemical and biological processes of the water.",
+    "title": "Glider Dataset"
+  }
+}

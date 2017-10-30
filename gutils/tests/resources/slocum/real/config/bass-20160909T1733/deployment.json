@@ -67,11 +67,6 @@
             "attributes": {
                 "instrument": "instrument_ctd"
             }
-        },
-        "m_altitude": {
-            "attributes": {
-                "instrument": "instrument_altitude"
-            }
         }
     }
 }

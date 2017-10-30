@@ -20,6 +20,7 @@ services:
       RUN_ASCII_TO_NETCDF_WATCH: "yes"
       RUN_NETCDF_TO_FTP_WATCH: "yes"
       RUN_NETCDF_TO_ERDDAP_WATCH: "yes"
+      GUTILS_NETCDF_TEMPLATE: ioos_ngdac
     volumes:
       - "./binary:/gutils/binary"
       - "./ascii:/gutils/ascii"

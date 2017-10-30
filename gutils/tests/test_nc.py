@@ -42,6 +42,7 @@ class TestCreateGliderScript(unittest.TestCase):
             config_path=resource('slocum', 'real', 'config', 'bass-20160909T1733'),
             output_path=out_base,
             subset=False,
+            template='trajectory',
             filter_distance=1,
             filter_points=5,
             filter_time=10,
@@ -55,10 +56,12 @@ class TestCreateGliderScript(unittest.TestCase):
 
         # First profile
         with nc4.Dataset(output_files[0]) as ncd:
+            assert ncd.variables['profile_id'].ndim == 0
             assert ncd.variables['profile_id'][0] == 1473499507
 
         # Last profile
         with nc4.Dataset(output_files[-1]) as ncd:
+            assert ncd.variables['profile_id'].ndim == 0
             assert ncd.variables['profile_id'][0] == 1473509118
 
         # Check netCDF file for compliance
@@ -77,6 +80,7 @@ class TestCreateGliderScript(unittest.TestCase):
                 config_path=resource('slocum', 'real', 'config', 'bass-20160909T1733'),
                 output_path=out_base,
                 subset=False,
+                template='ioos_ngdac',
                 filter_distance=1,
                 filter_points=5,
                 filter_time=10,
@@ -89,10 +93,12 @@ class TestCreateGliderScript(unittest.TestCase):
 
         # First profile
         with nc4.Dataset(output_files[0]) as ncd:
+            assert ncd.variables['profile_id'].ndim == 0
             assert ncd.variables['profile_id'][0] == 1473428494
 
         # Last profile
         with nc4.Dataset(output_files[-1]) as ncd:
+            assert ncd.variables['profile_id'].ndim == 0
             assert ncd.variables['profile_id'][0] == 1473509118
 
         # Check netCDF file for compliance
@@ -109,6 +115,7 @@ class TestCreateGliderScript(unittest.TestCase):
             config_path=resource('slocum', 'real', 'config', 'modena-2015'),
             output_path=out_base,
             subset=False,
+            template='trajectory',
             filter_distance=1,
             filter_points=5,
             filter_time=10,
@@ -122,10 +129,12 @@ class TestCreateGliderScript(unittest.TestCase):
 
         # First profile
         with nc4.Dataset(output_files[0]) as ncd:
+            assert ncd.variables['profile_id'].ndim == 0
             assert ncd.variables['profile_id'][0] == 1435257435
 
         # Last profile
         with nc4.Dataset(output_files[-1]) as ncd:
+            assert ncd.variables['profile_id'].ndim == 0
             assert ncd.variables['profile_id'][0] == 1435264145
 
         # Check netCDF file for compliance

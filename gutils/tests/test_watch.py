@@ -106,6 +106,7 @@ class TestWatchClasses(unittest.TestCase):
             outputs_path=os.path.dirname(netcdf_path),
             configs_path=os.path.dirname(config_path),
             subset=False,
+            template='trajectory',
             filter_distance=1,
             filter_points=5,
             filter_time=10,
