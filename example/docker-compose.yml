@@ -10,6 +10,12 @@ services:
     volumes:
       - "./run/ftp:/data/ftp"
 
+  config:
+    image: sgs-content
+    volumes:
+      - ./run/config:/data/secoora/dev/config
+    command: /sbin/my_init -- secoora_config_sync
+
   gutils:
     image: gutils
     environment:
@@ -18,7 +24,7 @@ services:
       GUTILS_FTP_PASS: thisismypass
       RUN_BINARY_TO_ASCII_WATCH: "yes"
       RUN_ASCII_TO_NETCDF_WATCH: "yes"
-      #RUN_NETCDF_TO_FTP_WATCH: "yes"
+      RUN_NETCDF_TO_FTP_WATCH: "yes"
       RUN_NETCDF_TO_ERDDAP_WATCH: "yes"
       GUTILS_NETCDF_TEMPLATE: ioos_ngdac
     volumes:
@@ -30,6 +36,7 @@ services:
       - "./run/erddap/flag:/gutils/erddap/flag"
     depends_on:
       - ftp
+      - config
 
   browse:
     image: nginx:stable
@@ -51,11 +58,12 @@ services:
     ports:
       - "8080:8080"
 
-  # download:
+  # data:
   #   image: sgs-content
   #   volumes:
   #     - ./run/binary:/data/secoora/dev/binary
-  #     - ./run/config:/data/secoora/dev/config
-  #   command: /bin/bash -c "sleep 30; secoora_download.sh"
+  #   command: /sbin/my_init -- sleep 30; secoora_skio_dl ramses-20170905T1728 "ramses-2017-24[0-9]-*.*bd"
   #   depends_on:
-  #     - erddap
+  #     - ftp
+  #     - config
+  #     - gutils
