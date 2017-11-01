@@ -1,0 +1,409 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>gutils package &#8212; gutils 2.3.0 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '2.3.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-gutils">
+<span id="gutils-package"></span><h1>gutils package<a class="headerlink" href="#module-gutils" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="gutils.boxcar_smooth_dataset">
+<code class="descclassname">gutils.</code><code class="descname">boxcar_smooth_dataset</code><span class="sig-paren">(</span><em>dataset</em>, <em>window_size</em><span class="sig-paren">)</span><a class="headerlink" href="#gutils.boxcar_smooth_dataset" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="gutils.generate_stream">
+<code class="descclassname">gutils.</code><code class="descname">generate_stream</code><span class="sig-paren">(</span><em>processArgs</em><span class="sig-paren">)</span><a class="headerlink" href="#gutils.generate_stream" title="Permalink to this definition">¶</a></dt>
+<dd><p>Runs a given process and outputs the resulting text as a StringIO</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>processArgs</strong> (<em>list</em>) – Arguments to run in a process</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Resulting text</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">StringIO</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="gutils.get_decimal_degrees">
+<code class="descclassname">gutils.</code><code class="descname">get_decimal_degrees</code><span class="sig-paren">(</span><em>lat_lon</em><span class="sig-paren">)</span><a class="headerlink" href="#gutils.get_decimal_degrees" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts NMEA GPS format (DDDmm.mmmm) to decimal degrees (DDD.dddddd)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>lat_lon</strong> (<em>str</em>) – NMEA GPS coordinate (DDDmm.mmmm)</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Decimal degree coordinate (DDD.dddddd) or math.nan</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="gutils.get_profile_data">
+<code class="descclassname">gutils.</code><code class="descname">get_profile_data</code><span class="sig-paren">(</span><em>profile</em>, <em>method=None</em><span class="sig-paren">)</span><a class="headerlink" href="#gutils.get_profile_data" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="gutils.get_uv_data">
+<code class="descclassname">gutils.</code><code class="descname">get_uv_data</code><span class="sig-paren">(</span><em>profile</em><span class="sig-paren">)</span><a class="headerlink" href="#gutils.get_uv_data" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="gutils.interpolate_gps">
+<code class="descclassname">gutils.</code><code class="descname">interpolate_gps</code><span class="sig-paren">(</span><em>timestamps</em>, <em>latitude</em>, <em>longitude</em><span class="sig-paren">)</span><a class="headerlink" href="#gutils.interpolate_gps" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates interpolated GPS coordinates between the two surfacings</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>'dataset'</strong> – An N by 3 numpy array of time, lat, lon pairs</td>
+</tr>
+</tbody>
+</table>
+<p>Returns interpolated gps dataset over entire time domain of dataset</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="gutils.masked_epoch">
+<code class="descclassname">gutils.</code><code class="descname">masked_epoch</code><span class="sig-paren">(</span><em>timeseries</em><span class="sig-paren">)</span><a class="headerlink" href="#gutils.masked_epoch" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="gutils.safe_makedirs">
+<code class="descclassname">gutils.</code><code class="descname">safe_makedirs</code><span class="sig-paren">(</span><em>folder</em><span class="sig-paren">)</span><a class="headerlink" href="#gutils.safe_makedirs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="gutils.setup_cli_logger">
+<code class="descclassname">gutils.</code><code class="descname">setup_cli_logger</code><span class="sig-paren">(</span><em>level=None</em><span class="sig-paren">)</span><a class="headerlink" href="#gutils.setup_cli_logger" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="gutils.validate_glider_args">
+<code class="descclassname">gutils.</code><code class="descname">validate_glider_args</code><span class="sig-paren">(</span><em>*args</em><span class="sig-paren">)</span><a class="headerlink" href="#gutils.validate_glider_args" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validates a glider dataset</p>
+<p>Performs the following changes and checks:
+* Makes sure that there are at least 2 points in the dataset
+* Checks for netCDF4 fill types and changes them to NaNs
+* Tests for finite values in time and depth arrays</p>
+</dd></dl>
+
+<div class="section" id="subpackages">
+<h2>Subpackages<a class="headerlink" href="#subpackages" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="gutils.slocum.html">gutils.slocum package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gutils.watch.html">gutils.watch package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="gutils.watch.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gutils.watch.html#module-gutils.watch.ascii">gutils.watch.ascii module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gutils.watch.html#module-gutils.watch.binary">gutils.watch.binary module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gutils.watch.html#module-gutils.watch.netcdf">gutils.watch.netcdf module</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-gutils.ctd">
+<span id="gutils-ctd-module"></span><h2>gutils.ctd module<a class="headerlink" href="#module-gutils.ctd" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="gutils.ctd.calculate_density">
+<code class="descclassname">gutils.ctd.</code><code class="descname">calculate_density</code><span class="sig-paren">(</span><em>time</em>, <em>temperature</em>, <em>pressure</em>, <em>salinity</em>, <em>latitude</em>, <em>longitude</em><span class="sig-paren">)</span><a class="headerlink" href="#gutils.ctd.calculate_density" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates density given glider practical salinity, pressure, latitude,
+and longitude using Gibbs gsw SA_from_SP and rho functions.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>time</strong> (<em>UNIX epoch</em>) – </li>
+<li><strong>temperature</strong> (<em>C</em><em>)</em><em>, </em><em>pressure</em><em> (</em><em>bar</em><em>)</em><em>, </em><em>salinity</em><em> (</em><em>psu PSS-78</em>) – </li>
+<li><strong>latitude</strong> (<em>decimal degrees</em><em>)</em><em>, </em><em>longitude</em><em> (</em><em>decimal degrees</em>) – </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">density (kg/m**3),</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="gutils.ctd.calculate_practical_salinity">
+<code class="descclassname">gutils.ctd.</code><code class="descname">calculate_practical_salinity</code><span class="sig-paren">(</span><em>time</em>, <em>conductivity</em>, <em>temperature</em>, <em>pressure</em><span class="sig-paren">)</span><a class="headerlink" href="#gutils.ctd.calculate_practical_salinity" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates practical salinity given glider conductivity, temperature,
+and pressure using Gibbs gsw SP_from_C function.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>conductivity</strong> (<em>time</em><em>,</em>) – </td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">salinity (psu PSS-78).</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-gutils.filters">
+<span id="gutils-filters-module"></span><h2>gutils.filters module<a class="headerlink" href="#module-gutils.filters" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="gutils.filters.default_filter">
+<code class="descclassname">gutils.filters.</code><code class="descname">default_filter</code><span class="sig-paren">(</span><em>dataset</em><span class="sig-paren">)</span><a class="headerlink" href="#gutils.filters.default_filter" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="gutils.filters.filter_profile_depth">
+<code class="descclassname">gutils.filters.</code><code class="descname">filter_profile_depth</code><span class="sig-paren">(</span><em>dataset</em>, <em>below=None</em>, <em>reindex=True</em><span class="sig-paren">)</span><a class="headerlink" href="#gutils.filters.filter_profile_depth" title="Permalink to this definition">¶</a></dt>
+<dd><p>Filters out profiles that are not completely below a certain depth (Default: 1m). This is
+depth positive down.</p>
+<p>Returns a DataFrame with a subset of profiles</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="gutils.filters.filter_profile_distance">
+<code class="descclassname">gutils.filters.</code><code class="descname">filter_profile_distance</code><span class="sig-paren">(</span><em>dataset</em>, <em>distance_condition=None</em>, <em>reindex=True</em><span class="sig-paren">)</span><a class="headerlink" href="#gutils.filters.filter_profile_distance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Filters out profiles that do not span a specified vertical distance
+(Default: 1m)</p>
+<p>Returns a DataFrame with a subset of profiles</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="gutils.filters.filter_profile_number_of_points">
+<code class="descclassname">gutils.filters.</code><code class="descname">filter_profile_number_of_points</code><span class="sig-paren">(</span><em>dataset</em>, <em>points_condition=None</em>, <em>reindex=True</em><span class="sig-paren">)</span><a class="headerlink" href="#gutils.filters.filter_profile_number_of_points" title="Permalink to this definition">¶</a></dt>
+<dd><p>Filters out profiles that do not have a specified number of points
+(Default: 5 points)</p>
+<p>Returns a DataFrame with a subset of profiles</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="gutils.filters.filter_profile_timeperiod">
+<code class="descclassname">gutils.filters.</code><code class="descname">filter_profile_timeperiod</code><span class="sig-paren">(</span><em>dataset</em>, <em>timespan_condition=None</em>, <em>reindex=True</em><span class="sig-paren">)</span><a class="headerlink" href="#gutils.filters.filter_profile_timeperiod" title="Permalink to this definition">¶</a></dt>
+<dd><p>Filters out profiles that do not span a specified number of seconds
+(Default: 10 seconds)</p>
+<p>Returns a DataFrame with a subset of profiles</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="gutils.filters.filter_profiles">
+<code class="descclassname">gutils.filters.</code><code class="descname">filter_profiles</code><span class="sig-paren">(</span><em>dataset</em>, <em>conditional</em>, <em>reindex=True</em><span class="sig-paren">)</span><a class="headerlink" href="#gutils.filters.filter_profiles" title="Permalink to this definition">¶</a></dt>
+<dd><p>Filters out profiles that do not meet some criteria</p>
+<p>Returns the filtered set of profiles</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="gutils.filters.process_dataset">
+<code class="descclassname">gutils.filters.</code><code class="descname">process_dataset</code><span class="sig-paren">(</span><em>file</em>, <em>reader_class</em>, <em>filter_z=None</em>, <em>filter_points=None</em>, <em>filter_time=None</em>, <em>filter_distance=None</em><span class="sig-paren">)</span><a class="headerlink" href="#gutils.filters.process_dataset" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-gutils.nc">
+<span id="gutils-nc-module"></span><h2>gutils.nc module<a class="headerlink" href="#module-gutils.nc" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="gutils.nc.check_arg_parser">
+<code class="descclassname">gutils.nc.</code><code class="descname">check_arg_parser</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#gutils.nc.check_arg_parser" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="gutils.nc.check_dataset">
+<code class="descclassname">gutils.nc.</code><code class="descname">check_dataset</code><span class="sig-paren">(</span><em>args</em><span class="sig-paren">)</span><a class="headerlink" href="#gutils.nc.check_dataset" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="gutils.nc.create_arg_parser">
+<code class="descclassname">gutils.nc.</code><code class="descname">create_arg_parser</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#gutils.nc.create_arg_parser" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="gutils.nc.create_dataset">
+<code class="descclassname">gutils.nc.</code><code class="descname">create_dataset</code><span class="sig-paren">(</span><em>file</em>, <em>reader_class</em>, <em>config_path</em>, <em>output_path</em>, <em>subset</em>, <em>template</em>, <em>**filters</em><span class="sig-paren">)</span><a class="headerlink" href="#gutils.nc.create_dataset" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="gutils.nc.create_netcdf">
+<code class="descclassname">gutils.nc.</code><code class="descname">create_netcdf</code><span class="sig-paren">(</span><em>attrs</em>, <em>data</em>, <em>output_path</em>, <em>mode</em><span class="sig-paren">)</span><a class="headerlink" href="#gutils.nc.create_netcdf" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="gutils.nc.main_check">
+<code class="descclassname">gutils.nc.</code><code class="descname">main_check</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#gutils.nc.main_check" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="gutils.nc.main_create">
+<code class="descclassname">gutils.nc.</code><code class="descname">main_create</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#gutils.nc.main_create" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="gutils.nc.read_attrs">
+<code class="descclassname">gutils.nc.</code><code class="descname">read_attrs</code><span class="sig-paren">(</span><em>config_path</em>, <em>template=None</em><span class="sig-paren">)</span><a class="headerlink" href="#gutils.nc.read_attrs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="gutils.nc.set_profile_data">
+<code class="descclassname">gutils.nc.</code><code class="descname">set_profile_data</code><span class="sig-paren">(</span><em>ncd</em>, <em>profile_txy</em>, <em>profile_index</em><span class="sig-paren">)</span><a class="headerlink" href="#gutils.nc.set_profile_data" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="gutils.nc.set_scalar_value">
+<code class="descclassname">gutils.nc.</code><code class="descname">set_scalar_value</code><span class="sig-paren">(</span><em>value</em>, <em>ncvar</em><span class="sig-paren">)</span><a class="headerlink" href="#gutils.nc.set_scalar_value" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="gutils.nc.set_uv_data">
+<code class="descclassname">gutils.nc.</code><code class="descname">set_uv_data</code><span class="sig-paren">(</span><em>ncd</em>, <em>uv_txy</em><span class="sig-paren">)</span><a class="headerlink" href="#gutils.nc.set_uv_data" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="gutils.nc.update_creation_attributes">
+<code class="descclassname">gutils.nc.</code><code class="descname">update_creation_attributes</code><span class="sig-paren">(</span><em>ncd</em>, <em>profile</em><span class="sig-paren">)</span><a class="headerlink" href="#gutils.nc.update_creation_attributes" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="gutils.nc.update_geographic_attributes">
+<code class="descclassname">gutils.nc.</code><code class="descname">update_geographic_attributes</code><span class="sig-paren">(</span><em>ncd</em>, <em>profile</em><span class="sig-paren">)</span><a class="headerlink" href="#gutils.nc.update_geographic_attributes" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="gutils.nc.update_temporal_attributes">
+<code class="descclassname">gutils.nc.</code><code class="descname">update_temporal_attributes</code><span class="sig-paren">(</span><em>ncd</em>, <em>profile</em><span class="sig-paren">)</span><a class="headerlink" href="#gutils.nc.update_temporal_attributes" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="gutils.nc.update_vertical_attributes">
+<code class="descclassname">gutils.nc.</code><code class="descname">update_vertical_attributes</code><span class="sig-paren">(</span><em>ncd</em>, <em>profile</em><span class="sig-paren">)</span><a class="headerlink" href="#gutils.nc.update_vertical_attributes" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-gutils.yo">
+<span id="gutils-yo-module"></span><h2>gutils.yo module<a class="headerlink" href="#module-gutils.yo" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="gutils.yo.assign_profiles">
+<code class="descclassname">gutils.yo.</code><code class="descname">assign_profiles</code><span class="sig-paren">(</span><em>df</em>, <em>tsint=None</em><span class="sig-paren">)</span><a class="headerlink" href="#gutils.yo.assign_profiles" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the start and stop timestamps for every profile indexed from the
+depth timeseries
+:param time, depth:</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">A Nx2 array of the start and stop timestamps indexed from the yo</td>
+</tr>
+</tbody>
+</table>
+<p>Use filter_yo_extrema to remove invalid/incomplete profiles</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="gutils.yo.binarize_diff">
+<code class="descclassname">gutils.yo.</code><code class="descname">binarize_diff</code><span class="sig-paren">(</span><em>data</em><span class="sig-paren">)</span><a class="headerlink" href="#gutils.yo.binarize_diff" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="gutils.yo.calculate_delta_depth">
+<code class="descclassname">gutils.yo.</code><code class="descname">calculate_delta_depth</code><span class="sig-paren">(</span><em>interp_data</em><span class="sig-paren">)</span><a class="headerlink" href="#gutils.yo.calculate_delta_depth" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">gutils package</a><ul>
+<li><a class="reference internal" href="#subpackages">Subpackages</a></li>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-gutils.ctd">gutils.ctd module</a></li>
+<li><a class="reference internal" href="#module-gutils.filters">gutils.filters module</a></li>
+<li><a class="reference internal" href="#module-gutils.nc">gutils.nc module</a></li>
+<li><a class="reference internal" href="#module-gutils.yo">gutils.yo module</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, Kyle Wilcox.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

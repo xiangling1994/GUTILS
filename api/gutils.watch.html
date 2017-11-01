@@ -1,0 +1,318 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>gutils.watch package &#8212; gutils 2.3.0 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '2.3.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-gutils.watch">
+<span id="gutils-watch-package"></span><h1>gutils.watch package<a class="headerlink" href="#module-gutils.watch" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-gutils.watch.ascii">
+<span id="gutils-watch-ascii-module"></span><h2>gutils.watch.ascii module<a class="headerlink" href="#module-gutils.watch.ascii" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="gutils.watch.ascii.Ascii2NetcdfProcessor">
+<em class="property">class </em><code class="descclassname">gutils.watch.ascii.</code><code class="descname">Ascii2NetcdfProcessor</code><span class="sig-paren">(</span><em>pevent=None</em>, <em>**kargs</em><span class="sig-paren">)</span><a class="headerlink" href="#gutils.watch.ascii.Ascii2NetcdfProcessor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">pyinotify.ProcessEvent</span></code></p>
+<dl class="method">
+<dt id="gutils.watch.ascii.Ascii2NetcdfProcessor.my_init">
+<code class="descname">my_init</code><span class="sig-paren">(</span><em>outputs_path</em>, <em>configs_path</em>, <em>subset</em>, <em>template</em>, <em>**filters</em><span class="sig-paren">)</span><a class="headerlink" href="#gutils.watch.ascii.Ascii2NetcdfProcessor.my_init" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="gutils.watch.ascii.Ascii2NetcdfProcessor.process_IN_CLOSE">
+<code class="descname">process_IN_CLOSE</code><span class="sig-paren">(</span><em>event</em><span class="sig-paren">)</span><a class="headerlink" href="#gutils.watch.ascii.Ascii2NetcdfProcessor.process_IN_CLOSE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="gutils.watch.ascii.Ascii2NetcdfProcessor.process_IN_MOVED_TO">
+<code class="descname">process_IN_MOVED_TO</code><span class="sig-paren">(</span><em>event</em><span class="sig-paren">)</span><a class="headerlink" href="#gutils.watch.ascii.Ascii2NetcdfProcessor.process_IN_MOVED_TO" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="gutils.watch.ascii.Ascii2NetcdfProcessor.valid_file">
+<code class="descname">valid_file</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="headerlink" href="#gutils.watch.ascii.Ascii2NetcdfProcessor.valid_file" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="gutils.watch.ascii.Slocum2NetcdfProcessor">
+<em class="property">class </em><code class="descclassname">gutils.watch.ascii.</code><code class="descname">Slocum2NetcdfProcessor</code><span class="sig-paren">(</span><em>pevent=None</em>, <em>**kargs</em><span class="sig-paren">)</span><a class="headerlink" href="#gutils.watch.ascii.Slocum2NetcdfProcessor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#gutils.watch.ascii.Ascii2NetcdfProcessor" title="gutils.watch.ascii.Ascii2NetcdfProcessor"><code class="xref py py-class docutils literal"><span class="pre">gutils.watch.ascii.Ascii2NetcdfProcessor</span></code></a></p>
+<dl class="attribute">
+<dt id="gutils.watch.ascii.Slocum2NetcdfProcessor.VALID_EXTENSIONS">
+<code class="descname">VALID_EXTENSIONS</code><em class="property"> = ['.dat']</em><a class="headerlink" href="#gutils.watch.ascii.Slocum2NetcdfProcessor.VALID_EXTENSIONS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="gutils.watch.ascii.Slocum2NetcdfProcessor.convert_to_netcdf">
+<code class="descname">convert_to_netcdf</code><span class="sig-paren">(</span><em>event</em><span class="sig-paren">)</span><a class="headerlink" href="#gutils.watch.ascii.Slocum2NetcdfProcessor.convert_to_netcdf" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="gutils.watch.ascii.Slocum2NetcdfProcessor.my_init">
+<code class="descname">my_init</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#gutils.watch.ascii.Slocum2NetcdfProcessor.my_init" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="gutils.watch.ascii.create_netcdf_arg_parser">
+<code class="descclassname">gutils.watch.ascii.</code><code class="descname">create_netcdf_arg_parser</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#gutils.watch.ascii.create_netcdf_arg_parser" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="gutils.watch.ascii.main_to_netcdf">
+<code class="descclassname">gutils.watch.ascii.</code><code class="descname">main_to_netcdf</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#gutils.watch.ascii.main_to_netcdf" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-gutils.watch.binary">
+<span id="gutils-watch-binary-module"></span><h2>gutils.watch.binary module<a class="headerlink" href="#module-gutils.watch.binary" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="gutils.watch.binary.Binary2AsciiProcessor">
+<em class="property">class </em><code class="descclassname">gutils.watch.binary.</code><code class="descname">Binary2AsciiProcessor</code><span class="sig-paren">(</span><em>pevent=None</em>, <em>**kargs</em><span class="sig-paren">)</span><a class="headerlink" href="#gutils.watch.binary.Binary2AsciiProcessor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">pyinotify.ProcessEvent</span></code></p>
+<dl class="method">
+<dt id="gutils.watch.binary.Binary2AsciiProcessor.my_init">
+<code class="descname">my_init</code><span class="sig-paren">(</span><em>outputs_path</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#gutils.watch.binary.Binary2AsciiProcessor.my_init" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="gutils.watch.binary.Binary2AsciiProcessor.process_IN_CLOSE">
+<code class="descname">process_IN_CLOSE</code><span class="sig-paren">(</span><em>event</em><span class="sig-paren">)</span><a class="headerlink" href="#gutils.watch.binary.Binary2AsciiProcessor.process_IN_CLOSE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="gutils.watch.binary.Binary2AsciiProcessor.process_IN_MOVED_TO">
+<code class="descname">process_IN_MOVED_TO</code><span class="sig-paren">(</span><em>event</em><span class="sig-paren">)</span><a class="headerlink" href="#gutils.watch.binary.Binary2AsciiProcessor.process_IN_MOVED_TO" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="gutils.watch.binary.Binary2AsciiProcessor.valid_file">
+<code class="descname">valid_file</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="headerlink" href="#gutils.watch.binary.Binary2AsciiProcessor.valid_file" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="gutils.watch.binary.Slocum2AsciiProcessor">
+<em class="property">class </em><code class="descclassname">gutils.watch.binary.</code><code class="descname">Slocum2AsciiProcessor</code><span class="sig-paren">(</span><em>pevent=None</em>, <em>**kargs</em><span class="sig-paren">)</span><a class="headerlink" href="#gutils.watch.binary.Slocum2AsciiProcessor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#gutils.watch.binary.Binary2AsciiProcessor" title="gutils.watch.binary.Binary2AsciiProcessor"><code class="xref py py-class docutils literal"><span class="pre">gutils.watch.binary.Binary2AsciiProcessor</span></code></a></p>
+<dl class="attribute">
+<dt id="gutils.watch.binary.Slocum2AsciiProcessor.PAIRS">
+<code class="descname">PAIRS</code><em class="property"> = {'.dbd': '.ebd', '.sbd': '.tbd', '.mbd': '.nbd'}</em><a class="headerlink" href="#gutils.watch.binary.Slocum2AsciiProcessor.PAIRS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="gutils.watch.binary.Slocum2AsciiProcessor.VALID_EXTENSIONS">
+<code class="descname">VALID_EXTENSIONS</code><a class="headerlink" href="#gutils.watch.binary.Slocum2AsciiProcessor.VALID_EXTENSIONS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="gutils.watch.binary.Slocum2AsciiProcessor.check_for_pair">
+<code class="descname">check_for_pair</code><span class="sig-paren">(</span><em>event</em><span class="sig-paren">)</span><a class="headerlink" href="#gutils.watch.binary.Slocum2AsciiProcessor.check_for_pair" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="gutils.watch.binary.Slocum2AsciiProcessor.convert_to_ascii">
+<code class="descname">convert_to_ascii</code><span class="sig-paren">(</span><em>event</em><span class="sig-paren">)</span><a class="headerlink" href="#gutils.watch.binary.Slocum2AsciiProcessor.convert_to_ascii" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="gutils.watch.binary.Slocum2AsciiProcessor.my_init">
+<code class="descname">my_init</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#gutils.watch.binary.Slocum2AsciiProcessor.my_init" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="gutils.watch.binary.create_ascii_arg_parser">
+<code class="descclassname">gutils.watch.binary.</code><code class="descname">create_ascii_arg_parser</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#gutils.watch.binary.create_ascii_arg_parser" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="gutils.watch.binary.main_to_ascii">
+<code class="descclassname">gutils.watch.binary.</code><code class="descname">main_to_ascii</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#gutils.watch.binary.main_to_ascii" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-gutils.watch.netcdf">
+<span id="gutils-watch-netcdf-module"></span><h2>gutils.watch.netcdf module<a class="headerlink" href="#module-gutils.watch.netcdf" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="gutils.watch.netcdf.Netcdf2ErddapProcessor">
+<em class="property">class </em><code class="descclassname">gutils.watch.netcdf.</code><code class="descname">Netcdf2ErddapProcessor</code><span class="sig-paren">(</span><em>pevent=None</em>, <em>**kargs</em><span class="sig-paren">)</span><a class="headerlink" href="#gutils.watch.netcdf.Netcdf2ErddapProcessor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">pyinotify.ProcessEvent</span></code></p>
+<dl class="method">
+<dt id="gutils.watch.netcdf.Netcdf2ErddapProcessor.create_and_update_content">
+<code class="descname">create_and_update_content</code><span class="sig-paren">(</span><em>event</em><span class="sig-paren">)</span><a class="headerlink" href="#gutils.watch.netcdf.Netcdf2ErddapProcessor.create_and_update_content" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="gutils.watch.netcdf.Netcdf2ErddapProcessor.my_init">
+<code class="descname">my_init</code><span class="sig-paren">(</span><em>outputs_path</em>, <em>erddap_content_path</em>, <em>erddap_flag_path</em><span class="sig-paren">)</span><a class="headerlink" href="#gutils.watch.netcdf.Netcdf2ErddapProcessor.my_init" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="gutils.watch.netcdf.Netcdf2ErddapProcessor.process_IN_CLOSE">
+<code class="descname">process_IN_CLOSE</code><span class="sig-paren">(</span><em>event</em><span class="sig-paren">)</span><a class="headerlink" href="#gutils.watch.netcdf.Netcdf2ErddapProcessor.process_IN_CLOSE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="gutils.watch.netcdf.Netcdf2ErddapProcessor.process_IN_MOVED_TO">
+<code class="descname">process_IN_MOVED_TO</code><span class="sig-paren">(</span><em>event</em><span class="sig-paren">)</span><a class="headerlink" href="#gutils.watch.netcdf.Netcdf2ErddapProcessor.process_IN_MOVED_TO" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="gutils.watch.netcdf.Netcdf2ErddapProcessor.valid_extension">
+<code class="descname">valid_extension</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="headerlink" href="#gutils.watch.netcdf.Netcdf2ErddapProcessor.valid_extension" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="gutils.watch.netcdf.Netcdf2FtpProcessor">
+<em class="property">class </em><code class="descclassname">gutils.watch.netcdf.</code><code class="descname">Netcdf2FtpProcessor</code><span class="sig-paren">(</span><em>pevent=None</em>, <em>**kargs</em><span class="sig-paren">)</span><a class="headerlink" href="#gutils.watch.netcdf.Netcdf2FtpProcessor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">pyinotify.ProcessEvent</span></code></p>
+<dl class="method">
+<dt id="gutils.watch.netcdf.Netcdf2FtpProcessor.my_init">
+<code class="descname">my_init</code><span class="sig-paren">(</span><em>ftp_url</em>, <em>ftp_user</em>, <em>ftp_pass</em><span class="sig-paren">)</span><a class="headerlink" href="#gutils.watch.netcdf.Netcdf2FtpProcessor.my_init" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="gutils.watch.netcdf.Netcdf2FtpProcessor.process_IN_CLOSE">
+<code class="descname">process_IN_CLOSE</code><span class="sig-paren">(</span><em>event</em><span class="sig-paren">)</span><a class="headerlink" href="#gutils.watch.netcdf.Netcdf2FtpProcessor.process_IN_CLOSE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="gutils.watch.netcdf.Netcdf2FtpProcessor.process_IN_MOVED_TO">
+<code class="descname">process_IN_MOVED_TO</code><span class="sig-paren">(</span><em>event</em><span class="sig-paren">)</span><a class="headerlink" href="#gutils.watch.netcdf.Netcdf2FtpProcessor.process_IN_MOVED_TO" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="gutils.watch.netcdf.Netcdf2FtpProcessor.upload_file">
+<code class="descname">upload_file</code><span class="sig-paren">(</span><em>event</em><span class="sig-paren">)</span><a class="headerlink" href="#gutils.watch.netcdf.Netcdf2FtpProcessor.upload_file" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="gutils.watch.netcdf.Netcdf2FtpProcessor.valid_extension">
+<code class="descname">valid_extension</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="headerlink" href="#gutils.watch.netcdf.Netcdf2FtpProcessor.valid_extension" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="gutils.watch.netcdf.create_erddap_arg_parser">
+<code class="descclassname">gutils.watch.netcdf.</code><code class="descname">create_erddap_arg_parser</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#gutils.watch.netcdf.create_erddap_arg_parser" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="gutils.watch.netcdf.create_ftp_arg_parser">
+<code class="descclassname">gutils.watch.netcdf.</code><code class="descname">create_ftp_arg_parser</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#gutils.watch.netcdf.create_ftp_arg_parser" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="gutils.watch.netcdf.lxml_elements_equal">
+<code class="descclassname">gutils.watch.netcdf.</code><code class="descname">lxml_elements_equal</code><span class="sig-paren">(</span><em>e1</em>, <em>e2</em><span class="sig-paren">)</span><a class="headerlink" href="#gutils.watch.netcdf.lxml_elements_equal" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="gutils.watch.netcdf.main_to_erddap">
+<code class="descclassname">gutils.watch.netcdf.</code><code class="descname">main_to_erddap</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#gutils.watch.netcdf.main_to_erddap" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="gutils.watch.netcdf.main_to_ftp">
+<code class="descclassname">gutils.watch.netcdf.</code><code class="descname">main_to_ftp</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#gutils.watch.netcdf.main_to_ftp" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">gutils.watch package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-gutils.watch.ascii">gutils.watch.ascii module</a></li>
+<li><a class="reference internal" href="#module-gutils.watch.binary">gutils.watch.binary module</a></li>
+<li><a class="reference internal" href="#module-gutils.watch.netcdf">gutils.watch.netcdf module</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, Kyle Wilcox.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

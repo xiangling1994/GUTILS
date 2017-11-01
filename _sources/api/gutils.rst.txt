@@ -1,0 +1,53 @@
+gutils package
+==============
+
+.. automodule:: gutils
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+Subpackages
+-----------
+
+.. toctree::
+
+    gutils.slocum
+    gutils.templates
+    gutils.watch
+
+Submodules
+----------
+
+gutils\.ctd module
+------------------
+
+.. automodule:: gutils.ctd
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+gutils\.filters module
+----------------------
+
+.. automodule:: gutils.filters
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+gutils\.nc module
+-----------------
+
+.. automodule:: gutils.nc
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+gutils\.yo module
+-----------------
+
+.. automodule:: gutils.yo
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+

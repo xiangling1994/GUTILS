@@ -1,0 +1,135 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>gutils.slocum package &#8212; gutils 2.3.0 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '2.3.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-gutils.slocum">
+<span id="gutils-slocum-package"></span><h1>gutils.slocum package<a class="headerlink" href="#module-gutils.slocum" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="gutils.slocum.SlocumMerger">
+<em class="property">class </em><code class="descclassname">gutils.slocum.</code><code class="descname">SlocumMerger</code><span class="sig-paren">(</span><em>source_directory</em>, <em>destination_directory</em>, <em>cache_directory=None</em>, <em>globs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#gutils.slocum.SlocumMerger" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>Merges flight and science data files into an ASCII file.</p>
+<p>Copies files matching the regex in source_directory to their own temporary directory
+before processing since the Rutgers supported script only takes foldesr as input</p>
+<p>Returns a list of flight/science files that were processed into ASCII files</p>
+<dl class="method">
+<dt id="gutils.slocum.SlocumMerger.convert">
+<code class="descname">convert</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#gutils.slocum.SlocumMerger.convert" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="gutils.slocum.SlocumReader">
+<em class="property">class </em><code class="descclassname">gutils.slocum.</code><code class="descname">SlocumReader</code><span class="sig-paren">(</span><em>ascii_file</em><span class="sig-paren">)</span><a class="headerlink" href="#gutils.slocum.SlocumReader" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<dl class="attribute">
+<dt id="gutils.slocum.SlocumReader.DEPTH_SENSORS">
+<code class="descname">DEPTH_SENSORS</code><em class="property"> = ['m_depth', 'm_water_depth']</em><a class="headerlink" href="#gutils.slocum.SlocumReader.DEPTH_SENSORS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="gutils.slocum.SlocumReader.PRESSURE_SENSORS">
+<code class="descname">PRESSURE_SENSORS</code><em class="property"> = ['sci_water_pressure', 'm_water_pressure', 'm_pressure']</em><a class="headerlink" href="#gutils.slocum.SlocumReader.PRESSURE_SENSORS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="gutils.slocum.SlocumReader.TIMESTAMP_SENSORS">
+<code class="descname">TIMESTAMP_SENSORS</code><em class="property"> = ['m_present_time', 'sci_m_present_time']</em><a class="headerlink" href="#gutils.slocum.SlocumReader.TIMESTAMP_SENSORS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="gutils.slocum.SlocumReader.compute">
+<code class="descname">compute</code><span class="sig-paren">(</span><em>df</em><span class="sig-paren">)</span><a class="headerlink" href="#gutils.slocum.SlocumReader.compute" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="gutils.slocum.SlocumReader.read">
+<code class="descname">read</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#gutils.slocum.SlocumReader.read" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="gutils.slocum.SlocumReader.standardize">
+<code class="descname">standardize</code><span class="sig-paren">(</span><em>gps_prefix=None</em><span class="sig-paren">)</span><a class="headerlink" href="#gutils.slocum.SlocumReader.standardize" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, Kyle Wilcox.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
