@@ -131,8 +131,6 @@ def process_dataset(file, reader_class, filter_z=None, filter_points=None, filte
         filtered['profile'] = filtered.profile.astype('int32')
         # Profiles are 1-indexed, so add one to each
         filtered['profile'] = filtered.profile.values + 1
-        # Rename the profile column to profile_id
-        filtered = filtered.rename(columns={'profile': 'profile_id'})
 
         # TODO: Backfill U/V?
         # TODO: Backfill X/Y?

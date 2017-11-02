@@ -174,7 +174,7 @@ def update_creation_attributes(ncd, profile):
 
 def create_netcdf(attrs, data, output_path, mode):
     # Create NetCDF Files for Each Profile
-    for pi, profile in data.groupby('profile_id'):
+    for pi, profile in data.groupby('profile'):
         try:
             # Path to hold file while we create it
             tmp_handle, tmp_path = tempfile.mkstemp(suffix='.nc', prefix='gutils_glider_netcdf_')
@@ -212,7 +212,7 @@ def create_netcdf(attrs, data, output_path, mode):
             profile = profile.assign(trajectory=traj_name)
 
             # We add this back in later as seconds since epoch
-            profile.drop('profile_id', axis=1, inplace=True)
+            profile.drop('profile', axis=1, inplace=True)
 
             axis_names = {
                 't': 'time',
