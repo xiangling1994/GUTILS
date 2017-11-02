@@ -121,16 +121,11 @@ def set_uv_data(ncd, uv_txy):
     ncd.sync()
 
 
-def update_geographic_attributes(ncd, profile):
+def get_geographic_attributes(profile):
     miny = profile.y.min().round(5)
     maxy = profile.y.max().round(5)
     minx = profile.x.min().round(5)
     maxx = profile.x.max().round(5)
-    ncd.setncattr('geospatial_lat_min', miny)
-    ncd.setncattr('geospatial_lat_max', maxy)
-    ncd.setncattr('geospatial_lon_min', minx)
-    ncd.setncattr('geospatial_lon_max', maxx)
-
     polygon_wkt = 'POLYGON ((' \
         '{maxy:.6f} {minx:.6f}, '  \
         '{maxy:.6f} {maxx:.6f}, '  \
@@ -143,33 +138,52 @@ def update_geographic_attributes(ncd, profile):
             minx=minx,
             maxx=maxx
         )
-    ncd.setncattr('geospatial_bounds', polygon_wkt)
+    return {
+        'attributes': {
+            'geospatial_lat_min': miny,
+            'geospatial_lat_max': maxy,
+            'geospatial_lon_min': minx,
+            'geospatial_lon_max': maxx,
+            'geospatial_bounds': polygon_wkt
+        }
+    }
 
 
-def update_vertical_attributes(ncd, profile):
-    ncd.setncattr('geospatial_vertical_min', profile.z.min().round(6))
-    ncd.setncattr('geospatial_vertical_max', profile.z.max().round(6))
-    ncd.setncattr('geospatial_vertical_units', 'm')
+def get_vertical_attributes(profile):
+    return {
+        'attributes': {
+            'geospatial_vertical_min': profile.z.min().round(6),
+            'geospatial_vertical_max': profile.z.max().round(6),
+            'geospatial_vertical_units': 'm',
+        }
+    }
 
 
-def update_temporal_attributes(ncd, profile):
+def get_temporal_attributes(profile):
     mint = profile.t.min()
     maxt = profile.t.max()
-    ncd.setncattr('time_coverage_start', mint.strftime('%Y-%m-%dT%H:%M:%SZ'))
-    ncd.setncattr('time_coverage_end', maxt.strftime('%Y-%m-%dT%H:%M:%SZ'))
-    ncd.setncattr('time_coverage_duration', (maxt - mint).isoformat())
+    return {
+        'attributes': {
+            'time_coverage_start': mint.strftime('%Y-%m-%dT%H:%M:%SZ'),
+            'time_coverage_end': maxt.strftime('%Y-%m-%dT%H:%M:%SZ'),
+            'time_coverage_duration': (maxt - mint).isoformat(),
+        }
+    }
 
 
-def update_creation_attributes(ncd, profile):
+def get_creation_attributes(profile):
     nc_create_ts = datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')
-    ncd.setncattr('date_created', nc_create_ts)
-    ncd.setncattr('date_issued', nc_create_ts)
-    ncd.setncattr('date_modified', nc_create_ts)
-
-    ncd.history = '{} - {}'.format(
-        nc_create_ts,
-        'Created with the GUTILS package: "{}"'.format(sys.argv[0])
-    )
+    return {
+        'attributes': {
+            'date_created': nc_create_ts,
+            'date_issued': nc_create_ts,
+            'date_modified': nc_create_ts,
+            'history': '{} - {}'.format(
+                nc_create_ts,
+                'Created with the GUTILS package: "{}"'.format(sys.argv[0])
+            )
+        }
+    }
 
 
 def create_netcdf(attrs, data, output_path, mode):
@@ -214,13 +228,6 @@ def create_netcdf(attrs, data, output_path, mode):
             # We add this back in later as seconds since epoch
             profile.drop('profile', axis=1, inplace=True)
 
-            axis_names = {
-                't': 'time',
-                'z': 'depth',
-                'x': 'lon',
-                'y': 'lat'
-            }
-
             # Compute U/V scalar values
             uv_txy = get_uv_data(profile)
             if 'u_orig' in profile.columns and 'v_orig' in profile.columns:
@@ -229,30 +236,31 @@ def create_netcdf(attrs, data, output_path, mode):
             # Compute profile scalar values
             profile_txy = get_profile_data(profile, method=None)
 
+            # Calculate some geographic global attributes
+            attrs = dict_update(attrs, get_geographic_attributes(profile))
+            # Calculate some vertical global attributes
+            attrs = dict_update(attrs, get_vertical_attributes(profile))
+            # Calculate some temporal global attributes
+            attrs = dict_update(attrs, get_temporal_attributes(profile))
+            # Set the creation dates and history
+            attrs = dict_update(attrs, get_creation_attributes(profile))
+
+            # Changing column names here from the default 't z x y'
+            axes = {
+                't': 'time',
+                'z': 'depth',
+                'x': 'lon',
+                'y': 'lat'
+            }
+            profile = profile.rename(columns=axes)
+
             # Use pocean to create NetCDF file
             with IncompleteMultidimensionalTrajectory.from_dataframe(
                     profile,
                     tmp_path,
-                    axis_names=axis_names,
+                    axes=axes,
                     reduce_dims=True,
                     mode='a') as ncd:
-
-                # BEFORE RENAMING VARIABLES
-                # Calculate some geographic global attributes
-                update_geographic_attributes(ncd, profile)
-
-                # Calculate some vertical global attributes
-                update_vertical_attributes(ncd, profile)
-
-                # Calculate some temporal global attributes
-                update_temporal_attributes(ncd, profile)
-
-                # Set the creation dates and history
-                update_creation_attributes(ncd, profile)
-
-                # AFTER RENAMING VARIABLES
-                # Load metadata from config files to create the skeleton
-                # This will create scalar variables but not assign the data
 
                 # We only want to apply metadata from the `attrs` map if the variable is already in
                 # the netCDF file or it is a scalar variable (no shape defined). This avoids
@@ -264,10 +272,10 @@ def create_netcdf(attrs, data, output_path, mode):
                         if 'shape' in vobj:
                             # Assign coordinates
                             vobj['attributes']['coordinates'] = '{} {} {} {}'.format(
-                                axis_names.get('t'),
-                                axis_names.get('z'),
-                                axis_names.get('x'),
-                                axis_names.get('y'),
+                                axes.get('t'),
+                                axes.get('z'),
+                                axes.get('x'),
+                                axes.get('y'),
                             )
                         vars_to_update[vname] = vobj
                     else:
