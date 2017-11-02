@@ -146,6 +146,11 @@ class SlocumReader(object):
         # Compute additional columns
         df = self.compute(df)
 
+        # Now change pressure to dbar AFTER the calculations of saliniy and density are done
+        # since the calculations assume pressure in bar
+        if 'pressure' in df:
+            df['pressure'] = df.pressure * 10  # Convert from bar to dbar
+
         return df
 
     def compute(self, df):
