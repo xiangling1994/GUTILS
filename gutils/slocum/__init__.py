@@ -33,6 +33,8 @@ class SlocumReader(object):
     TIMESTAMP_SENSORS = ['m_present_time', 'sci_m_present_time']
     PRESSURE_SENSORS = ['sci_water_pressure', 'm_water_pressure', 'm_pressure']
     DEPTH_SENSORS = ['m_depth', 'm_water_depth']
+    TEMPERATURE_SENSORS = ['sci_water_temp']
+    CONDUCTIVITY_SENSORS = ['sci_water_cond']
 
     def __init__(self, ascii_file):
         self.ascii_file = ascii_file
@@ -116,9 +118,16 @@ class SlocumReader(object):
             df['y'] = y_interp
             df['x'] = x_interp
 
+        rename_columns = {
+            'm_water_vx': 'u_orig',
+            'm_water_vy': 'v_orig',
+        }
+
         # Standardize 'pressure' to the 'z' column
         for p in self.PRESSURE_SENSORS:
             if p in df.columns:
+                # Add the found pressure to the rename_columns to be renamed
+                rename_columns[p] = 'pressure'
                 # Calculate depth from pressure (multiplied by 10 to get to decibars) and latitude
                 # Negate the results so that increasing values note increasing depths
                 df['z'] = -z_from_p(df[p] * 10, df.y)
@@ -131,17 +140,18 @@ class SlocumReader(object):
                     df['z'] = df[p].copy()
                     break
 
-        standard_columns = {
-            'm_water_vx': 'u_orig',
-            'm_water_vy': 'v_orig',
-            'sci_water_temp': 'temperature',
-            'sci_water_cond': 'conductivity',
-            'sci_water_pressure': 'pressure',
-            'sci_bbfl2s_bb_scaled': 'backscatter'
-        }
+        # These need to be standardize so we can compute salinity and density!
+        for vname in self.TEMPERATURE_SENSORS:
+            if vname in df.columns:
+                rename_columns[vname] = 'temperature'
+                break
+        for vname in self.CONDUCTIVITY_SENSORS:
+            if vname in df.columns:
+                rename_columns[vname] = 'conductivity'
+                break
 
         # Standardize columns
-        df = df.rename(columns=standard_columns)
+        df = df.rename(columns=rename_columns)
 
         # Compute additional columns
         df = self.compute(df)
