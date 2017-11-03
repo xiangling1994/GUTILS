@@ -1,7 +1,6 @@
 #!python
 # coding=utf-8
 import os
-import unittest
 
 from gutils import get_decimal_degrees, interpolate_gps, masked_epoch
 
@@ -23,11 +22,10 @@ from gutils.ctd import (
 )
 
 from gutils.slocum import SlocumReader
-from gutils.tests import setup_testing_logger
+from gutils.tests import GutilsTestClass
 
 import logging
 L = logging.getLogger(__name__)  # noqa
-setup_testing_logger()
 
 
 def is_continuous(profiled_dataset):
@@ -55,9 +53,11 @@ ctd_filepath = os.path.join(
 )
 
 
-class TestFindProfile(unittest.TestCase):
+class TestFindProfile(GutilsTestClass):
 
     def setUp(self):
+        super(TestFindProfile, self).setUp()
+
         sr = SlocumReader(ctd_filepath)
         self.df = sr.standardize()
 
@@ -218,9 +218,11 @@ class TestFindProfile(unittest.TestCase):
         # plt.show()
 
 
-class TestInterpolateGPS(unittest.TestCase):
+class TestInterpolateGPS(GutilsTestClass):
 
     def setUp(self):
+        super(TestInterpolateGPS, self).setUp()
+
         sr = SlocumReader(ctd_filepath)
         self.df = sr.standardize()
 
@@ -235,7 +237,7 @@ class TestInterpolateGPS(unittest.TestCase):
         assert len(est_lon) == self.df.x.size
 
 
-class TestSalinity(unittest.TestCase):
+class TestSalinity(GutilsTestClass):
 
     def test_practical_salinity(self):
         sr = SlocumReader(ctd_filepath)
@@ -248,7 +250,7 @@ class TestSalinity(unittest.TestCase):
         assert sr.data.sci_m_present_time.size == salinity.size
 
 
-class TestDensity(unittest.TestCase):
+class TestDensity(GutilsTestClass):
 
     def test_density(self):
         sr = SlocumReader(ctd_filepath)
@@ -279,7 +281,7 @@ class TestDensity(unittest.TestCase):
         assert sr.data.sci_m_present_time.size == density.size
 
 
-class TestUtility(unittest.TestCase):
+class TestUtility(GutilsTestClass):
 
     def test_decimal_degrees(self):
         decimal_degrees = get_decimal_degrees(-8330.567)

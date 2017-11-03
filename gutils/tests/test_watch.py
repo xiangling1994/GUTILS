@@ -3,7 +3,6 @@
 import os
 import time
 import shutil
-import unittest
 from glob import glob
 
 from pyinotify import (
@@ -14,15 +13,14 @@ from pyinotify import (
 )
 
 from gutils import safe_makedirs
-from gutils.tests import resource, output, setup_testing_logger
 from gutils.slocum import SlocumMerger
 from gutils.watch.binary import Slocum2AsciiProcessor
 from gutils.watch.ascii import Slocum2NetcdfProcessor
 from gutils.watch.netcdf import Netcdf2ErddapProcessor
+from gutils.tests import resource, output, GutilsTestClass
 
 import logging
 L = logging.getLogger(__name__)  # noqa
-setup_testing_logger()
 
 config_path = resource('slocum', 'config', 'bass-20160909T1733')
 original_binary = resource('slocum', 'real', 'binary', 'bass-20160909T1733')
@@ -50,9 +48,11 @@ def wait_for_files(path, number):
                 time.sleep(6)
 
 
-class TestWatchClasses(unittest.TestCase):
+class TestWatchClasses(GutilsTestClass):
 
     def setUp(self):
+        super(TestWatchClasses, self).setUp()
+
         safe_makedirs(binary_path)
         safe_makedirs(ascii_path)
         safe_makedirs(netcdf_path)

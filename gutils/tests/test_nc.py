@@ -11,18 +11,17 @@ import netCDF4 as nc4
 from gutils import safe_makedirs
 from gutils.nc import check_dataset, create_dataset
 from gutils.slocum import SlocumReader
-from gutils.tests import resource, setup_testing_logger
+from gutils.tests import resource, GutilsTestClass
 
 import logging
 L = logging.getLogger(__name__)  # noqa
-setup_testing_logger()
 
 
 def decoder(x):
     return str(x.decode('utf-8'))
 
 
-class TestCreateGliderScript(unittest.TestCase):
+class TestCreateGliderScript(GutilsTestClass):
 
     def tearDown(self):
         outputs = [
@@ -143,9 +142,11 @@ class TestCreateGliderScript(unittest.TestCase):
             assert check_dataset(ds(file=o)) == 0
 
 
-class TestGliderCheck(unittest.TestCase):
+class TestGliderCheck(GutilsTestClass):
 
     def setUp(self):
+        super(TestGliderCheck, self).setUp()
+
         self.args = namedtuple('Check_Arguments', ['file'])
 
     def test_passing_testing_compliance(self):

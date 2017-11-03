@@ -3,20 +3,20 @@
 import os
 import shutil
 import tempfile
-import unittest
 from glob import glob
 
 from gutils.slocum import SlocumMerger, SlocumReader
-from gutils.tests import setup_testing_logger, resource
+from gutils.tests import GutilsTestClass, resource
 
 import logging
 L = logging.getLogger(__name__)  # noqa
-setup_testing_logger()
 
 
-class TestSlocumMerger(unittest.TestCase):
+class TestSlocumMerger(GutilsTestClass):
 
     def setUp(self):
+        super(TestSlocumMerger, self).setUp()
+
         self.binary_path = resource('slocum', 'real', 'binary', 'bass-20150407T1300')
         self.ascii_path = resource('slocum', 'real', 'ascii', 'bass-20150407T1300')
 
@@ -64,9 +64,10 @@ class TestSlocumMerger(unittest.TestCase):
         assert len(glob(os.path.join(self.ascii_path, '*.dat'))) == 1
 
 
-class TestSlocumReaderNoGPS(unittest.TestCase):
+class TestSlocumReaderNoGPS(GutilsTestClass):
 
     def setUp(self):
+        super(TestSlocumReaderNoGPS, self).setUp()
         self.binary_path = resource('slocum', 'real', 'binary', 'bass-20150407T1300')
         self.ascii_path = resource('slocum', 'real', 'ascii', 'bass-20150407T1300')
 
@@ -104,9 +105,10 @@ class TestSlocumReaderNoGPS(unittest.TestCase):
         assert 'z' in enh.columns
 
 
-class TestSlocumReaderWithGPS(unittest.TestCase):
+class TestSlocumReaderWithGPS(GutilsTestClass):
 
     def setUp(self):
+        super(TestSlocumReaderWithGPS, self).setUp()
         self.binary_path = resource('slocum', 'real', 'binary', 'bass-20160909T1733')
         self.ascii_path = resource('slocum', 'real', 'ascii', 'bass-20160909T1733')
 
@@ -143,9 +145,10 @@ class TestSlocumReaderWithGPS(unittest.TestCase):
         assert 'z' in enh.columns
 
 
-class TestSlocumExportDelayed(unittest.TestCase):
+class TestSlocumExportDelayed(GutilsTestClass):
 
     def setUp(self):
+        super(TestSlocumExportDelayed, self).setUp()
         self.binary_path = resource('slocum', 'real', 'binary', 'modena-2015')
         self.ascii_path = resource('slocum', 'real', 'ascii', 'modena-2015')
         self.cache_path = os.path.join(self.binary_path, 'cac')

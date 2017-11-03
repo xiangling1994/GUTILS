@@ -12,7 +12,6 @@ from gutils.tests import setup_testing_logger, resource
 
 import logging
 L = logging.getLogger(__name__)  # noqa
-setup_testing_logger()
 
 
 @pytest.mark.long
@@ -25,6 +24,7 @@ setup_testing_logger()
     'salacia-20170710T1942',
 ])
 def test_real_deployments(deployment):
+    setup_testing_logger(level=logging.WARNING)
     binary_path = resource('slocum', 'real', 'binary', deployment)
     ascii_path = resource('slocum', 'real', 'ascii', deployment)
     netcdf_path = resource('slocum', 'real', 'netcdf', deployment)
