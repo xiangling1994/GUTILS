@@ -7,7 +7,7 @@ from collections import OrderedDict
 
 import numpy as np
 import pandas as pd
-from gsw import z_from_p
+from gsw import z_from_p, p_from_z
 
 from gutils import (
     generate_stream,
@@ -118,27 +118,70 @@ class SlocumReader(object):
             df['y'] = y_interp
             df['x'] = x_interp
 
+        """
+        ---- Option 1: Always calculate Z from pressure ----
+        It's really a matter of data provider preference and varies from one provider to another.
+        That being said, typically the sci_water_pressure or m_water_pressure variables, if present
+        in the raw data files, will typically have more non-NaN values than m_depth.  For example,
+        all MARACOOS gliders typically have both m_depth and sci_water_pressure contained in them.
+        However, m_depth is typically heavily decimated while sci_water_pressure contains a more
+        complete pressure record.  So, while we transmit both m_depth and sci_water_pressure, I
+        calculate depth from pressure & (interpolated) latitude and use that as my NetCDF depth
+        variable.
+        """
+        # Search for a 'pressure' column
+        for p in self.PRESSURE_SENSORS:
+            if p in df.columns:
+                # Convert bar to dbar here
+                df['pressure'] = df[p].copy() * 10
+                # Calculate depth from pressure and latitude
+                # Negate the results so that increasing values note increasing depths
+                df['z'] = -z_from_p(df.pressure, df.y)
+                break
+
+        if 'z' not in df and 'pressure' not in df:
+            # Search for a 'z' column
+            for p in self.DEPTH_SENSORS:
+                if p in df.columns:
+                    df['z'] = df[p].copy()
+                    # Calculate pressure from depth and latitude
+                    # Negate the results so that increasing values note increasing depth
+                    df['pressure'] = -p_from_z(df.z, df.y)
+                    break
+        # End Option 1
+
+        """
+        ---- Option 2: Use raw pressure/depth data that was sent across ----
+        # Standardize to the 'pressure' column
+        for p in self.PRESSURE_SENSORS:
+            if p in df.columns:
+                # Convert bar to dbar here
+                df['pressure'] = df[p].copy() * 10
+                break
+
+        # Standardize to the 'z' column
+        for p in self.DEPTH_SENSORS:
+            if p in df.columns:
+                df['z'] = df[p].copy()
+                break
+
+        # Don't calculate Z from pressure if a metered depth column exists already
+        if 'pressure' in df and 'z' not in df:
+            # Calculate depth from pressure and latitude
+            # Negate the results so that increasing values note increasing depths
+            df['z'] = -z_from_p(df.pressure, df.y)
+
+        if 'z' in df and 'pressure' not in df:
+            # Calculate pressure from depth and latitude
+            # Negate the results so that increasing values note increasing depth
+            df['pressure'] = -p_from_z(df.z, df.y)
+        # End Option 2
+        """
+
         rename_columns = {
             'm_water_vx': 'u_orig',
             'm_water_vy': 'v_orig',
         }
-
-        # Standardize 'pressure' to the 'z' column
-        for p in self.PRESSURE_SENSORS:
-            if p in df.columns:
-                # Add the found pressure to the rename_columns to be renamed
-                rename_columns[p] = 'pressure'
-                # Calculate depth from pressure (multiplied by 10 to get to decibars) and latitude
-                # Negate the results so that increasing values note increasing depths
-                df['z'] = -z_from_p(df[p] * 10, df.y)
-                break
-
-        if 'z' not in df.columns:
-            # Try the depth sensor
-            for p in self.DEPTH_SENSORS:
-                if p in df.columns:
-                    df['z'] = df[p].copy()
-                    break
 
         # These need to be standardize so we can compute salinity and density!
         for vname in self.TEMPERATURE_SENSORS:
@@ -156,11 +199,6 @@ class SlocumReader(object):
         # Compute additional columns
         df = self.compute(df)
 
-        # Now change pressure to dbar AFTER the calculations of saliniy and density are done
-        # since the calculations assume pressure in bar
-        if 'pressure' in df:
-            df['pressure'] = df.pressure * 10  # Convert from bar to dbar
-
         return df
 
     def compute(self, df):
@@ -173,7 +211,7 @@ class SlocumReader(object):
                 pressure=df.pressure.values,
             )
         except (ValueError, AttributeError) as e:
-            L.error("Could not compute salinity: {}".format(e))
+            L.error("Could not compute salinity for {}: {}".format(self.ascii_file, e))
 
         try:
             # Compute density
@@ -186,7 +224,7 @@ class SlocumReader(object):
                 longitude=df.x,
             )
         except (ValueError, AttributeError) as e:
-            L.error("Could not compute density: {}".format(e))
+            L.error("Could not compute density for {}: {}".format(self.ascii_file, e))
 
         return df
 

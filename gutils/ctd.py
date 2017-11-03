@@ -15,7 +15,7 @@ def calculate_practical_salinity(time, conductivity, temperature, pressure):
     and pressure using Gibbs gsw SP_from_C function.
 
     Parameters:
-        time, conductivity (S/m), temperature (C), and pressure (bar).
+        time, conductivity (S/m), temperature (C), and pressure (dbar).
 
     Returns:
         salinity (psu PSS-78).
@@ -26,15 +26,12 @@ def calculate_practical_salinity(time, conductivity, temperature, pressure):
     # Convert S/m to mS/cm
     mS_conductivity = conductivity * 10
 
-    # Convert bar to dbar
-    dBar_pressure = pressure * 10
-
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         return SP_from_C(
             mS_conductivity,
             temperature,
-            dBar_pressure
+            pressure
         )
 
 
@@ -44,7 +41,7 @@ def calculate_density(time, temperature, pressure, salinity, latitude, longitude
 
     Parameters:
         time (UNIX epoch),
-        temperature (C), pressure (bar), salinity (psu PSS-78),
+        temperature (C), pressure (dbar), salinity (psu PSS-78),
         latitude (decimal degrees), longitude (decimal degrees)
 
     Returns:
@@ -53,14 +50,12 @@ def calculate_density(time, temperature, pressure, salinity, latitude, longitude
 
     validate_glider_args(time, temperature, pressure, salinity, latitude, longitude)
 
-    dBar_pressure = pressure * 10
-
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
 
         absolute_salinity = SA_from_SP(
             salinity,
-            dBar_pressure,
+            pressure,
             longitude,
             latitude
         )
@@ -68,13 +63,13 @@ def calculate_density(time, temperature, pressure, salinity, latitude, longitude
         conservative_temperature = CT_from_t(
             absolute_salinity,
             temperature,
-            dBar_pressure
+            pressure
         )
 
         density = rho(
             absolute_salinity,
             conservative_temperature,
-            dBar_pressure
+            pressure
         )
 
         return density
