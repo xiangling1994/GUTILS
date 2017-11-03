@@ -22,6 +22,7 @@ L = logging.getLogger(__name__)  # noqa
     'ramses-20170516T1345',
     'salacia-20160919T2028',
     'salacia-20170710T1942',
+    'ramses-20170905T1728',
 ])
 def test_real_deployments(deployment):
     setup_testing_logger(level=logging.WARNING)
