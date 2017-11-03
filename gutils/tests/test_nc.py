@@ -2,7 +2,6 @@
 # coding=utf-8
 import os
 import shutil
-import unittest
 from glob import glob
 from collections import namedtuple
 
