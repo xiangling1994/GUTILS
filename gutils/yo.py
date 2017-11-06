@@ -39,7 +39,7 @@ def assign_profiles(df, tsint=None):
     tmp_df = df.copy()
 
     if tsint is None:
-        tsint = 10
+        tsint = 2
 
     # Make 't' epochs and not a DateTimeIndex
     tmp_df['t'] = masked_epoch(tmp_df.t)
@@ -67,7 +67,7 @@ def assign_profiles(df, tsint=None):
     if len(interp_z) < 2:
         return None
 
-    filtered_z = boxcar_smooth_dataset(interp_z, tsint // 2)
+    filtered_z = boxcar_smooth_dataset(interp_z, max(tsint // 2, 1))
     delta_depth = calculate_delta_depth(filtered_z)
 
     p_inds = np.empty((0, 2))

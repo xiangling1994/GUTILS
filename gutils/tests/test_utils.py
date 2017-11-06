@@ -62,7 +62,8 @@ class TestFindProfile(GutilsTestClass):
         self.df = sr.standardize()
 
         self.profiled_dataset = assign_profiles(
-            self.df
+            self.df,
+            tsint=10
         )
 
     def test_find_profile(self):

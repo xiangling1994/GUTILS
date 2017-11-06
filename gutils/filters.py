@@ -96,7 +96,7 @@ def filter_profile_number_of_points(dataset, points_condition=None, reindex=True
     return filter_profiles(dataset, conditional, reindex)
 
 
-def process_dataset(file, reader_class, filter_z=None, filter_points=None, filter_time=None, filter_distance=None):
+def process_dataset(file, reader_class, tsint=None, filter_z=None, filter_points=None, filter_time=None, filter_distance=None):
 
     # Check filename
     if file is None:
@@ -115,7 +115,7 @@ def process_dataset(file, reader_class, filter_z=None, filter_points=None, filte
             return None, None
 
         # Find profile breaks
-        profiles = assign_profiles(data)
+        profiles = assign_profiles(data, tsint=tsint)
 
         # Shortcut for empty dataframes
         if profiles is None:

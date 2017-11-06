@@ -360,6 +360,11 @@ def create_arg_parser():
         default='slocum'
     )
     parser.add_argument(
+        '-ts', '--tsint',
+        help="Interpolation window to consider when assigning profiles",
+        default=2
+    )
+    parser.add_argument(
         '-fp', '--filter_points',
         help="Filter out profiles that do not have at least this number of points",
         default=5
