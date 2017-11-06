@@ -186,8 +186,30 @@ def get_creation_attributes(profile):
     }
 
 
-def create_netcdf(attrs, data, output_path, mode):
+def create_netcdf(attrs, data, output_path, mode, subset=True):
     # Create NetCDF Files for Each Profile
+    written_files = []
+
+    # Optionally, remove any variables from the dataframe that do not have metadata assigned
+    if subset is True:
+        all_columns = set(data.columns)
+        reserved_columns = [
+            'trajectory',
+            'profile',
+            't',
+            'x',
+            'y',
+            'z',
+            'u_orig',
+            'v_orig'
+        ]
+        removable_columns = all_columns - set(reserved_columns)
+        orphans = removable_columns - set(attrs.get('variables', {}).keys())
+        L.info(
+            "Excluded from output (absent from JSON config):\n  * {}".format('\n  * '.join(orphans))
+        )
+        data = data.drop(orphans, axis=1)
+
     for pi, profile in data.groupby('profile'):
         try:
             # Path to hold file while we create it
@@ -299,6 +321,7 @@ def create_netcdf(attrs, data, output_path, mode):
             safe_makedirs(os.path.dirname(output_file))
             os.chmod(tmp_path, 0o664)
             shutil.move(tmp_path, output_file)
+            written_files.append(output_file)
             L.info('Created: {}'.format(output_file))
         except BaseException as e:
             L.exception('Error: {}'.format(e))
@@ -307,6 +330,8 @@ def create_netcdf(attrs, data, output_path, mode):
             os.close(tmp_handle)
             if os.path.exists(tmp_path):
                 os.remove(tmp_path)
+
+    return written_files
 
 
 def create_arg_parser():
@@ -379,26 +404,6 @@ def create_dataset(file, reader_class, config_path, output_path, subset, templat
         return 1
 
     attrs = read_attrs(config_path, template=template)
-
-    # Optionally, remove any variables from the dataframe that do not have metadata assigned
-    if subset is True:
-        all_columns = set(processed_df.columns)
-        reserved_columns = [
-            'trajectory',
-            'profile',
-            't',
-            'x',
-            'y',
-            'z',
-            'u_orig',
-            'v_orig'
-        ]
-        removable_columns = all_columns - set(reserved_columns)
-        orphans = removable_columns - set(attrs.get('variables', {}).keys())
-        L.info(
-            "Excluded from output (absent from JSON config):\n  * {}".format('\n  * '.join(orphans))
-        )
-        processed_df = processed_df.drop(orphans, axis=1)
 
     return create_netcdf(attrs, processed_df, output_path, mode)
 
