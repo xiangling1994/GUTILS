@@ -134,20 +134,26 @@ class SlocumReader(object):
             if p in df.columns:
                 # Convert bar to dbar here
                 df['pressure'] = df[p].copy() * 10
-                # Calculate depth from pressure and latitude
-                # Negate the results so that increasing values note increasing depths
-                df['z'] = -z_from_p(df.pressure, df.y)
                 break
 
-        if 'z' not in df and 'pressure' not in df:
-            # Search for a 'z' column
-            for p in self.DEPTH_SENSORS:
-                if p in df.columns:
-                    df['z'] = df[p].copy()
+        # Search for a 'z' column
+        for p in self.DEPTH_SENSORS:
+            if p in df.columns:
+                if 'pressure' not in df:
                     # Calculate pressure from depth and latitude
                     # Negate the results so that increasing values note increasing depth
-                    df['pressure'] = -p_from_z(df.z, df.y)
+                    df['pressure'] = -p_from_z(df[p], df.y)
                     break
+                else:
+                    # Calculate pressure from depth column when it is null
+                    pnn = df['pressure'].isnull()
+                    df.loc[pnn, 'pressure'] = -p_from_z(df.loc[pnn, p], df.loc[pnn, 'y'])
+                    break
+
+        # Calculate depth from pressure and latitude
+        # Negate the results so that increasing values note increasing depths
+        df['z'] = -z_from_p(df.pressure, df.y)
+
         # End Option 1
 
         """
