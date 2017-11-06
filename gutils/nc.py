@@ -27,7 +27,7 @@ import logging
 L = logging.getLogger(__name__)
 
 
-def read_attrs(config_path, template=None):
+def read_attrs(config_path=None, template=None):
 
     def cfg_file(name):
         return os.path.join(
