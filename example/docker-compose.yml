@@ -46,6 +46,7 @@ services:
       - "./run/ascii:/gutils/ascii:ro"
       - "./run/netcdf:/gutils/netcdf:ro"
       - "./run/config:/gutils/config:ro"
+      - "./run/ftp:/gutils/ftp:ro"
     ports:
       - "20000:80"
 
