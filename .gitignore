@@ -51,3 +51,4 @@ example/run/erddap/content/*.xml
 example/run/erddap/flag/*
 docs/_site
 docs/api
+docs/notebooks/.ipynb_checkpoints/
