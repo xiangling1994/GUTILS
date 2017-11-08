@@ -30,3 +30,8 @@ $ conda create -n gutils python=3.5
 $ source activate gutils
 $ conda install -c conda-forge gutils
 ```
+
+
+## Testing
+
+To run the "long" tests you will need [this](https://github.com/SECOORA/SGS) cloned somewhere. Then set the env variable `GUTILS_TEST_CONFIG_DIRECTORY` to the config directory, ie `export GUTILS_TEST_CONFIG_DIRECTORY=/data/Development/secoora/sgs/SGS/config`
