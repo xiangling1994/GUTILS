@@ -17,7 +17,10 @@ import netCDF4 as nc4
 from compliance_checker.runner import ComplianceChecker, CheckSuite
 from pocean.utils import dict_update, get_fill_value
 from pocean.meta import MetaInterface
-from pocean.dsg.trajectory.im import IncompleteMultidimensionalTrajectory
+from pocean.dsg import (
+    IncompleteMultidimensionalTrajectory,
+    ContiguousRaggedTrajectoryProfile
+)
 
 from gutils import get_uv_data, get_profile_data, safe_makedirs, setup_cli_logger
 from gutils.filters import process_dataset
@@ -505,3 +508,59 @@ def main_check():
         raise ValueError('Must specify path to NetCDF file')
 
     return check_dataset(args)
+
+
+def merge_profile_netcdf_files(folder, output):
+    import pandas as pd
+    from glob import glob
+
+    new_fp, new_path = tempfile.mkstemp(suffix='.nc', prefix='gutils_merge_')
+
+    try:
+        # Get the number of profiles
+        members = sorted(list(glob(os.path.join(folder, '*.nc'))))
+
+        # Iterate over the netCDF files and create a dataframe for each
+        dfs = []
+        axes = {
+            'trajectory': 'trajectory',
+            't': 'time',
+            'x': 'lon',
+            'y': 'lat',
+            'z': 'depth',
+        }
+        for ncf in members:
+            with IncompleteMultidimensionalTrajectory(ncf) as old:
+                df = old.to_dataframe(axes=axes, clean_cols=False)
+                dfs.append(df)
+
+        full_df = pd.concat(dfs, ignore_index=True)
+
+        # Now add a profile axes
+        axes = {
+            'trajectory': 'trajectory',
+            'profile': 'profile_id',
+            't': 'profile_time',
+            'x': 'profile_lon',
+            'y': 'profile_lat',
+            'z': 'depth',
+        }
+
+        newds = ContiguousRaggedTrajectoryProfile.from_dataframe(
+            full_df,
+            output=new_path,
+            axes=axes,
+            mode='a'
+        )
+
+        # Apply default metadata
+        attrs = read_attrs(template='ioos_ngdac')
+        newds.apply_meta(attrs, create_vars=False, create_dims=False)
+        newds.close()
+
+        os.makedirs(os.path.dirname(output), exist_ok=True)
+        shutil.move(new_path, output)
+    finally:
+        os.close(new_fp)
+        if os.path.exists(new_path):
+            os.remove(new_path)

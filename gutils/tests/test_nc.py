@@ -8,9 +8,11 @@ from collections import namedtuple
 import netCDF4 as nc4
 
 from gutils import safe_makedirs
-from gutils.nc import check_dataset, create_dataset
+from gutils.nc import check_dataset, create_dataset, merge_profile_netcdf_files
 from gutils.slocum import SlocumReader
 from gutils.tests import resource, GutilsTestClass
+
+from pocean.dsg import ContiguousRaggedTrajectoryProfile
 
 import logging
 L = logging.getLogger(__name__)  # noqa
@@ -158,3 +160,20 @@ class TestGliderCheck(GutilsTestClass):
     def test_failing_testing_compliance(self):
         args = self.args(file=resource('should_fail.nc'))
         assert check_dataset(args) == 1
+
+
+class TestProfileNetcdfMerge(GutilsTestClass):
+
+    def test_small_merge(self):
+        folder = resource('slocum', 'merge', 'small')
+        output = resource('slocum', 'merge', 'output', 'small.nc')
+        merge_profile_netcdf_files(folder, output)
+
+        with ContiguousRaggedTrajectoryProfile(output) as ncd:
+            L.info(ncd.variables)
+            assert ncd.is_valid()
+
+    def test_large_merge(self):
+        folder = resource('slocum', 'merge', 'large')
+        output = resource('slocum', 'merge', 'output', 'large.nc')
+        merge_profile_netcdf_files(folder, output)
