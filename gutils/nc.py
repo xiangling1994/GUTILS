@@ -558,7 +558,7 @@ def merge_profile_netcdf_files(folder, output):
         newds.apply_meta(attrs, create_vars=False, create_dims=False)
         newds.close()
 
-        os.makedirs(os.path.dirname(output), exist_ok=True)
+        safe_makedirs(os.path.dirname(output))
         shutil.move(new_path, output)
     finally:
         os.close(new_fp)
