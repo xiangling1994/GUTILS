@@ -6,6 +6,7 @@ import shutil
 import argparse
 import tempfile
 from ftplib import FTP
+from copy import deepcopy
 from datetime import datetime
 from collections import namedtuple
 
@@ -275,7 +276,7 @@ def netcdf_to_erddap_dataset(datasets_path, netcdf_path, flag_path):
                     if vname not in new_vars:
                         # Append the old variable block into the new one
                         L.debug('Carried over variable {}'.format(vname))
-                        deployment_xml_node.append(dv)
+                        deployment_xml_node.append(deepcopy(dv))
 
                 # Update the existing datasetID with a new XML block
                 xmltree.replace(dnode[0], deployment_xml_node)
