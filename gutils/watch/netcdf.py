@@ -214,6 +214,110 @@ destination_mapping = {
 }
 
 
+def netcdf_to_erddap_dataset(datasets_path, netcdf_path, flag_path):
+    tmp_handle, tmp_path = tempfile.mkstemp(prefix='gutils_errdap_', suffix='.xml')
+
+    try:
+        loader = PackageLoader('gutils', 'templates')
+        jenv = Environment(loader=loader, autoescape=select_autoescape(['html', 'xml']))
+
+        # Copy datasets.xml to a tmpfile if it exists
+        if os.path.isfile(datasets_path):
+            shutil.copy(datasets_path, tmp_path)
+        else:
+            # Render the base template to the tmpfile
+            datasets_template_string = jenv.get_template('erddap_datasets.xml').render()
+            with open(tmp_path, 'wt') as f:
+                f.write(
+                    etree.tostring(
+                        etree.fromstring(datasets_template_string),
+                        encoding='ISO-8859-1',
+                        pretty_print=True,
+                        xml_declaration=True
+                    ).decode('iso-8859-1')
+                )
+                f.write('\n')
+
+        deployment_directory = os.path.dirname(netcdf_path)
+        deployment_name = os.path.basename(deployment_directory)
+        with nc4.Dataset(netcdf_path) as ncd:
+            xmlstring = jenv.get_template('erddap_deployment.xml').render(
+                deployment_name=deployment_name,
+                deployment_directory=deployment_directory,
+                deployment_variables=ncd.variables,
+                datatype_mapping=datatype_mapping,
+                destination_mapping=destination_mapping
+            )
+        deployment_xml_node = etree.fromstring(xmlstring)
+
+        # Create
+        xmltree = etree.parse(tmp_path).getroot()
+        find_dataset = etree.XPath("//erddapDatasets/dataset[@datasetID=$name]")
+
+        # Find an existing datasetID within the datasets.xml file
+        dnode = find_dataset(xmltree, name=deployment_name)
+        if not dnode:
+            # No datasetID found, create a new one
+            xmltree.append(deployment_xml_node)
+            L.info("Added Deployment: {}".format(deployment_name))
+        else:
+            if lxml_elements_equal(dnode[0], deployment_xml_node):
+                L.info("Not replacing identical deployment XML node")
+                return
+            else:
+                # Now make sure we don't remove any variables since some could be
+                # missing from this file but present in others
+                new_vars = [ d.findtext('sourceName') for d in deployment_xml_node.iter('dataVariable') ]
+                # iterate over the old_vars and figure out which ones
+                # are not in the new_vars
+                for dv in dnode[0].iter('dataVariable'):
+                    vname = dv.findtext('sourceName')
+                    if vname not in new_vars:
+                        # Append the old variable block into the new one
+                        L.info('Carried over variable {}'.format(vname))
+                        deployment_xml_node.append(dv)
+
+                # Update the existing datasetID with a new XML block
+                xmltree.replace(dnode[0], deployment_xml_node)
+                L.info("Replaced Deployment: {}".format(deployment_name))
+
+        # Create tempfile for the new modified file
+        new_datasets_handle, new_datasets_path = tempfile.mkstemp(prefix='gutils_erddap_', suffix='.xml')
+        with open(new_datasets_path, 'wt') as f:
+            f.write(etree.tostring(
+                xmltree,
+                encoding='ISO-8859-1',
+                pretty_print=True,
+                xml_declaration=True
+            ).decode('iso-8859-1'))
+            f.write('\n')
+
+        # Replace old datasets.xml
+        os.close(new_datasets_handle)
+        os.chmod(new_datasets_path, 0o664)
+        shutil.move(new_datasets_path, datasets_path)
+
+    finally:
+        # Write dataset update flag if it doesn't exist
+        if flag_path is not None:
+            flag_tmp_handle, flag_tmp_path = tempfile.mkstemp(prefix='gutils_errdap_', suffix='.flag')
+            final_flagfile = os.path.join(flag_path, deployment_name)
+
+            if not os.path.isfile(final_flagfile):
+                with open(flag_tmp_path, 'w') as ff:
+                    ff.write(datetime.utcnow().isoformat())
+                os.chmod(flag_tmp_path, 0o666)
+                shutil.move(flag_tmp_path, final_flagfile)
+
+            os.close(flag_tmp_handle)
+            if os.path.exists(flag_tmp_path):
+                os.remove(flag_tmp_path)
+
+        os.close(tmp_handle)
+        if os.path.exists(tmp_path):
+            os.remove(tmp_path)
+
+
 class Netcdf2ErddapProcessor(ProcessEvent):
 
     def my_init(self, outputs_path, erddap_content_path, erddap_flag_path):
@@ -236,95 +340,12 @@ class Netcdf2ErddapProcessor(ProcessEvent):
         return False
 
     def create_and_update_content(self, event):
-        tmp_handle, tmp_path = tempfile.mkstemp(prefix='gutils_errdap_', suffix='.xml')
-
-        try:
-            loader = PackageLoader('gutils', 'templates')
-            jenv = Environment(loader=loader, autoescape=select_autoescape(['html', 'xml']))
-
-            # Copy datasets.xml to a tmpfile
-            datasets_path = os.path.join(self.erddap_content_path, 'datasets.xml')
-            if os.path.isfile(datasets_path):
-                shutil.copy(datasets_path, tmp_path)
-            else:
-                # Render the base template to the tmpfile
-                datasets_template_string = jenv.get_template('erddap_datasets.xml').render()
-                with open(tmp_path, 'wt') as f:
-                    f.write(
-                        etree.tostring(
-                            etree.fromstring(datasets_template_string),
-                            encoding='ISO-8859-1',
-                            pretty_print=True,
-                            xml_declaration=True
-                        ).decode('iso-8859-1')
-                    )
-                    f.write('\n')
-
-            deployment_name = os.path.basename(event.path)
-            with nc4.Dataset(event.pathname) as ncd:
-                xmlstring = jenv.get_template('erddap_deployment.xml').render(
-                    deployment_name=deployment_name,
-                    deployment_directory=event.path,
-                    deployment_variables=ncd.variables,
-                    datatype_mapping=datatype_mapping,
-                    destination_mapping=destination_mapping
-                )
-            deployment_xml_node = etree.fromstring(xmlstring)
-
-            # Create
-            xmltree = etree.parse(tmp_path).getroot()
-            find_dataset = etree.XPath("//erddapDatasets/dataset[@datasetID=$name]")
-
-            # Find an existing datasetID within the datasets.xml file
-            dnode = find_dataset(xmltree, name=deployment_name)
-            if not dnode:
-                # No datasetID found, create a new one
-                xmltree.append(deployment_xml_node)
-                L.info("Added Deployment: {}".format(deployment_name))
-            else:
-                if lxml_elements_equal(dnode[0], deployment_xml_node):
-                    L.info("Not replacing identical deployment XML node")
-                    return
-                else:
-                    # Update the existing datasetID with a new XML block
-                    xmltree.replace(dnode[0], deployment_xml_node)
-                    L.info("Replaced Deployment: {}".format(deployment_name))
-
-            # Create tempfile for the new modified file
-            new_datasets_handle, new_datasets_path = tempfile.mkstemp(prefix='gutils_erddap_', suffix='.xml')
-            with open(new_datasets_path, 'wt') as f:
-                f.write(etree.tostring(
-                    xmltree,
-                    encoding='ISO-8859-1',
-                    pretty_print=True,
-                    xml_declaration=True
-                ).decode('iso-8859-1'))
-                f.write('\n')
-
-            # Replace old datasets.xml
-            os.close(new_datasets_handle)
-            os.chmod(new_datasets_path, 0o664)
-            shutil.move(new_datasets_path, datasets_path)
-
-        finally:
-            # Write dataset update flag if it doesn't exist
-            if self.erddap_flag_path is not None:
-                flag_tmp_handle, flag_tmp_path = tempfile.mkstemp(prefix='gutils_errdap_', suffix='.flag')
-                final_flagfile = os.path.join(self.erddap_flag_path, deployment_name)
-
-                if not os.path.isfile(final_flagfile):
-                    with open(flag_tmp_path, 'w') as ff:
-                        ff.write(datetime.utcnow().isoformat())
-                    os.chmod(flag_tmp_path, 0o666)
-                    shutil.move(flag_tmp_path, final_flagfile)
-
-                os.close(flag_tmp_handle)
-                if os.path.exists(flag_tmp_path):
-                    os.remove(flag_tmp_path)
-
-            os.close(tmp_handle)
-            if os.path.exists(tmp_path):
-                os.remove(tmp_path)
+        datasets_path = os.path.join(self.erddap_content_path, 'datasets.xml')
+        netcdf_to_erddap_dataset(
+            datasets_path=datasets_path,
+            netcdf_path=event.pathname,
+            flag_path=self.erddap_flag_path
+        )
 
 
 def create_erddap_arg_parser():

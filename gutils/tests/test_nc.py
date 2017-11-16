@@ -6,11 +6,13 @@ from glob import glob
 from collections import namedtuple
 
 import netCDF4 as nc4
+from lxml import etree
 
 from gutils import safe_makedirs
 from gutils.nc import check_dataset, create_dataset, merge_profile_netcdf_files
 from gutils.slocum import SlocumReader
 from gutils.tests import resource, GutilsTestClass
+from gutils.watch.netcdf import netcdf_to_erddap_dataset
 
 from pocean.dsg import ContiguousRaggedTrajectoryProfile
 
@@ -170,10 +172,38 @@ class TestProfileNetcdfMerge(GutilsTestClass):
         merge_profile_netcdf_files(folder, output)
 
         with ContiguousRaggedTrajectoryProfile(output) as ncd:
-            L.info(ncd.variables)
             assert ncd.is_valid()
 
     def test_large_merge(self):
         folder = resource('slocum', 'merge', 'large')
         output = resource('slocum', 'merge', 'output', 'large.nc')
         merge_profile_netcdf_files(folder, output)
+
+        with ContiguousRaggedTrajectoryProfile(output) as ncd:
+            assert ncd.is_valid()
+
+
+class TestNetcdfToErddap(GutilsTestClass):
+
+    def test_appending_variables(self):
+        datasets_path = resource('erddap', 'datasets.xml')
+        netcdf_files = [
+            resource('erddap', '1.nc'),  # Creates datasets.xml
+            resource('erddap', '2.nc'),  # Adds additional variables
+            resource('erddap', '3.nc')   # Should not remove any variables
+        ]
+
+        for n in netcdf_files:
+            netcdf_to_erddap_dataset(datasets_path, n, None)
+
+        xmltree = etree.parse(datasets_path).getroot()
+        find_dataset = etree.XPath("//erddapDatasets/dataset")
+        ds = find_dataset(xmltree)[0]
+        vs = [ d.findtext('sourceName') for d in ds.iter('dataVariable') ]
+
+        # Temperatuer is only in 2.nc and not 1.nc or 3.nc. Make sure
+        # it was carried through correctly
+        assert 'temperature' in vs
+        assert 'conductivity' in vs
+        assert 'salinity' in vs
+        assert 'density' in vs
