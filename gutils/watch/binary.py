@@ -125,7 +125,7 @@ def create_ascii_arg_parser():
 
 
 def main_to_ascii():
-    setup_cli_logger(logging.WARNING)
+    setup_cli_logger(logging.INFO)
 
     parser = create_ascii_arg_parser()
     args = parser.parse_args()

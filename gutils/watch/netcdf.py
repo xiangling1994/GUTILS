@@ -259,10 +259,10 @@ def netcdf_to_erddap_dataset(datasets_path, netcdf_path, flag_path):
         if not dnode:
             # No datasetID found, create a new one
             xmltree.append(deployment_xml_node)
-            L.info("Added Deployment: {}".format(deployment_name))
+            L.debug("Added Deployment: {}".format(deployment_name))
         else:
             if lxml_elements_equal(dnode[0], deployment_xml_node):
-                L.info("Not replacing identical deployment XML node")
+                L.debug("Not replacing identical deployment XML node")
                 return
             else:
                 # Now make sure we don't remove any variables since some could be
@@ -274,12 +274,12 @@ def netcdf_to_erddap_dataset(datasets_path, netcdf_path, flag_path):
                     vname = dv.findtext('sourceName')
                     if vname not in new_vars:
                         # Append the old variable block into the new one
-                        L.info('Carried over variable {}'.format(vname))
+                        L.debug('Carried over variable {}'.format(vname))
                         deployment_xml_node.append(dv)
 
                 # Update the existing datasetID with a new XML block
                 xmltree.replace(dnode[0], deployment_xml_node)
-                L.info("Replaced Deployment: {}".format(deployment_name))
+                L.debug("Replaced Deployment: {}".format(deployment_name))
 
         # Create tempfile for the new modified file
         new_datasets_handle, new_datasets_path = tempfile.mkstemp(prefix='gutils_erddap_', suffix='.xml')

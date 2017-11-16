@@ -208,7 +208,7 @@ def create_netcdf(attrs, data, output_path, mode, subset=True):
         ]
         removable_columns = all_columns - set(reserved_columns)
         orphans = removable_columns - set(attrs.get('variables', {}).keys())
-        L.info(
+        L.debug(
             "Excluded from output (absent from JSON config):\n  * {}".format('\n  * '.join(orphans))
         )
         data = data.drop(orphans, axis=1)
