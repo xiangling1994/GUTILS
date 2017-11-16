@@ -207,3 +207,5 @@ class TestNetcdfToErddap(GutilsTestClass):
         assert 'conductivity' in vs
         assert 'salinity' in vs
         assert 'density' in vs
+
+        os.remove(datasets_path)
