@@ -59,11 +59,22 @@ services:
     ports:
       - "8080:8080"
 
-  # data:
+  # data1:
   #   image: sgs-content
   #   volumes:
   #     - ./run/binary:/data/secoora/dev/binary
   #   command: /sbin/my_init -- sleep 30; secoora_skio_dl ramses-20170905T1728 "ramses-2017-24[0-9]-*.*bd"
+  #   depends_on:
+  #     - ftp
+  #     - config
+  #     - gutils
+
+  # data2:
+  #   image: sgs-content
+  #   volumes:
+  #     - ./run/binary:/data/secoora/dev/binary
+  #     - /home/kwilcox/.ssh/usf_gliders:/usf.key
+  #   command: /sbin/my_init -- sleep 30; secoora_usf_dl bass-20171031T0000 default "*.*bd"
   #   depends_on:
   #     - ftp
   #     - config
