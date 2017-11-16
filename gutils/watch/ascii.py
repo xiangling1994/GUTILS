@@ -146,7 +146,7 @@ def create_netcdf_arg_parser():
 
 
 def main_to_netcdf():
-    setup_cli_logger(logging.INFO)
+    setup_cli_logger(logging.WARNING)
 
     parser = create_netcdf_arg_parser()
     args = parser.parse_args()

@@ -381,7 +381,7 @@ def create_erddap_arg_parser():
 
 
 def main_to_erddap():
-    setup_cli_logger(logging.INFO)
+    setup_cli_logger(logging.WARNING)
 
     parser = create_erddap_arg_parser()
     args = parser.parse_args()
