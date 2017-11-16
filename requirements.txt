@@ -4,7 +4,7 @@ gsw<3.1.0
 netCDF4
 numpy
 pandas
-pocean-core>=1.2.5
+pocean-core>=1.2.6,<2.0
 pyinotify
 scipy
 six
