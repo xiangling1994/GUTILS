@@ -125,10 +125,10 @@ def set_uv_data(ncd, uv_txy):
 
 
 def get_geographic_attributes(profile):
-    miny = profile.y.min().round(5)
-    maxy = profile.y.max().round(5)
-    minx = profile.x.min().round(5)
-    maxx = profile.x.max().round(5)
+    miny = round(profile.y.min(), 5)
+    maxy = round(profile.y.max(), 5)
+    minx = round(profile.x.min(), 5)
+    maxx = round(profile.x.max(), 5)
     polygon_wkt = 'POLYGON ((' \
         '{maxy:.6f} {minx:.6f}, '  \
         '{maxy:.6f} {maxx:.6f}, '  \
@@ -155,8 +155,8 @@ def get_geographic_attributes(profile):
 def get_vertical_attributes(profile):
     return {
         'attributes': {
-            'geospatial_vertical_min': profile.z.min().round(6),
-            'geospatial_vertical_max': profile.z.max().round(6),
+            'geospatial_vertical_min': round(profile.z.min(), 6),
+            'geospatial_vertical_max': round(profile.z.max(), 6),
             'geospatial_vertical_units': 'm',
         }
     }
