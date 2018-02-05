@@ -9,10 +9,10 @@ L = logging.getLogger(__name__)
 
 
 def default_filter(dataset):
-    dataset, rm_depth = filter_profile_depth(dataset)
-    dataset, rm_points = filter_profile_number_of_points(dataset)
-    dataset, rm_time = filter_profile_timeperiod(dataset)
-    dataset, rm_distance = filter_profile_distance(dataset)
+    dataset, rm_depth = filter_profile_depth(dataset, reindex=False)
+    dataset, rm_points = filter_profile_number_of_points(dataset, reindex=False)
+    dataset, rm_time = filter_profile_timeperiod(dataset, reindex=False)
+    dataset, rm_distance = filter_profile_distance(dataset, reindex=True)
     total_filtered = rm_depth + rm_points + rm_time + rm_distance
     return dataset, total_filtered
 
@@ -22,15 +22,15 @@ def filter_profiles(dataset, conditional, reindex=True):
 
     Returns the filtered set of profiles
     """
-    before = dataset.profile.unique()
+    before = len(dataset.profile.unique())
     filtered = dataset.groupby('profile').filter(conditional).copy()
-    after = filtered.profile.unique()
+    after = len(filtered.profile.unique())
     # Re-index the profiles
     if reindex is True:
-        for ix, p in enumerate(after):
-            filtered.loc[filtered.profile == p, 'profile'] = ix
+        f, _ = pd.factorize(filtered.profile)
+        filtered.loc[:, 'profile'] = f.astype('int32')  # Avoid the int64 dtype
 
-    return filtered, (len(before) - len(after))
+    return filtered, before - after
 
 
 def filter_profile_depth(dataset, below=None, reindex=True):
@@ -46,7 +46,7 @@ def filter_profile_depth(dataset, below=None, reindex=True):
     def conditional(profile):
         return profile.z.max() >= below
 
-    return filter_profiles(dataset, conditional, reindex)
+    return filter_profiles(dataset, conditional, reindex=reindex)
 
 
 def filter_profile_timeperiod(dataset, timespan_condition=None, reindex=True):
@@ -62,7 +62,7 @@ def filter_profile_timeperiod(dataset, timespan_condition=None, reindex=True):
         timespan = profile.t.max() - profile.t.min()
         return timespan >= pd.Timedelta(timespan_condition, unit='s')
 
-    return filter_profiles(dataset, conditional, reindex)
+    return filter_profiles(dataset, conditional, reindex=reindex)
 
 
 def filter_profile_distance(dataset, distance_condition=None, reindex=True):
@@ -78,12 +78,12 @@ def filter_profile_distance(dataset, distance_condition=None, reindex=True):
         distance = abs(profile.z.max() - profile.z.min())
         return distance >= distance_condition
 
-    return filter_profiles(dataset, conditional, reindex)
+    return filter_profiles(dataset, conditional, reindex=reindex)
 
 
 def filter_profile_number_of_points(dataset, points_condition=None, reindex=True):
     """Filters out profiles that do not have a specified number of points
-    (Default: 5 points)
+    (Default: 3 points)
 
     Returns a DataFrame with a subset of profiles
     """
@@ -93,7 +93,7 @@ def filter_profile_number_of_points(dataset, points_condition=None, reindex=True
     def conditional(profile):
         return len(profile) >= points_condition
 
-    return filter_profiles(dataset, conditional, reindex)
+    return filter_profiles(dataset, conditional, reindex=reindex)
 
 
 def process_dataset(file, reader_class, tsint=None, filter_z=None, filter_points=None, filter_time=None, filter_distance=None):
@@ -123,10 +123,10 @@ def process_dataset(file, reader_class, tsint=None, filter_z=None, filter_points
 
         # Filter data
         original_profiles = len(profiles.profile.unique())
-        filtered, rm_depth    = filter_profile_depth(profiles, below=filter_z)
-        filtered, rm_points   = filter_profile_number_of_points(filtered, points_condition=filter_points)
-        filtered, rm_time     = filter_profile_timeperiod(filtered, timespan_condition=filter_time)
-        filtered, rm_distance = filter_profile_distance(filtered, distance_condition=filter_distance)
+        filtered, rm_depth    = filter_profile_depth(profiles, below=filter_z, reindex=False)
+        filtered, rm_points   = filter_profile_number_of_points(filtered, points_condition=filter_points, reindex=False)
+        filtered, rm_time     = filter_profile_timeperiod(filtered, timespan_condition=filter_time, reindex=False)
+        filtered, rm_distance = filter_profile_distance(filtered, distance_condition=filter_distance, reindex=True)
         total_filtered = rm_depth + rm_points + rm_time + rm_distance
         L.info(
             (
