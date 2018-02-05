@@ -189,6 +189,129 @@ def get_creation_attributes(profile):
     }
 
 
+def create_profile_netcdf(attrs, profile, output_path, mode):
+    try:
+        # Path to hold file while we create it
+        tmp_handle, tmp_path = tempfile.mkstemp(suffix='.nc', prefix='gutils_glider_netcdf_')
+
+        profile_time = profile.t.dropna().iloc[0]
+        profile_index = calendar.timegm(profile_time.utctimetuple())
+        # Create final filename
+        filename = "{0}_{1:%Y%m%dT%H%M%S}Z_{2}_{3}.nc".format(
+            attrs['glider'],
+            profile_time,
+            profile_index,
+            mode
+        )
+        output_file = os.path.join(output_path, filename)
+
+        # We are using the epoch as the profile_index!
+        # # Get all existing netCDF outputs and find out the index of this netCDF file. That
+        # # will be the profile_id of this file. This is effectively keeping a tally of netCDF
+        # # files that have been created and only works if NETCDF FILES ARE WRITTEN IN
+        # # ASCENDING ORDER
+        # netcdf_files_same_mode = list(glob(
+        #     os.path.join(
+        #         output_path,
+        #         '*_{}.nc'.format(mode)
+        #     )
+        # ))
+        # netcdf_files_same_mode = np.asarray(netcdf_files_same_mode)
+        # profile_index = np.searchsorted(netcdf_files_same_mode, filename)
+
+        # Add in the trajectory dimension to make pocean happy
+        traj_name = '{}-{}'.format(
+            attrs['glider'],
+            attrs['trajectory_date']
+        )
+        profile = profile.assign(trajectory=traj_name)
+
+        # We add this back in later as seconds since epoch
+        profile.drop('profile', axis=1, inplace=True)
+
+        # Compute U/V scalar values
+        uv_txy = get_uv_data(profile)
+        if 'u_orig' in profile.columns and 'v_orig' in profile.columns:
+            profile.drop(['u_orig', 'v_orig'], axis=1, inplace=True)
+
+        # Compute profile scalar values
+        profile_txy = get_profile_data(profile, method=None)
+
+        # Calculate some geographic global attributes
+        attrs = dict_update(attrs, get_geographic_attributes(profile))
+        # Calculate some vertical global attributes
+        attrs = dict_update(attrs, get_vertical_attributes(profile))
+        # Calculate some temporal global attributes
+        attrs = dict_update(attrs, get_temporal_attributes(profile))
+        # Set the creation dates and history
+        attrs = dict_update(attrs, get_creation_attributes(profile))
+
+        # Changing column names here from the default 't z x y'
+        axes = {
+            't': 'time',
+            'z': 'depth',
+            'x': 'lon',
+            'y': 'lat',
+            'sample': 'time'
+        }
+        profile = profile.rename(columns=axes)
+
+        # Use pocean to create NetCDF file
+        with IncompleteMultidimensionalTrajectory.from_dataframe(
+                profile,
+                tmp_path,
+                axes=axes,
+                reduce_dims=True,
+                mode='a') as ncd:
+
+            # We only want to apply metadata from the `attrs` map if the variable is already in
+            # the netCDF file or it is a scalar variable (no shape defined). This avoids
+            # creating measured variables that were not measured in this profile.
+            prof_attrs = attrs.copy()
+
+            vars_to_update = OrderedDict()
+            for vname, vobj in prof_attrs['variables'].items():
+                if vname in ncd.variables or ('shape' not in vobj and 'type' in vobj):
+                    if 'shape' in vobj:
+                        # Assign coordinates
+                        vobj['attributes']['coordinates'] = '{} {} {} {}'.format(
+                            axes.get('t'),
+                            axes.get('z'),
+                            axes.get('x'),
+                            axes.get('y'),
+                        )
+                    vars_to_update[vname] = vobj
+                else:
+                    # L.debug("Skipping missing variable: {}".format(vname))
+                    pass
+
+            prof_attrs['variables'] = vars_to_update
+            ncd.apply_meta(prof_attrs)
+
+            # Set trajectory value
+            ncd.id = traj_name
+            ncd.variables['trajectory'][0] = traj_name
+
+            # Set profile_* data
+            set_profile_data(ncd, profile_txy, profile_index)
+
+            # Set *_uv data
+            set_uv_data(ncd, uv_txy)
+
+        # Move to final destination
+        safe_makedirs(os.path.dirname(output_file))
+        os.chmod(tmp_path, 0o664)
+        shutil.move(tmp_path, output_file)
+        L.info('Created: {}'.format(output_file))
+        return output_file
+    except BaseException:
+        raise
+    finally:
+        os.close(tmp_handle)
+        if os.path.exists(tmp_path):
+            os.remove(tmp_path)
+
+
 def create_netcdf(attrs, data, output_path, mode, subset=True):
     # Create NetCDF Files for Each Profile
     written_files = []
@@ -213,126 +336,14 @@ def create_netcdf(attrs, data, output_path, mode, subset=True):
         )
         data = data.drop(orphans, axis=1)
 
+    written = []
     for pi, profile in data.groupby('profile'):
         try:
-            # Path to hold file while we create it
-            tmp_handle, tmp_path = tempfile.mkstemp(suffix='.nc', prefix='gutils_glider_netcdf_')
-
-            profile_time = profile.t.dropna().iloc[0]
-            profile_index = calendar.timegm(profile_time.utctimetuple())
-            # Create final filename
-            filename = "{0}_{1:%Y%m%dT%H%M%S}Z_{2}_{3}.nc".format(
-                attrs['glider'],
-                profile_time,
-                profile_index,
-                mode
-            )
-            output_file = os.path.join(output_path, filename)
-
-            # We are using the epoch as the profile_index!
-            # # Get all existing netCDF outputs and find out the index of this netCDF file. That
-            # # will be the profile_id of this file. This is effectively keeping a tally of netCDF
-            # # files that have been created and only works if NETCDF FILES ARE WRITTEN IN
-            # # ASCENDING ORDER
-            # netcdf_files_same_mode = list(glob(
-            #     os.path.join(
-            #         output_path,
-            #         '*_{}.nc'.format(mode)
-            #     )
-            # ))
-            # netcdf_files_same_mode = np.asarray(netcdf_files_same_mode)
-            # profile_index = np.searchsorted(netcdf_files_same_mode, filename)
-
-            # Add in the trajectory dimension to make pocean happy
-            traj_name = '{}-{}'.format(
-                attrs['glider'],
-                attrs['trajectory_date']
-            )
-            profile = profile.assign(trajectory=traj_name)
-
-            # We add this back in later as seconds since epoch
-            profile.drop('profile', axis=1, inplace=True)
-
-            # Compute U/V scalar values
-            uv_txy = get_uv_data(profile)
-            if 'u_orig' in profile.columns and 'v_orig' in profile.columns:
-                profile.drop(['u_orig', 'v_orig'], axis=1, inplace=True)
-
-            # Compute profile scalar values
-            profile_txy = get_profile_data(profile, method=None)
-
-            # Calculate some geographic global attributes
-            attrs = dict_update(attrs, get_geographic_attributes(profile))
-            # Calculate some vertical global attributes
-            attrs = dict_update(attrs, get_vertical_attributes(profile))
-            # Calculate some temporal global attributes
-            attrs = dict_update(attrs, get_temporal_attributes(profile))
-            # Set the creation dates and history
-            attrs = dict_update(attrs, get_creation_attributes(profile))
-
-            # Changing column names here from the default 't z x y'
-            axes = {
-                't': 'time',
-                'z': 'depth',
-                'x': 'lon',
-                'y': 'lat'
-            }
-            profile = profile.rename(columns=axes)
-
-            # Use pocean to create NetCDF file
-            with IncompleteMultidimensionalTrajectory.from_dataframe(
-                    profile,
-                    tmp_path,
-                    axes=axes,
-                    reduce_dims=True,
-                    mode='a') as ncd:
-
-                # We only want to apply metadata from the `attrs` map if the variable is already in
-                # the netCDF file or it is a scalar variable (no shape defined). This avoids
-                # creating measured variables that were not measured in this profile.
-                prof_attrs = attrs.copy()
-                vars_to_update = OrderedDict()
-                for vname, vobj in prof_attrs['variables'].items():
-                    if vname in ncd.variables or ('shape' not in vobj and 'type' in vobj):
-                        if 'shape' in vobj:
-                            # Assign coordinates
-                            vobj['attributes']['coordinates'] = '{} {} {} {}'.format(
-                                axes.get('t'),
-                                axes.get('z'),
-                                axes.get('x'),
-                                axes.get('y'),
-                            )
-                        vars_to_update[vname] = vobj
-                    else:
-                        # L.debug("Skipping missing variable: {}".format(vname))
-                        pass
-
-                prof_attrs['variables'] = vars_to_update
-                ncd.apply_meta(prof_attrs)
-
-                # Set trajectory value
-                ncd.id = traj_name
-                ncd.variables['trajectory'][0] = traj_name
-
-                # Set profile_* data
-                set_profile_data(ncd, profile_txy, profile_index)
-
-                # Set *_uv data
-                set_uv_data(ncd, uv_txy)
-
-            # Move to final destination
-            safe_makedirs(os.path.dirname(output_file))
-            os.chmod(tmp_path, 0o664)
-            shutil.move(tmp_path, output_file)
-            written_files.append(output_file)
-            L.info('Created: {}'.format(output_file))
-        except BaseException as e:
-            L.exception('Error: {}'.format(e))
+            cr = create_profile_netcdf(attrs, profile, output_path, mode)
+            written.append(cr)
+        except BaseException:
+            L.exception('Error creating netCDF for profile {}. Skipping.'.format(pi))
             continue
-        finally:
-            os.close(tmp_handle)
-            if os.path.exists(tmp_path):
-                os.remove(tmp_path)
 
     return written_files
 
