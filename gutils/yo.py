@@ -36,6 +36,7 @@ def assign_profiles(df, tsint=None):
     """
 
     profile_df = df.copy()
+    profile_df['profile'] = np.nan  # Fill profile with nans
     tmp_df = df.copy()
 
     if tsint is None:
@@ -64,6 +65,8 @@ def assign_profiles(df, tsint=None):
         right=tmp_df.z.iloc[-1]
     )
 
+    del tmp_df
+
     if len(interp_z) < 2:
         return None
 
@@ -72,6 +75,8 @@ def assign_profiles(df, tsint=None):
 
     p_inds = np.empty((0, 2))
     inflections = np.where(np.diff(delta_depth) != 0)[0]
+    if inflections.size < 1:
+        return profile_df
     p_inds = np.append(p_inds, [[0, inflections[0]]], axis=0)
 
     for p in range(len(inflections) - 1):
@@ -81,7 +86,6 @@ def assign_profiles(df, tsint=None):
     # Start profile index
     profile_index = 0
     ts_window = tsint * 2
-    profile_df['profile'] = np.nan  # Fill profile with nans
 
     # Iterate through the profile start/stop indices
     for p0, p1 in p_inds:
