@@ -37,8 +37,8 @@ RUN echo 'export PATH=/opt/conda/bin:$PATH' > /etc/profile.d/conda.sh && \
         && \
     /opt/conda/bin/conda config \
         --add create_default_packages pip \
-        --add channels conda-forge \
         --add channels axiom-data-science \
+        --add channels conda-forge \
         && \
     /opt/conda/bin/conda install python=$PYTHON_VERSION && \
     /opt/conda/bin/conda clean -a -y
