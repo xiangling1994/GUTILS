@@ -454,6 +454,19 @@ def check_dataset(args):
 
     outhandle, outfile = tempfile.mkstemp()
 
+    def show_messages(jn):
+        out_messages = []
+        for k, v in jn.items():
+            if isinstance(v, list):
+                for x in v:
+                    if 'msgs' in x and x['msgs']:
+                        out_messages += x['msgs']
+        L.warning(
+            '{}:\n{}'.format(args.file, '\n'.join(['  * {}'.format(
+                m) for m in out_messages ])
+            )
+        )
+
     try:
         return_value, errors = ComplianceChecker.run_checker(
             ds_loc=args.file,
@@ -463,20 +476,16 @@ def check_dataset(args):
             output_format='json',
             output_filename=outfile
         )
-        assert errors is False
-        return 0
-    except AssertionError:
-        with open(outfile, 'rt') as f:
-            ers = json.loads(f.read())
-            for k, v in ers.items():
-                if isinstance(v, list):
-                    for x in v:
-                        if 'msgs' in x and x['msgs']:
-                            L.warning('{} - {}'.format(args.file, x['msgs']))
-        return 1
     except BaseException as e:
         L.warning('{} - {}'.format(args.file, e))
         return 1
+    else:
+        with open(outfile, 'rt') as f:
+            show_messages(json.loads(f.read())['gliderdac'])
+        if errors is False:
+            return 0
+        else:
+            return 1
     finally:
         os.close(outhandle)
         if os.path.isfile(outfile):
