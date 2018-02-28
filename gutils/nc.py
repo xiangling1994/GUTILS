@@ -484,14 +484,14 @@ def check_dataset(args):
 
     outhandle, outfile = tempfile.mkstemp()
 
-    def show_messages(jn):
+    def show_messages(jn, log):
         out_messages = []
         for k, v in jn.items():
             if isinstance(v, list):
                 for x in v:
                     if 'msgs' in x and x['msgs']:
                         out_messages += x['msgs']
-        L.warning(
+        log(
             '{}:\n{}'.format(args.file, '\n'.join(['  * {}'.format(
                 m) for m in out_messages ])
             )
@@ -510,12 +510,17 @@ def check_dataset(args):
         L.warning('{} - {}'.format(args.file, e))
         return 1
     else:
-        with open(outfile, 'rt') as f:
-            show_messages(json.loads(f.read())['gliderdac'])
         if errors is False:
-            return 0
+            return_value = 0
+            log = L.debug
         else:
-            return 1
+            return_value = 1
+            log = L.warning
+
+        with open(outfile, 'rt') as f:
+            show_messages(json.loads(f.read())['gliderdac'], log)
+
+        return return_value
     finally:
         os.close(outhandle)
         if os.path.isfile(outfile):
