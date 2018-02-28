@@ -1,5 +1,5 @@
-gutils\.slocum package
-======================
+gutils.slocum package
+=====================
 
 .. automodule:: gutils.slocum
     :members:

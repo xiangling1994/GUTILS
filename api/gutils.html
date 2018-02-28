@@ -4,20 +4,12 @@
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
+        <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>gutils package &#8212; gutils 2.5.0 documentation</title>
     <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '../',
-        VERSION:     '2.5.0',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true,
-        SOURCELINK_SUFFIX: '.txt'
-      };
-    </script>
+    <script type="text/javascript" src="../_static/documentation_options.js"></script>
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
@@ -29,8 +21,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
 
-  </head>
-  <body>
+  </head><body>
   
 
     <div class="document">
@@ -136,13 +127,6 @@
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="gutils.slocum.html">gutils.slocum package</a></li>
-<li class="toctree-l1"><a class="reference internal" href="gutils.watch.html">gutils.watch package</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="gutils.watch.html#submodules">Submodules</a></li>
-<li class="toctree-l2"><a class="reference internal" href="gutils.watch.html#module-gutils.watch.ascii">gutils.watch.ascii module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="gutils.watch.html#module-gutils.watch.binary">gutils.watch.binary module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="gutils.watch.html#module-gutils.watch.netcdf">gutils.watch.netcdf module</a></li>
-</ul>
-</li>
 </ul>
 </div>
 </div>
@@ -246,6 +230,28 @@ depth positive down.</p>
 </div>
 <div class="section" id="module-gutils.nc">
 <span id="gutils-nc-module"></span><h2>gutils.nc module<a class="headerlink" href="#module-gutils.nc" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="gutils.nc.ProfileIdTypes">
+<em class="property">class </em><code class="descclassname">gutils.nc.</code><code class="descname">ProfileIdTypes</code><a class="headerlink" href="#gutils.nc.ProfileIdTypes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Types of profile IDs</p>
+<dl class="attribute">
+<dt id="gutils.nc.ProfileIdTypes.COUNT">
+<code class="descname">COUNT</code><em class="property"> = 2</em><a class="headerlink" href="#gutils.nc.ProfileIdTypes.COUNT" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="gutils.nc.ProfileIdTypes.EPOCH">
+<code class="descname">EPOCH</code><em class="property"> = 1</em><a class="headerlink" href="#gutils.nc.ProfileIdTypes.EPOCH" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="gutils.nc.ProfileIdTypes.FRAME">
+<code class="descname">FRAME</code><em class="property"> = 3</em><a class="headerlink" href="#gutils.nc.ProfileIdTypes.FRAME" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
 <dl class="function">
 <dt id="gutils.nc.check_arg_parser">
 <code class="descclassname">gutils.nc.</code><code class="descname">check_arg_parser</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#gutils.nc.check_arg_parser" title="Permalink to this definition">¶</a></dt>
@@ -263,17 +269,17 @@ depth positive down.</p>
 
 <dl class="function">
 <dt id="gutils.nc.create_dataset">
-<code class="descclassname">gutils.nc.</code><code class="descname">create_dataset</code><span class="sig-paren">(</span><em>file</em>, <em>reader_class</em>, <em>config_path</em>, <em>output_path</em>, <em>subset</em>, <em>template</em>, <em>**filters</em><span class="sig-paren">)</span><a class="headerlink" href="#gutils.nc.create_dataset" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">gutils.nc.</code><code class="descname">create_dataset</code><span class="sig-paren">(</span><em>file</em>, <em>reader_class</em>, <em>config_path</em>, <em>output_path</em>, <em>subset</em>, <em>template</em>, <em>profile_id_type</em>, <em>**filters</em><span class="sig-paren">)</span><a class="headerlink" href="#gutils.nc.create_dataset" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="function">
 <dt id="gutils.nc.create_netcdf">
-<code class="descclassname">gutils.nc.</code><code class="descname">create_netcdf</code><span class="sig-paren">(</span><em>attrs</em>, <em>data</em>, <em>output_path</em>, <em>mode</em>, <em>subset=True</em><span class="sig-paren">)</span><a class="headerlink" href="#gutils.nc.create_netcdf" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">gutils.nc.</code><code class="descname">create_netcdf</code><span class="sig-paren">(</span><em>attrs</em>, <em>data</em>, <em>output_path</em>, <em>mode</em>, <em>profile_id_type=1</em>, <em>subset=True</em><span class="sig-paren">)</span><a class="headerlink" href="#gutils.nc.create_netcdf" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="function">
 <dt id="gutils.nc.create_profile_netcdf">
-<code class="descclassname">gutils.nc.</code><code class="descname">create_profile_netcdf</code><span class="sig-paren">(</span><em>attrs</em>, <em>profile</em>, <em>output_path</em>, <em>mode</em><span class="sig-paren">)</span><a class="headerlink" href="#gutils.nc.create_profile_netcdf" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">gutils.nc.</code><code class="descname">create_profile_netcdf</code><span class="sig-paren">(</span><em>attrs</em>, <em>profile</em>, <em>output_path</em>, <em>mode</em>, <em>profile_id_type=1</em><span class="sig-paren">)</span><a class="headerlink" href="#gutils.nc.create_profile_netcdf" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="function">
@@ -391,12 +397,14 @@ depth timeseries
 </div>
 <div id="searchbox" style="display: none" role="search">
   <h3>Quick search</h3>
+    <div class="searchformwrapper">
     <form class="search" action="../search.html" method="get">
-      <div><input type="text" name="q" /></div>
-      <div><input type="submit" value="Go" /></div>
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
       <input type="hidden" name="check_keywords" value="yes" />
       <input type="hidden" name="area" value="default" />
     </form>
+    </div>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
@@ -407,7 +415,7 @@ depth timeseries
       &copy;2017, Kyle Wilcox.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.7</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.0</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
       
     </div>

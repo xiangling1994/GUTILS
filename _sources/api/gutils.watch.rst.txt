@@ -1,5 +1,5 @@
-gutils\.watch package
-=====================
+gutils.watch package
+====================
 
 .. automodule:: gutils.watch
     :members:
@@ -9,24 +9,24 @@ gutils\.watch package
 Submodules
 ----------
 
-gutils\.watch\.ascii module
----------------------------
+gutils.watch.ascii module
+-------------------------
 
 .. automodule:: gutils.watch.ascii
     :members:
     :undoc-members:
     :show-inheritance:
 
-gutils\.watch\.binary module
-----------------------------
+gutils.watch.binary module
+--------------------------
 
 .. automodule:: gutils.watch.binary
     :members:
     :undoc-members:
     :show-inheritance:
 
-gutils\.watch\.netcdf module
-----------------------------
+gutils.watch.netcdf module
+--------------------------
 
 .. automodule:: gutils.watch.netcdf
     :members:
