@@ -45,6 +45,7 @@ class TestCreateGliderScript(GutilsTestClass):
             output_path=out_base,
             subset=False,
             template='trajectory',
+            profile_id_type=1,
             tsint=10,
             filter_distance=1,
             filter_points=5,
@@ -84,6 +85,7 @@ class TestCreateGliderScript(GutilsTestClass):
                 output_path=out_base,
                 subset=False,
                 template='ioos_ngdac',
+                profile_id_type=2,
                 tsint=10,
                 filter_distance=1,
                 filter_points=5,
@@ -98,12 +100,12 @@ class TestCreateGliderScript(GutilsTestClass):
         # First profile
         with nc4.Dataset(output_files[0]) as ncd:
             assert ncd.variables['profile_id'].ndim == 0
-            assert ncd.variables['profile_id'][0] == 1473428494
+            assert ncd.variables['profile_id'][0] == 0
 
         # Last profile
         with nc4.Dataset(output_files[-1]) as ncd:
             assert ncd.variables['profile_id'].ndim == 0
-            assert ncd.variables['profile_id'][0] == 1473509118
+            assert ncd.variables['profile_id'][0] == len(output_files) - 1
 
         # Check netCDF file for compliance
         ds = namedtuple('Arguments', ['file'])
@@ -120,6 +122,7 @@ class TestCreateGliderScript(GutilsTestClass):
             output_path=out_base,
             subset=False,
             template='trajectory',
+            profile_id_type=1,
             tsint=10,
             filter_distance=1,
             filter_points=5,

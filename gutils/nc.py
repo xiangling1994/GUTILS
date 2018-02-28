@@ -10,6 +10,7 @@ import shutil
 import argparse
 import calendar
 import tempfile
+from glob import glob
 from datetime import datetime
 from collections import OrderedDict
 
@@ -28,6 +29,14 @@ from gutils.slocum import SlocumReader
 
 import logging
 L = logging.getLogger(__name__)
+
+
+class ProfileIdTypes(object):
+    """Types of profile IDs"""
+
+    EPOCH = 1  # epochs
+    COUNT = 2  # "count" from the output directory
+    FRAME = 3  # "profile" column from the input dataframe
 
 
 def read_attrs(config_path=None, template=None):
@@ -189,35 +198,45 @@ def get_creation_attributes(profile):
     }
 
 
-def create_profile_netcdf(attrs, profile, output_path, mode):
+def create_profile_netcdf(attrs, profile, output_path, mode, profile_id_type=ProfileIdTypes.EPOCH):
     try:
         # Path to hold file while we create it
         tmp_handle, tmp_path = tempfile.mkstemp(suffix='.nc', prefix='gutils_glider_netcdf_')
 
         profile_time = profile.t.dropna().iloc[0]
-        profile_index = calendar.timegm(profile_time.utctimetuple())
+
+        if profile_id_type == ProfileIdTypes.EPOCH:
+            # We are using the epoch as the profile_index!
+            profile_index = calendar.timegm(profile_time.utctimetuple())
+        # Figure out which profile index to use (epoch or integer)
+        elif profile_id_type == ProfileIdTypes.COUNT:
+            # Get all existing netCDF outputs and find out the index of this netCDF file. That
+            # will be the profile_id of this file. This is effectively keeping a tally of netCDF
+            # files that have been created and only works if NETCDF FILES ARE WRITTEN IN
+            # ASCENDING ORDER.
+            # There is a race condition here if files are being in parallel and one should be
+            # sure that when this function is being run there can be no more files writtten.
+            # This file being written is the last profile available.
+            netcdf_files_same_mode = list(glob(
+                os.path.join(
+                    output_path,
+                    '*_{}.nc'.format(mode)
+                )
+            ))
+            profile_index = len(netcdf_files_same_mode)
+        elif profile_id_type == ProfileIdTypes.FRAME:
+            profile_index = profile.profile.iloc[0]
+        else:
+            raise ValueError('{} is not a valid profile type'.format(profile_id_type))
+
         # Create final filename
-        filename = "{0}_{1:%Y%m%dT%H%M%S}Z_{2}_{3}.nc".format(
+        filename = "{0}_{1:010d}_{2:%Y%m%dT%H%M%S}Z_{3}.nc".format(
             attrs['glider'],
-            profile_time,
             profile_index,
+            profile_time,
             mode
         )
         output_file = os.path.join(output_path, filename)
-
-        # We are using the epoch as the profile_index!
-        # # Get all existing netCDF outputs and find out the index of this netCDF file. That
-        # # will be the profile_id of this file. This is effectively keeping a tally of netCDF
-        # # files that have been created and only works if NETCDF FILES ARE WRITTEN IN
-        # # ASCENDING ORDER
-        # netcdf_files_same_mode = list(glob(
-        #     os.path.join(
-        #         output_path,
-        #         '*_{}.nc'.format(mode)
-        #     )
-        # ))
-        # netcdf_files_same_mode = np.asarray(netcdf_files_same_mode)
-        # profile_index = np.searchsorted(netcdf_files_same_mode, filename)
 
         # Add in the trajectory dimension to make pocean happy
         traj_name = '{}-{}'.format(
@@ -226,7 +245,7 @@ def create_profile_netcdf(attrs, profile, output_path, mode):
         )
         profile = profile.assign(trajectory=traj_name)
 
-        # We add this back in later as seconds since epoch
+        # We add this back in later
         profile.drop('profile', axis=1, inplace=True)
 
         # Compute U/V scalar values
@@ -312,7 +331,7 @@ def create_profile_netcdf(attrs, profile, output_path, mode):
             os.remove(tmp_path)
 
 
-def create_netcdf(attrs, data, output_path, mode, subset=True):
+def create_netcdf(attrs, data, output_path, mode, profile_id_type=ProfileIdTypes.EPOCH, subset=True):
     # Create NetCDF Files for Each Profile
     written_files = []
 
@@ -339,7 +358,7 @@ def create_netcdf(attrs, data, output_path, mode, subset=True):
     written = []
     for pi, profile in data.groupby('profile'):
         try:
-            cr = create_profile_netcdf(attrs, profile, output_path, mode)
+            cr = create_profile_netcdf(attrs, profile, output_path, mode, profile_id_type)
             written.append(cr)
         except BaseException:
             L.exception('Error creating netCDF for profile {}. Skipping.'.format(pi))
@@ -415,7 +434,7 @@ def create_arg_parser():
     return parser
 
 
-def create_dataset(file, reader_class, config_path, output_path, subset, template, **filters):
+def create_dataset(file, reader_class, config_path, output_path, subset, template, profile_id_type, **filters):
 
     processed_df, mode = process_dataset(file, reader_class, **filters)
 
@@ -424,7 +443,7 @@ def create_dataset(file, reader_class, config_path, output_path, subset, templat
 
     attrs = read_attrs(config_path, template=template)
 
-    return create_netcdf(attrs, processed_df, output_path, mode)
+    return create_netcdf(attrs, processed_df, output_path, mode, profile_id_type, subset=subset)
 
 
 def main_create():

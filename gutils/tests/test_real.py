@@ -17,12 +17,12 @@ L = logging.getLogger(__name__)  # noqa
 @pytest.mark.long
 @pytest.mark.parametrize("deployment", [
     'bass-20160909T1733',
-    'modena-20160909T1758',
-    'ramses-20160909T2028',
-    'ramses-20170516T1345',
-    'salacia-20160919T2028',
-    'salacia-20170710T1942',
-    'ramses-20170905T1728',
+    # 'modena-20160909T1758',
+    # 'ramses-20160909T2028',
+    # 'ramses-20170516T1345',
+    # 'salacia-20160919T2028',
+    # 'salacia-20170710T1942',
+    # 'ramses-20170905T1728',
 ])
 def test_real_deployments(deployment):
     setup_testing_logger(level=logging.WARNING)
@@ -42,6 +42,7 @@ def test_real_deployments(deployment):
         output_path=netcdf_path,
         subset=True,
         template='ioos_ngdac',
+        profile_id_type=2,
         filter_distance=1,
         filter_points=5,
         filter_time=10,

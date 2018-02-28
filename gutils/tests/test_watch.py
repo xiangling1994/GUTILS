@@ -107,6 +107,7 @@ class TestWatchClasses(GutilsTestClass):
             configs_path=os.path.dirname(config_path),
             subset=False,
             template='trajectory',
+            profile_id_type=2,
             tsint=10,
             filter_distance=1,
             filter_points=5,

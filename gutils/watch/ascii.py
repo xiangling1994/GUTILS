@@ -23,12 +23,13 @@ L = logging.getLogger(__name__)
 
 class Ascii2NetcdfProcessor(ProcessEvent):
 
-    def my_init(self, outputs_path, configs_path, subset, template, **filters):
+    def my_init(self, outputs_path, configs_path, subset, template, profile_id_type, **filters):
         self.outputs_path = outputs_path
         self.configs_path = configs_path
         self.subset = subset
         self.template = template
         self.filters = filters
+        self.profile_id_type = profile_id_type
 
     def valid_file(self, name):
         _, extension = os.path.splitext(name)
@@ -68,6 +69,7 @@ class Slocum2NetcdfProcessor(Ascii2NetcdfProcessor):
             output_path=glider_output_folder,
             subset=self.subset,
             template=self.template,
+            profile_id_type=self.profile_id_type,
             **self.filters
         )
 
@@ -135,6 +137,13 @@ def create_netcdf_arg_parser():
         default=os.environ.get('GUTILS_NETCDF_TEMPLATE', 'trajectory')
     )
     parser.add_argument(
+        "-p",
+        "--profile_id_type",
+        help="The profile type to use when writing netCDF files. 1 == EPOCH, 2 == COUNT, 3 == FRAME",
+        default=os.environ.get('GUTILS_PROFILE_ID_TYPE', 1),
+        type=int
+    )
+    parser.add_argument(
         "--daemonize",
         help="To daemonize or not to daemonize",
         type=bool,
@@ -159,6 +168,7 @@ def main_to_netcdf():
     subset = filter_args.pop('subset')
     daemonize = filter_args.pop('daemonize')
     template = filter_args.pop('template')
+    profile_id_type = int(filter_args.pop('profile_id_type'))
 
     # Move reader_class to a class
     reader_class = filter_args.pop('reader_class')
@@ -187,6 +197,7 @@ def main_to_netcdf():
             configs_path=configs,
             subset=subset,
             template=template,
+            profile_id_type=profile_id_type,
             **filter_args
         )
     notifier = Notifier(wm, processor, read_freq=10)
