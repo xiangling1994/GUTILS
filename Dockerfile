@@ -25,7 +25,7 @@ RUN apt-get update && apt-get install -y \
 
 # Setup CONDA (https://hub.docker.com/r/continuumio/miniconda3/~/dockerfile/)
 ENV MINICONDA_VERSION latest
-ENV PYTHON_VERSION 3.5
+ENV PYTHON_VERSION 3.6
 RUN echo 'export PATH=/opt/conda/bin:$PATH' > /etc/profile.d/conda.sh && \
     curl -k -o /miniconda.sh https://repo.continuum.io/miniconda/Miniconda3-$MINICONDA_VERSION-Linux-x86_64.sh && \
     /bin/bash /miniconda.sh -b -p /opt/conda && \
