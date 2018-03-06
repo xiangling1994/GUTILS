@@ -26,6 +26,7 @@ MODE_MAPPING = {
     "rt": ["sbd", "tbd", "mbd", "nbd"],
     "delayed": ["dbd", "ebd"]
 }
+ALL_EXTENSIONS = [".sbd", ".tbd", ".mbd", ".nbd", ".dbd", ".ebd"]
 
 
 class SlocumReader(object):
@@ -127,7 +128,7 @@ class SlocumReader(object):
         However, m_depth is typically heavily decimated while sci_water_pressure contains a more
         complete pressure record.  So, while we transmit both m_depth and sci_water_pressure, I
         calculate depth from pressure & (interpolated) latitude and use that as my NetCDF depth
-        variable.
+        variable. - Kerfoot
         """
         # Search for a 'pressure' column
         for p in self.PRESSURE_SENSORS:
@@ -249,13 +250,27 @@ class SlocumMerger(object):
         self.destination_directory = destination_directory
         self.source_directory = source_directory
 
+        mf = set()
         for g in globs:
-            self.matched_files += list(glob(
-                os.path.join(
-                    source_directory,
-                    g
+            mf.update(
+                glob(
+                    os.path.join(
+                        source_directory,
+                        g
+                    )
                 )
-            ))
+            )
+
+        def slocum_binary_sorter(x):
+            """ Sort slocum binary files correctly, using leading zeros.leading """
+            'usf-bass-2014-048-2-1.tbd -> 2014_048_00000002_000000001'
+            x, ext = os.path.splitext(os.path.basename(x))
+            if ext not in ALL_EXTENSIONS:
+                return x
+            z = [ int(a) for a in x.split('-')[-4:] ]
+            return '{0[0]:04d}_{0[1]:03d}_{0[2]:08d}_{0[3]:08d}'.format(z)
+
+        self.matched_files = sorted(list(mf), key=slocum_binary_sorter)
 
     def __del__(self):
         # Remove tmpdir
