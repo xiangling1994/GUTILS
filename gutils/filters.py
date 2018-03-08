@@ -116,7 +116,7 @@ def process_dataset(file, reader_class, tsint=None, filter_z=None, filter_points
 
         # Find profile breaks
         profiles = assign_profiles(data, tsint=tsint)
-
+        profiles = reassign_profile_id(profiles)
         # Shortcut for empty dataframes
         if profiles is None:
             return None, None
